@@ -1,6 +1,6 @@
 {
     "name": "wasm-xlsxwriter",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "type": "module",
     "main": "rust/pkg/wasm_xlsxwriter.js",
     "types": "rust/pkg/wasm_xlsxwriter.d.ts",
@@ -15,7 +15,7 @@
         "url": "https://github.com/estie-inc/wasm-xlsxwriter"
     },
     "scripts": {
-        "build": "wasm-pack build ./rust --target web --release",
+        "build": "wasm-pack build ./rust --target web --release && rm rust/pkg/.gitignore",
         "test": "vitest"
     },
     "devDependencies": {
