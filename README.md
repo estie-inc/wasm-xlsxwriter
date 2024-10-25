@@ -1,4 +1,4 @@
-# wasm-xlsxwriter ![NPM Version](https://img.shields.io/npm/v/wasm-xlsxwriter)
+# wasm-xlsxwriter [![NPM Version](https://img.shields.io/npm/v/wasm-xlsxwriter)](https://www.npmjs.com/package/wasm-xlsxwriter)
 
 The `wasm-xlsxwriter` library is a lightweight wrapper around the write API of Rust's [`rust_xlsxwriter`](https://crates.io/crates/rust_xlsxwriter), compiled to WebAssembly (Wasm) with minimal setup to make it easily usable from JavaScript.
 
