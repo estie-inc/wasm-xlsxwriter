@@ -1,0 +1,10 @@
+rust/target
+rust/pkg
+
+**/node_modules
+**/*.xlsx
+!test/expected/*.xlsx
+
+**/dist
+
+docs/

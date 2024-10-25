@@ -1,0 +1,18 @@
+{
+    "extends": "@tsconfig/strictest/tsconfig.json",
+    "include": [
+        "src",
+        "test",
+        "vitest.d.ts"
+    ],
+    "compilerOptions": {
+        "noEmit": true,
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ESNext",
+        "lib": [
+            "ESNext",
+            "DOM"
+        ]
+    }
+}
