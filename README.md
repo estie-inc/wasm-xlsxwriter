@@ -75,7 +75,7 @@ worksheet.write(8, 0, new Url("https://www.rust-lang.org").setText("Rust"));
 worksheet.mergeRange(9, 0, 9, 1, "Merged cells", mergeFormat);
 
 // Insert an image (ensure `imageBuffer` contains the image data).
-const image = Image.newFromBuffer(imageBuffer);
+const image = new Image(imageBuffer);
 worksheet.insertImage(1, 2, image);
 
 // Save the file to a buffer.
