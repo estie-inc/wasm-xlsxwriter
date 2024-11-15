@@ -159,3 +159,24 @@ describe("xlsx-wasm test", () => {
     expect(actual).matchXlsx(expected);
   });
 });
+
+describe("xlsx-wasm test", () => {
+  test('use width and height', async () => {
+    // Arrange
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet();
+
+    // Act
+    worksheet.setColumnWidth(0, 16);
+    worksheet.setColumnRangeWidth(1, 2, 32);
+    worksheet.setColumnWidthPixels(4, 100);
+
+    worksheet.setRowHeight(0, 24);
+    worksheet.setRowHeightPixels(1, 100); // 100 pixels = 75
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/format_width_height.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});
