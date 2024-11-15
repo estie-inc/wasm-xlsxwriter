@@ -180,3 +180,27 @@ describe("xlsx-wasm test", () => {
     expect(actual).matchXlsx(expected);
   });
 });
+
+describe("xlsx-wasm test", () => {
+  test("methods mutate self", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    const format = new Format();
+    format
+      .setFontName('Meiryo UI')
+      .setFontSize(16)
+      .setAlign(FormatAlign.Center)
+      .setBorder(FormatBorder.Thin);
+
+    worksheet.writeWithFormat(0, 0, 'foo', format);
+    worksheet.writeWithFormat(1, 1, 'bar', format);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/format_mutate.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});

@@ -162,7 +162,7 @@ impl TableColumn {
     #[wasm_bindgen(js_name = "setHeaderFormat", skip_jsdoc)]
     pub fn set_header_format(&self, format: &Format) -> TableColumn {
         TableColumn {
-            inner: self.clone().inner.set_header_format(&format.inner),
+            inner: self.clone().inner.set_header_format(format.get().clone()),
         }
     }
 
@@ -183,7 +183,7 @@ impl TableColumn {
     #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
     pub fn set_format(&self, format: &Format) -> TableColumn {
         TableColumn {
-            inner: self.clone().inner.set_format(&format.inner),
+            inner: self.clone().inner.set_format(format.get().clone()),
         }
     }
 
