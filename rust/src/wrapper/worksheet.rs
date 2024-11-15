@@ -282,7 +282,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let data: ExcelData = data.try_into()?;
-        let _ = map_xlsx_error(sheet.write_with_format(row, col, data, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_with_format(row, col, data, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -319,7 +319,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_blank(row, col, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_blank(row, col, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -392,7 +392,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_string_with_format(row, col, string, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_string_with_format(row, col, string, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -493,7 +493,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_number_with_format(row, col, number, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_number_with_format(row, col, number, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -552,7 +552,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_boolean_with_format(row, col, boolean, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_boolean_with_format(row, col, boolean, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -627,7 +627,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
-            let _ = map_xlsx_error(sheet.write_datetime_with_format(row, col, dt, &format.inner))?;
+            let _ = map_xlsx_error(sheet.write_datetime_with_format(row, col, dt, &format.get()))?;
             Ok(self.clone())
         } else {
             Err(XlsxError::InvalidDate)
@@ -663,7 +663,7 @@ impl Worksheet {
             row,
             col,
             formula.inner.clone(),
-            &format.inner,
+            &format.get(),
         ))?;
         Ok(self.clone())
     }
@@ -691,7 +691,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_url_with_format(row, col, &link.inner, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_url_with_format(row, col, &link.inner, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -727,7 +727,7 @@ impl Worksheet {
             &link.inner,
             text,
             tip,
-            format.as_ref().map(|f| &f.inner),
+            format.map(|f| f.get().clone()).as_ref(),
         ))?;
         Ok(self.clone())
     }
@@ -757,7 +757,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let values: Vec<ExcelData> = values.try_into()?;
-        let _ = map_xlsx_error(sheet.write_column_with_format(row, col, values, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_column_with_format(row, col, values, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -800,7 +800,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let values: Vec<ExcelData> = values.try_into()?;
-        let _ = map_xlsx_error(sheet.write_row_with_format(row, col, values, &format.inner))?;
+        let _ = map_xlsx_error(sheet.write_row_with_format(row, col, values, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -857,7 +857,7 @@ impl Worksheet {
             last_row,
             last_col,
             formula.inner.clone(),
-            &format.inner,
+            &format.get(),
         ))?;
         Ok(self.clone())
     }
@@ -901,7 +901,7 @@ impl Worksheet {
             last_row,
             last_col,
             formula.inner.clone(),
-            &format.inner,
+            &format.get(),
         ))?;
         Ok(self.clone())
     }
@@ -945,7 +945,7 @@ impl Worksheet {
             last_row,
             last_col,
             formula.inner.clone(),
-            &format.inner,
+            &format.get(),
         ))?;
         Ok(self.clone())
     }
@@ -1017,7 +1017,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ =
-            map_xlsx_error(sheet.embed_image_with_format(row, col, &image.inner, &format.inner))?;
+            map_xlsx_error(sheet.embed_image_with_format(row, col, &image.inner, &format.get()))?;
         Ok(self.clone())
     }
 
@@ -1293,7 +1293,7 @@ impl Worksheet {
             last_row,
             last_col,
             value,
-            &format.inner,
+            &format.get(),
         ))?;
         Ok(self.clone())
     }
@@ -1338,7 +1338,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &format.inner,
+            &format.get(),
         ))?;
         Ok(self.clone())
     }
@@ -1360,8 +1360,8 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &format.inner,
-            &border_format.inner,
+            &format.get(),
+            &border_format.get(),
         ))?;
         Ok(self.clone())
     }
