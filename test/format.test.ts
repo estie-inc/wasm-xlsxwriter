@@ -213,8 +213,8 @@ describe("xlsx-wasm test", () => {
     // Act
     const worksheet = workbook.addWorksheet();
     const baseFormat = new Format().setBold();
-    const format1 = new Format(baseFormat).setItalic();
-    const format2 = new Format(baseFormat).setFontColor(Color.red());
+    const format1 = baseFormat.clone().setItalic();
+    const format2 = baseFormat.clone().setFontColor(Color.red());
 
     worksheet.writeStringWithFormat(0, 0, "bold", baseFormat);
     worksheet.writeStringWithFormat(0, 1, "bold italic", format1);

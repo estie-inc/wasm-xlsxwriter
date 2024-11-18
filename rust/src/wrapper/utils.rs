@@ -7,7 +7,6 @@ use wasm_bindgen::convert::RefFromWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
-use super::format::Format;
 use super::formula::Formula;
 use super::url::Url;
 
@@ -81,12 +80,6 @@ pub fn generic_of_jsval<T: RefFromWasmAbi<Abi = u32>>(
 
 pub fn formula_of_jsval(js: &JsValue) -> Option<Formula> {
     generic_of_jsval::<Formula>(js, "Formula")
-        .ok()
-        .map(|f| f.clone())
-}
-
-pub fn format_of_jsval(js: &JsValue) -> Option<Format> {
-    generic_of_jsval::<Format>(js, "Format")
         .ok()
         .map(|f| f.clone())
 }
