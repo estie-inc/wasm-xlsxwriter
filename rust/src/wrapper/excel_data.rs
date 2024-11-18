@@ -6,7 +6,7 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::error::XlsxError;
 
-use super::{formula::Formula, url::Url, utils};
+use super::{formula::Formula, rich_string::RichString, url::Url, utils};
 
 // We only export the ExcelData type since ExcelDataArray and ExcelDataMatrix are used for
 #[wasm_bindgen(typescript_custom_section)]
@@ -15,7 +15,7 @@ const EXCEL_DATA: &'static str = r#"
  *  Data type that can be written to Excel's cells.
  *  You can write data to cells via {@link Worksheet#write}.
  */
-export type ExcelData = undefined | string | number | boolean | Date | Formula | Url;
+export type ExcelData = undefined | string | number | boolean | Date | Formula | Url | RichString;
 
 type ExcelDataArray = ExcelData[];
 
@@ -108,6 +108,7 @@ pub enum ExcelData {
     DateTime(chrono::NaiveDateTime),
     Formula(Formula),
     Url(Url),
+    RichString(RichString),
 }
 
 impl TryInto<ExcelData> for JsValue {
@@ -136,6 +137,8 @@ impl TryInto<ExcelData> for JsValue {
                     Ok(ExcelData::Formula(formula))
                 } else if let Some(url) = utils::url_of_jsval(&self) {
                     Ok(ExcelData::Url(url))
+                } else if let Some(rich_string) = utils::rich_string_of_jsval(&self) {
+                    Ok(ExcelData::RichString(rich_string))
                 } else {
                     let ctor = Object::get_prototype_of(&self).constructor().name();
                     Err(XlsxError::Type(format!(
@@ -167,6 +170,12 @@ impl xlsx::IntoExcelData for ExcelData {
             ExcelData::DateTime(dt) => worksheet.write_datetime(row, col, dt),
             ExcelData::Formula(f) => worksheet.write_formula(row, col, &f.inner),
             ExcelData::Url(url) => worksheet.write_url(row, col, &url.inner),
+            ExcelData::RichString(rich_string) => {
+                let rich_string = rich_string.lock();
+                let rich_string: Vec<_> =
+                    rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
+                worksheet.write_rich_string(row, col, &rich_string)
+            }
         }
     }
 
@@ -187,6 +196,12 @@ impl xlsx::IntoExcelData for ExcelData {
                 worksheet.write_formula_with_format(row, col, &f.inner, format)
             }
             ExcelData::Url(url) => worksheet.write_url_with_format(row, col, &url.inner, format),
+            ExcelData::RichString(rich_string) => {
+                let rich_string = rich_string.lock();
+                let rich_string: Vec<_> =
+                    rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
+                worksheet.write_rich_string_with_format(row, col, &rich_string, format)
+            }
         }
     }
 }
