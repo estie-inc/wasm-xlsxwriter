@@ -282,6 +282,6 @@ impl Workbook {
     #[wasm_bindgen(js_name = "setProperties", skip_jsdoc)]
     pub fn set_properties(&self, properties: &DocProperties) {
         let mut workbook = self.inner.lock().unwrap();
-        workbook.set_properties(&properties.inner);
+        workbook.set_properties(&properties.lock());
     }
 }

@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
@@ -20,16 +22,20 @@ use wasm_bindgen::prelude::*;
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct DocProperties {
-    pub(crate) inner: xlsx::DocProperties,
+    pub(crate) inner: Arc<Mutex<xlsx::DocProperties>>,
 }
 
 #[wasm_bindgen]
 impl DocProperties {
+    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::DocProperties> {
+        self.inner.lock().unwrap()
+    }
+
     /// Create a new `DocProperties` class.
     #[wasm_bindgen(constructor)]
     pub fn new() -> DocProperties {
         DocProperties {
-            inner: xlsx::DocProperties::new(),
+            inner: Arc::new(Mutex::new(xlsx::DocProperties::new())),
         }
     }
 
@@ -42,8 +48,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setTitle", skip_jsdoc)]
     pub fn set_title(&self, title: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_title(title);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_title(title),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -56,8 +66,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setSubject", skip_jsdoc)]
     pub fn set_subject(&self, subject: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_subject(subject);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_subject(subject),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -70,8 +84,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setAuthor", skip_jsdoc)]
     pub fn set_author(&self, author: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_author(author);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_author(author),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -84,8 +102,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setManager", skip_jsdoc)]
     pub fn set_manager(&self, manager: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_manager(manager);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_manager(manager),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -98,8 +120,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setCompany", skip_jsdoc)]
     pub fn set_company(&self, company: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_company(company);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_company(company),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -112,8 +138,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setCategory", skip_jsdoc)]
     pub fn set_category(&self, category: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_category(category);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_category(category),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -126,8 +156,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setKeywords", skip_jsdoc)]
     pub fn set_keywords(&self, keywords: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_keywords(keywords);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_keywords(keywords),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -141,8 +175,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setComment", skip_jsdoc)]
     pub fn set_comment(&self, comment: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_comment(comment);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_comment(comment),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -155,8 +193,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setStatus", skip_jsdoc)]
     pub fn set_status(&self, status: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_status(status);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_status(status),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -169,8 +211,12 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setHyperlinkBase", skip_jsdoc)]
     pub fn set_hyperlink_base(&self, hyperlink_base: &str) -> DocProperties {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_hyperlink_base(hyperlink_base);
+        let _ = std::mem::replace(&mut *lock, inner);
         DocProperties {
-            inner: self.clone().inner.set_hyperlink_base(hyperlink_base),
+            inner: Arc::clone(&self.inner),
         }
     }
 }

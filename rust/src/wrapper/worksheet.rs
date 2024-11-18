@@ -644,7 +644,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_formula(row, col, formula.inner.clone()))?;
+        let _ = map_xlsx_error(sheet.write_formula(row, col, &*formula.lock()))?;
         Ok(self.clone())
     }
 
@@ -661,7 +661,7 @@ impl Worksheet {
         let _ = map_xlsx_error(sheet.write_formula_with_format(
             row,
             col,
-            formula.inner.clone(),
+            &*formula.lock(),
             &format.lock(),
         ))?;
         Ok(self.clone())
@@ -676,7 +676,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_url(row, col, &link.inner))?;
+        let _ = map_xlsx_error(sheet.write_url(row, col, &*link.lock()))?;
         Ok(self.clone())
     }
 
@@ -690,7 +690,8 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_url_with_format(row, col, &link.inner, &format.lock()))?;
+        let _ =
+            map_xlsx_error(sheet.write_url_with_format(row, col, &*link.lock(), &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -704,7 +705,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_url_with_text(row, col, &link.inner, text))?;
+        let _ = map_xlsx_error(sheet.write_url_with_text(row, col, &*link.lock(), text))?;
         Ok(self.clone())
     }
 
@@ -723,7 +724,7 @@ impl Worksheet {
         let _ = map_xlsx_error(sheet.write_url_with_options(
             row,
             col,
-            &link.inner,
+            &*link.lock(),
             text,
             tip,
             format.map(|f| f.lock().clone()).as_ref(),
@@ -869,7 +870,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            formula.inner.clone(),
+            &*formula.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -891,7 +892,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            formula.inner.clone(),
+            &*formula.lock(),
             &format.lock(),
         ))?;
         Ok(self.clone())
@@ -913,7 +914,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            formula.inner.clone(),
+            &*formula.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -935,7 +936,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            formula.inner.clone(),
+            &*formula.lock(),
             &format.lock(),
         ))?;
         Ok(self.clone())
@@ -957,7 +958,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            formula.inner.clone(),
+            &*formula.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -979,7 +980,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            formula.inner.clone(),
+            &*formula.lock(),
             &format.lock(),
         ))?;
         Ok(self.clone())

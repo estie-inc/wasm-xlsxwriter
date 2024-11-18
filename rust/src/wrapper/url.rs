@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
@@ -74,11 +76,15 @@ use wasm_bindgen::prelude::*;
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct Url {
-    pub(crate) inner: xlsx::Url,
+    pub(crate) inner: Arc<Mutex<xlsx::Url>>,
 }
 
 #[wasm_bindgen]
 impl Url {
+    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Url> {
+        self.inner.lock().unwrap()
+    }
+
     /// Create a new Url struct.
     ///
     /// @param {string} link - A string like type representing a URL.
@@ -86,7 +92,7 @@ impl Url {
     #[wasm_bindgen(constructor, skip_jsdoc)]
     pub fn new(link: &str) -> Url {
         Url {
-            inner: xlsx::Url::new(link),
+            inner: Arc::new(Mutex::new(xlsx::Url::new(link))),
         }
     }
 
@@ -98,8 +104,12 @@ impl Url {
     /// @returns {Url} - The url object.
     #[wasm_bindgen(js_name = "setText", skip_jsdoc)]
     pub fn set_text(&self, text: &str) -> Url {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
+        inner = inner.set_text(text);
+        let _ = std::mem::replace(&mut *lock, inner);
         Url {
-            inner: self.clone().inner.set_text(text),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -111,8 +121,12 @@ impl Url {
     /// @returns {Url} - The url object.
     #[wasm_bindgen(js_name = "setTip", skip_jsdoc)]
     pub fn set_tip(&self, tip: &str) -> Url {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
+        inner = inner.set_tip(tip);
+        let _ = std::mem::replace(&mut *lock, inner);
         Url {
-            inner: self.clone().inner.set_tip(tip),
+            inner: Arc::clone(&self.inner),
         }
     }
 }

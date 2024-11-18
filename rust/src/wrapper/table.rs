@@ -204,7 +204,7 @@ impl TableColumn {
     #[wasm_bindgen(js_name = "setFormula", skip_jsdoc)]
     pub fn set_formula(&self, formula: &Formula) -> TableColumn {
         TableColumn {
-            inner: self.clone().inner.set_formula(&formula.inner),
+            inner: self.clone().inner.set_formula(&*formula.lock()),
         }
     }
 
@@ -550,7 +550,7 @@ impl TableFunction {
     #[wasm_bindgen]
     pub fn custom(formula: &Formula) -> TableFunction {
         TableFunction {
-            inner: xlsx::TableFunction::Custom(formula.inner.clone()),
+            inner: xlsx::TableFunction::Custom(formula.lock().clone()),
         }
     }
 }
