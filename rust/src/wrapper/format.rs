@@ -188,7 +188,7 @@ impl Format {
         }
     }
 
-    pub(crate) fn get<'a>(&'a self) -> MutexGuard<'a, xlsx::Format> {
+    pub(crate) fn lock(&self) -> MutexGuard<xlsx::Format> {
         self.inner.lock().unwrap()
     }
 

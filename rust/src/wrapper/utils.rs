@@ -8,6 +8,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 use super::formula::Formula;
+use super::rich_string::RichString;
 use super::url::Url;
 
 fn is_jsdate(obj: &JsValue) -> bool {
@@ -86,4 +87,10 @@ pub fn formula_of_jsval(js: &JsValue) -> Option<Formula> {
 
 pub fn url_of_jsval(js: &JsValue) -> Option<Url> {
     generic_of_jsval::<Url>(js, "Url").ok().map(|f| f.clone())
+}
+
+pub fn rich_string_of_jsval(js: &JsValue) -> Option<RichString> {
+    generic_of_jsval::<super::rich_string::RichString>(js, "RichString")
+        .ok()
+        .map(|f| f.clone())
 }

@@ -12,6 +12,7 @@ use crate::wrapper::{
 use super::{
     excel_data::{JsExcelData, JsExcelDataArray, JsExcelDataMatrix},
     formula::Formula,
+    rich_string::RichString,
     url::Url,
 };
 
@@ -282,7 +283,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let data: ExcelData = data.try_into()?;
-        let _ = map_xlsx_error(sheet.write_with_format(row, col, data, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_with_format(row, col, data, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -319,7 +320,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_blank(row, col, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_blank(row, col, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -392,7 +393,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_string_with_format(row, col, string, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_string_with_format(row, col, string, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -493,7 +494,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_number_with_format(row, col, number, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_number_with_format(row, col, number, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -552,7 +553,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_boolean_with_format(row, col, boolean, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_boolean_with_format(row, col, boolean, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -627,14 +628,12 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
-            let _ = map_xlsx_error(sheet.write_datetime_with_format(row, col, dt, &format.get()))?;
+            let _ = map_xlsx_error(sheet.write_datetime_with_format(row, col, dt, &format.lock()))?;
             Ok(self.clone())
         } else {
             Err(XlsxError::InvalidDate)
         }
     }
-
-    // TODO: write_rich_string
 
     #[wasm_bindgen(js_name = "writeFormula")]
     pub fn write_formula(
@@ -663,7 +662,7 @@ impl Worksheet {
             row,
             col,
             formula.inner.clone(),
-            &format.get(),
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -691,7 +690,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.write_url_with_format(row, col, &link.inner, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_url_with_format(row, col, &link.inner, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -727,7 +726,43 @@ impl Worksheet {
             &link.inner,
             text,
             tip,
-            format.map(|f| f.get().clone()).as_ref(),
+            format.map(|f| f.lock().clone()).as_ref(),
+        ))?;
+        Ok(self.clone())
+    }
+
+    #[wasm_bindgen(js_name = "writeRichString")]
+    pub fn write_rich_string(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        rich_string: &RichString,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let rich_string = rich_string.lock();
+        let rich_string: Vec<_> = rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
+        let _ = map_xlsx_error(sheet.write_rich_string(row, col, &rich_string))?;
+        Ok(self.clone())
+    }
+
+    #[wasm_bindgen(js_name = "writeRichStringWithFormat")]
+    pub fn write_rich_string_with_format(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        rich_string: &RichString,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let rich_string = rich_string.lock();
+        let rich_string: Vec<_> = rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
+        let _ = map_xlsx_error(sheet.write_rich_string_with_format(
+            row,
+            col,
+            &rich_string,
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -757,7 +792,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let values: Vec<ExcelData> = values.try_into()?;
-        let _ = map_xlsx_error(sheet.write_column_with_format(row, col, values, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_column_with_format(row, col, values, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -800,7 +835,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let values: Vec<ExcelData> = values.try_into()?;
-        let _ = map_xlsx_error(sheet.write_row_with_format(row, col, values, &format.get()))?;
+        let _ = map_xlsx_error(sheet.write_row_with_format(row, col, values, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -857,7 +892,7 @@ impl Worksheet {
             last_row,
             last_col,
             formula.inner.clone(),
-            &format.get(),
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -901,7 +936,7 @@ impl Worksheet {
             last_row,
             last_col,
             formula.inner.clone(),
-            &format.get(),
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -945,7 +980,7 @@ impl Worksheet {
             last_row,
             last_col,
             formula.inner.clone(),
-            &format.get(),
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -1017,7 +1052,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ =
-            map_xlsx_error(sheet.embed_image_with_format(row, col, &image.inner, &format.get()))?;
+            map_xlsx_error(sheet.embed_image_with_format(row, col, &image.inner, &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -1293,23 +1328,19 @@ impl Worksheet {
             last_row,
             last_col,
             value,
-            &format.get(),
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
-    
+
     #[wasm_bindgen(js_name = "setRowHeight")]
-    pub fn set_row_height(
-        &mut self,
-        row: xlsx::RowNum,
-        height: f64,
-    ) -> WasmResult<Worksheet> {
+    pub fn set_row_height(&mut self, row: xlsx::RowNum, height: f64) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = map_xlsx_error(sheet.set_row_height(row, height))?;
         Ok(self.clone())
     }
-    
+
     #[wasm_bindgen(js_name = "setRowHeightPixels")]
     pub fn set_row_height_pixels(
         &mut self,
@@ -1338,7 +1369,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &format.get(),
+            &format.lock(),
         ))?;
         Ok(self.clone())
     }
@@ -1360,8 +1391,8 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &format.get(),
-            &border_format.get(),
+            &format.lock(),
+            &border_format.lock(),
         ))?;
         Ok(self.clone())
     }

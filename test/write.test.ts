@@ -1,4 +1,4 @@
-import { Workbook, Format, Formula } from "../rust/pkg";
+import { Workbook, Format, Formula, RichString } from "../rust/pkg";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 
@@ -107,6 +107,29 @@ describe("xlsx-wasm test", () => {
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
     const expected = await readXlsxFile("./expected/write_matrix.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});
+
+describe("xlsx-wasm test", () => {
+  test("write rich string", async () => {
+    // Arrange
+    const workbook = new Workbook();
+    const richStr1 = new RichString().append(new Format(), "Hello, ")
+      .append(new Format().setBold(), "World!");
+    const richStr2 = new RichString();
+    richStr2.append(new Format().setItalic(), "Bonjour, ");
+    richStr2.append(new Format(), "le!");
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, richStr1);
+    worksheet.write(1, 0, richStr2);
+    worksheet.writeWithFormat(2, 0, richStr2, new Format().setItalic());
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/write_rich_string.xlsx");
     expect(actual).matchXlsx(expected);
   });
 });
