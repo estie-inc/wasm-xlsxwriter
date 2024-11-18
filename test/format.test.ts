@@ -204,3 +204,25 @@ describe("xlsx-wasm test", () => {
     expect(actual).matchXlsx(expected);
   });
 });
+
+describe("xlsx-wasm test", () => {
+  test("clone format object", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    const baseFormat = new Format().setBold();
+    const format1 = new Format(baseFormat).setItalic();
+    const format2 = new Format(baseFormat).setFontColor(Color.red());
+
+    worksheet.writeStringWithFormat(0, 0, "bold", baseFormat);
+    worksheet.writeStringWithFormat(0, 1, "bold italic", format1);
+    worksheet.writeStringWithFormat(0, 2, "bold red", format2);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/format_clone.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});

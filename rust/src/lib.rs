@@ -2,3 +2,7 @@
 
 mod error;
 mod wrapper;
+
+trait DeepClone {
+    fn deep_clone(&self) -> Self;
+}

@@ -3,7 +3,9 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use super::color::Color;
+use crate::{error::XlsxError, wrapper::utils, DeepClone};
+
+use super::{color::Color, WasmResult};
 
 /// The `Format` struct is used to define cell formatting for data in a
 /// worksheet.
@@ -177,14 +179,31 @@ pub struct Format {
 }
 
 #[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(typescript_type = "Format")]
+    pub type JsFormat;
+}
+
+#[wasm_bindgen]
 impl Format {
     /// Create a new Format object.
     ///
     /// Create a new Format object to use with worksheet formatting.
+    /// If a Format obejct is provided as an argument, it will be cloned.
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Format {
-        Format {
-            inner: Arc::new(Mutex::new(xlsx::Format::new())),
+    pub fn new(format: Option<JsFormat>) -> WasmResult<Format> {
+        if let Some(format) = format {
+            // HACK: Since wasm-bindgen does not supports Option<&RustStruct>, we cast JsValue as Format.
+            let format = utils::format_of_jsval(&format).ok_or(XlsxError::Type(
+                "Expected a value of type Format".to_string(),
+            ))?;
+            // Clone the inner object
+            let format = format.deep_clone();
+            Ok(format)
+        } else {
+            Ok(Format {
+                inner: Arc::new(Mutex::new(xlsx::Format::new())),
+            })
         }
     }
 
@@ -794,6 +813,15 @@ impl Format {
         let _ = std::mem::replace(&mut *lock, inner);
         Format {
             inner: Arc::clone(&self.inner),
+        }
+    }
+}
+
+impl DeepClone for Format {
+    fn deep_clone(&self) -> Self {
+        let inner = self.inner.lock().unwrap();
+        Format {
+            inner: Arc::new(Mutex::new(inner.clone())),
         }
     }
 }

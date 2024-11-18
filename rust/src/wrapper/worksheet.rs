@@ -1297,19 +1297,15 @@ impl Worksheet {
         ))?;
         Ok(self.clone())
     }
-    
+
     #[wasm_bindgen(js_name = "setRowHeight")]
-    pub fn set_row_height(
-        &mut self,
-        row: xlsx::RowNum,
-        height: f64,
-    ) -> WasmResult<Worksheet> {
+    pub fn set_row_height(&mut self, row: xlsx::RowNum, height: f64) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = map_xlsx_error(sheet.set_row_height(row, height))?;
         Ok(self.clone())
     }
-    
+
     #[wasm_bindgen(js_name = "setRowHeightPixels")]
     pub fn set_row_height_pixels(
         &mut self,
