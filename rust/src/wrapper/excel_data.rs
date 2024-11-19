@@ -168,14 +168,14 @@ impl xlsx::IntoExcelData for ExcelData {
             ExcelData::Number(n) => worksheet.write_number(row, col, n),
             ExcelData::Bool(b) => worksheet.write_boolean(row, col, b),
             ExcelData::DateTime(dt) => worksheet.write_datetime(row, col, dt),
-            ExcelData::Formula(f) => worksheet.write_formula(row, col, &f.inner),
-            ExcelData::Url(url) => worksheet.write_url(row, col, &url.inner),
             ExcelData::RichString(rich_string) => {
                 let rich_string = rich_string.lock();
                 let rich_string: Vec<_> =
                     rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
                 worksheet.write_rich_string(row, col, &rich_string)
             }
+            ExcelData::Formula(f) => worksheet.write_formula(row, col, &*f.lock()),
+            ExcelData::Url(url) => worksheet.write_url(row, col, &*url.lock()),
         }
     }
 
@@ -193,15 +193,15 @@ impl xlsx::IntoExcelData for ExcelData {
             ExcelData::Bool(b) => worksheet.write_boolean_with_format(row, col, b, format),
             ExcelData::DateTime(dt) => worksheet.write_datetime_with_format(row, col, dt, format),
             ExcelData::Formula(f) => {
-                worksheet.write_formula_with_format(row, col, &f.inner, format)
+                worksheet.write_formula_with_format(row, col, &*f.lock(), format)
             }
-            ExcelData::Url(url) => worksheet.write_url_with_format(row, col, &url.inner, format),
             ExcelData::RichString(rich_string) => {
                 let rich_string = rich_string.lock();
                 let rich_string: Vec<_> =
                     rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
                 worksheet.write_rich_string_with_format(row, col, &rich_string, format)
             }
+            ExcelData::Url(url) => worksheet.write_url_with_format(row, col, &*url.lock(), format),
         }
     }
 }

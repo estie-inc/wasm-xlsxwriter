@@ -176,6 +176,18 @@ pub struct Format {
     pub(crate) inner: Arc<Mutex<xlsx::Format>>,
 }
 
+macro_rules! impl_method {
+    ($self:ident.$method:ident($($arg:expr),*)) => {
+        let mut lock = $self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.$method($($arg),*);
+        let _ = std::mem::replace(&mut *lock, inner);
+        return Format {
+            inner: Arc::clone(&$self.inner),
+        }
+    };
+}
+
 #[wasm_bindgen]
 impl Format {
     /// Create a new Format object.
@@ -212,13 +224,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setAlign", skip_jsdoc)]
     pub fn set_align(&self, align: FormatAlign) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_align(align.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_align(align.into()));
     }
 
     /// Set the bold property for a Format font.
@@ -228,13 +234,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setBold", skip_jsdoc)]
     pub fn set_bold(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_bold();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_bold());
     }
 
     /// Set the italic property for the Format font.
@@ -244,46 +244,22 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setItalic", skip_jsdoc)]
     pub fn set_italic(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_italic();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_italic());
     }
 
     #[wasm_bindgen(js_name = "setUnderline")]
     pub fn set_underline(&self, underline: FormatUnderline) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_underline(underline.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_underline(underline.into()));
     }
 
     #[wasm_bindgen(js_name = "setTextWrap")]
     pub fn set_text_wrap(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_text_wrap();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_text_wrap());
     }
 
     #[wasm_bindgen(js_name = "setIndent")]
     pub fn set_indent(&self, level: u8) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_indent(level);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_indent(level));
     }
 
     /// Set the Format rotation property.
@@ -298,13 +274,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setRotation", skip_jsdoc)]
     pub fn set_rotation(&self, rotation: i16) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_rotation(rotation);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_rotation(rotation));
     }
 
     /// Set the Format border property.
@@ -324,13 +294,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setBorder", skip_jsdoc)]
     pub fn set_border(&self, border: FormatBorder) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border(border.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border(border.into()));
     }
 
     /// Set the Format border color property.
@@ -349,13 +313,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setBorderColor", skip_jsdoc)]
     pub fn set_border_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_color(color.inner));
     }
 
     /// Set the cell bottom border style.
@@ -367,13 +325,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderBottom", skip_jsdoc)]
     pub fn set_border_bottom(&self, border: FormatBorder) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_bottom(border.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_bottom(border.into()));
     }
 
     /// Set the cell bottom border color.
@@ -384,13 +336,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderBottomColor", skip_jsdoc)]
     pub fn set_border_bottom_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_bottom_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_bottom_color(color.inner));
     }
 
     /// Set the cell top border style.
@@ -402,13 +348,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderTop", skip_jsdoc)]
     pub fn set_border_top(&self, border: FormatBorder) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_top(border.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_top(border.into()));
     }
 
     /// Set the cell top border color.
@@ -419,13 +359,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderTopColor", skip_jsdoc)]
     pub fn set_border_top_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_top_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_top_color(color.inner));
     }
 
     /// Set the cell left border style.
@@ -437,13 +371,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderLeft", skip_jsdoc)]
     pub fn set_border_left(&self, border: FormatBorder) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_left(border.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_left(border.into()));
     }
 
     /// Set the cell left border color.
@@ -454,13 +382,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderLeftColor", skip_jsdoc)]
     pub fn set_border_left_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_left_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_left_color(color.inner));
     }
 
     /// Set the cell right border style.
@@ -472,13 +394,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderRight", skip_jsdoc)]
     pub fn set_border_right(&self, border: FormatBorder) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_right(border.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_right(border.into()));
     }
 
     /// Set the cell right border color.
@@ -489,13 +405,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderRightColor", skip_jsdoc)]
     pub fn set_border_right_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_right_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_right_color(color.inner));
     }
 
     /// Set the Format border diagonal property.
@@ -511,13 +421,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setBorderDiagonal", skip_jsdoc)]
     pub fn set_border_diagonal(&self, border: FormatBorder) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_diagonal(border.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_diagonal(border.into()));
     }
 
     /// Set the cell diagonal border color.
@@ -528,13 +432,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderDiagonalColor", skip_jsdoc)]
     pub fn set_border_diagonal_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_border_diagonal_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_border_diagonal_color(color.inner));
     }
 
     /// Set the color property for the Format font.
@@ -550,13 +448,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setFontColor", skip_jsdoc)]
     pub fn set_font_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_color(color.inner));
     }
 
     /// Set the Format font family property.
@@ -568,13 +460,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setFontFamily", skip_jsdoc)]
     pub fn set_font_family(&self, font_family: u8) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_family(font_family);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_family(font_family));
     }
 
     /// Set the Format font name property.
@@ -589,13 +475,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setFontName")]
     pub fn set_font_name(&self, font_name: &str) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_name(font_name);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_name(font_name));
     }
 
     /// Set the Format font size property.
@@ -612,13 +492,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setFontSize", skip_jsdoc)]
     pub fn set_font_size(&self, font_size: f64) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_size(font_size);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_size(font_size));
     }
 
     /// Set the Format font scheme property.
@@ -630,13 +504,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setFontScheme", skip_jsdoc)]
     pub fn set_font_scheme(&self, font_scheme: &str) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_scheme(font_scheme);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_scheme(font_scheme));
     }
 
     /// Set the Format font character set property.
@@ -648,13 +516,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setFontCharset", skip_jsdoc)]
     pub fn set_font_charset(&self, font_charset: u8) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_charset(font_charset);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_charset(font_charset));
     }
 
     /// Set the Format font strikethrough property.
@@ -662,13 +524,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setFontStrikethrough")]
     pub fn set_font_strikethrough(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_font_strikethrough();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_font_strikethrough());
     }
 
     /// Set the Format pattern foreground color property.
@@ -683,13 +539,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setForegroundColor", skip_jsdoc)]
     pub fn set_foreground_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_foreground_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_foreground_color(color.inner));
     }
 
     /// Set the Format pattern background color property.
@@ -705,13 +555,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setBackgroundColor", skip_jsdoc)]
     pub fn set_background_color(&self, color: Color) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_background_color(color.inner);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_background_color(color.inner));
     }
 
     /// Set the number format for a Format.
@@ -732,13 +576,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setNumFormat", skip_jsdoc)]
     pub fn set_num_format(&self, num_format: &str) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_num_format(num_format);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_num_format(num_format));
     }
 
     /// Set the Format pattern property.
@@ -755,13 +593,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setPattern", skip_jsdoc)]
     pub fn set_pattern(&self, pattern: FormatPattern) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_pattern(pattern.into());
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_pattern(pattern.into()));
     }
 
     /// Set the Format property to hide formulas in a cell.
@@ -775,35 +607,17 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setHidden", skip_jsdoc)]
     pub fn set_hidden(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_hidden();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_hidden());
     }
 
     #[wasm_bindgen(js_name = "setLocked")]
     pub fn set_locked(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_locked();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_locked());
     }
 
     #[wasm_bindgen(js_name = "setUnlocked")]
     pub fn set_unlocked(&self) -> Format {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Format::new());
-        inner = inner.set_unlocked();
-        let _ = std::mem::replace(&mut *lock, inner);
-        Format {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_unlocked());
     }
 }
 

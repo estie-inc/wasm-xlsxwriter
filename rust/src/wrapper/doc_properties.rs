@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
@@ -20,16 +22,32 @@ use wasm_bindgen::prelude::*;
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct DocProperties {
-    pub(crate) inner: xlsx::DocProperties,
+    pub(crate) inner: Arc<Mutex<xlsx::DocProperties>>,
+}
+
+macro_rules! impl_method {
+    ($self:ident.$method:ident($($arg:expr),*)) => {
+        let mut lock = $self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.$method($($arg),*);
+        let _ = std::mem::replace(&mut *lock, inner);
+        return DocProperties {
+            inner: Arc::clone(&$self.inner),
+        }
+    };
 }
 
 #[wasm_bindgen]
 impl DocProperties {
+    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::DocProperties> {
+        self.inner.lock().unwrap()
+    }
+
     /// Create a new `DocProperties` class.
     #[wasm_bindgen(constructor)]
     pub fn new() -> DocProperties {
         DocProperties {
-            inner: xlsx::DocProperties::new(),
+            inner: Arc::new(Mutex::new(xlsx::DocProperties::new())),
         }
     }
 
@@ -42,9 +60,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setTitle", skip_jsdoc)]
     pub fn set_title(&self, title: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_title(title),
-        }
+        impl_method!(self.set_title(title));
     }
 
     /// Set the Subject field of the document properties.
@@ -56,9 +72,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setSubject", skip_jsdoc)]
     pub fn set_subject(&self, subject: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_subject(subject),
-        }
+        impl_method!(self.set_subject(subject));
     }
 
     /// Set the Author field of the document properties.
@@ -70,9 +84,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setAuthor", skip_jsdoc)]
     pub fn set_author(&self, author: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_author(author),
-        }
+        impl_method!(self.set_author(author));
     }
 
     /// Set the Manager field of the document properties.
@@ -84,9 +96,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setManager", skip_jsdoc)]
     pub fn set_manager(&self, manager: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_manager(manager),
-        }
+        impl_method!(self.set_manager(manager));
     }
 
     /// Set the Company field of the document properties.
@@ -98,9 +108,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setCompany", skip_jsdoc)]
     pub fn set_company(&self, company: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_company(company),
-        }
+        impl_method!(self.set_company(company));
     }
 
     /// Set the Category field of the document properties.
@@ -112,9 +120,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setCategory", skip_jsdoc)]
     pub fn set_category(&self, category: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_category(category),
-        }
+        impl_method!(self.set_category(category));
     }
 
     /// Set the Keywords field of the document properties.
@@ -126,9 +132,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setKeywords", skip_jsdoc)]
     pub fn set_keywords(&self, keywords: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_keywords(keywords),
-        }
+        impl_method!(self.set_keywords(keywords));
     }
 
     /// Set the Comment field of the document properties.
@@ -141,9 +145,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setComment", skip_jsdoc)]
     pub fn set_comment(&self, comment: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_comment(comment),
-        }
+        impl_method!(self.set_comment(comment));
     }
 
     /// Set the Status field of the document properties.
@@ -155,9 +157,7 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setStatus", skip_jsdoc)]
     pub fn set_status(&self, status: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_status(status),
-        }
+        impl_method!(self.set_status(status));
     }
 
     /// Set the hyperlink base field of the document properties.
@@ -169,8 +169,6 @@ impl DocProperties {
     /// @returns {DocProperties} - The DocProperties object.
     #[wasm_bindgen(js_name = "setHyperlinkBase", skip_jsdoc)]
     pub fn set_hyperlink_base(&self, hyperlink_base: &str) -> DocProperties {
-        DocProperties {
-            inner: self.clone().inner.set_hyperlink_base(hyperlink_base),
-        }
+        impl_method!(self.set_hyperlink_base(hyperlink_base));
     }
 }
