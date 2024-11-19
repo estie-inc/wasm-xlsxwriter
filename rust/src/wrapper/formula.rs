@@ -9,6 +9,18 @@ pub struct Formula {
     pub(crate) inner: Arc<Mutex<xlsx::Formula>>,
 }
 
+macro_rules! impl_method {
+    ($self:ident.$method:ident($($arg:expr),*)) => {
+        let mut lock = $self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Formula::new(""));
+        inner = inner.$method($($arg),*);
+        let _ = std::mem::replace(&mut *lock, inner);
+        return Formula {
+            inner: Arc::clone(&$self.inner),
+        }
+    };
+}
+
 #[wasm_bindgen]
 impl Formula {
     pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Formula> {
@@ -24,12 +36,6 @@ impl Formula {
 
     #[wasm_bindgen(js_name = "setResult")]
     pub fn set_result(&self, result: &str) -> Formula {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Formula::new(""));
-        inner = inner.set_result(result);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Formula {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_result(result));
     }
 }

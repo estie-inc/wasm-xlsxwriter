@@ -79,6 +79,18 @@ pub struct Url {
     pub(crate) inner: Arc<Mutex<xlsx::Url>>,
 }
 
+macro_rules! impl_method {
+    ($self:ident.$method:ident($($arg:expr),*)) => {
+        let mut lock = $self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
+        inner = inner.$method($($arg),*);
+        let _ = std::mem::replace(&mut *lock, inner);
+        return Url {
+            inner: Arc::clone(&$self.inner),
+        }
+    };
+}
+
 #[wasm_bindgen]
 impl Url {
     pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Url> {
@@ -104,13 +116,7 @@ impl Url {
     /// @returns {Url} - The url object.
     #[wasm_bindgen(js_name = "setText", skip_jsdoc)]
     pub fn set_text(&self, text: &str) -> Url {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
-        inner = inner.set_text(text);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Url {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_text(text));
     }
 
     /// Set the screen tip for the url.
@@ -121,12 +127,6 @@ impl Url {
     /// @returns {Url} - The url object.
     #[wasm_bindgen(js_name = "setTip", skip_jsdoc)]
     pub fn set_tip(&self, tip: &str) -> Url {
-        let mut lock = self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
-        inner = inner.set_tip(tip);
-        let _ = std::mem::replace(&mut *lock, inner);
-        Url {
-            inner: Arc::clone(&self.inner),
-        }
+        impl_method!(self.set_tip(tip));
     }
 }
