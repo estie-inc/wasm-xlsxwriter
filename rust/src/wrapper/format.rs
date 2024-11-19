@@ -3,9 +3,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::{DeepClone};
-
-use super::{color::Color};
+use super::color::Color;
 
 /// The `Format` struct is used to define cell formatting for data in a
 /// worksheet.
@@ -192,6 +190,15 @@ impl Format {
 
     pub(crate) fn get<'a>(&'a self) -> MutexGuard<'a, xlsx::Format> {
         self.inner.lock().unwrap()
+    }
+
+    /// Clone a Format object.
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Format {
+        let inner = self.inner.lock().unwrap();
+        Format {
+            inner: Arc::new(Mutex::new(inner.clone())),
+        }
     }
 
     /// Set the Format alignment properties.
@@ -796,20 +803,6 @@ impl Format {
         let _ = std::mem::replace(&mut *lock, inner);
         Format {
             inner: Arc::clone(&self.inner),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "clone")]
-    pub fn clone_format(&self) -> Format {
-        self.deep_clone()
-    }
-}
-
-impl DeepClone for Format {
-    fn deep_clone(&self) -> Self {
-        let inner = self.inner.lock().unwrap();
-        Format {
-            inner: Arc::new(Mutex::new(inner.clone())),
         }
     }
 }
