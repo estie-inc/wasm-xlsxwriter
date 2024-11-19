@@ -192,6 +192,15 @@ impl Format {
         self.inner.lock().unwrap()
     }
 
+    /// Clone a Format object.
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Format {
+        let inner = self.inner.lock().unwrap();
+        Format {
+            inner: Arc::new(Mutex::new(inner.clone())),
+        }
+    }
+
     /// Set the Format alignment properties.
     ///
     /// This method is used to set the horizontal and vertical data alignment
