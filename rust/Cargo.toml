@@ -10,6 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 chrono = "0.4.38"
-js-sys = "0.3.71"
-rust_xlsxwriter = { version = "0.79.0", features = ["wasm", "chrono"] }
+js-sys = "0.3.72"
+rust_xlsxwriter = { version = "0.79.4", features = ["wasm", "chrono"] }
 wasm-bindgen = "0.2.94"
