@@ -3,12 +3,14 @@ import {
   Format,
   FormatAlign,
   FormatBorder,
+  FormatDiagonalBorder,
+  FormatScript,
   FormatUnderline,
   Formula,
   Workbook,
 } from "../rust/pkg";
 import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile } from "./common";
+import { initWasModule, readXlsx, readXlsxFile, saveFile } from "./common";
 
 beforeAll(async () => {
   await initWasModule();
@@ -101,6 +103,11 @@ describe("xlsx-wasm test", () => {
       .setBorderDiagonal(FormatBorder.Dotted)
       .setBorderDiagonalColor(Color.rgb(0xff0000));
     worksheet.writeStringWithFormat(0, 3, "DDD", format4);
+
+    const format5 = new Format()
+      .setBorderDiagonal(FormatBorder.Thick)
+      .setBorderDiagonalType(FormatDiagonalBorder.BorderUp);
+    worksheet.writeStringWithFormat(0, 4, "EEE", format5);
 
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
@@ -223,6 +230,47 @@ describe("xlsx-wasm test", () => {
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
     const expected = await readXlsxFile("./expected/format_clone.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});
+
+describe("xlsx-wasm test", () => {
+  test("format script", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    const superscript = new Format().setFormatScript(FormatScript.Superscript);
+    const subscript = new Format().setFormatScript(FormatScript.Subscript);
+
+    worksheet.writeStringWithFormat(0, 0, "superscript", superscript);
+    worksheet.writeStringWithFormat(0, 1, "subscript", subscript);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/format_format_script.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});
+
+describe("xlsx-wasm test", () => {
+  test("format locked and unlocked", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    const locked = new Format().setLocked();
+    const unlocked = new Format().setUnlocked();
+
+    worksheet.protect();
+    worksheet.writeStringWithFormat(0, 0, "locked", locked);
+    worksheet.writeStringWithFormat(0, 1, "unlocked", unlocked);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/format_locked_unlocked.xlsx");
     expect(actual).matchXlsx(expected);
   });
 });
