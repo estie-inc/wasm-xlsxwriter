@@ -435,6 +435,28 @@ impl Format {
         impl_method!(self.set_border_diagonal_color(color.inner));
     }
 
+    /// Set the cell diagonal border direction type.
+    ///
+    /// See {@link Format#setBorderDiagonal} for details.
+    ///
+    /// @param {FormatDiagonalBorder}`border_type - The diagonal border type as defined by a {@link FormatDiagonalBorder} enum value.
+    /// @return {Format} - The Format instance.
+    #[wasm_bindgen(js_name = "setBorderDiagonalType", skip_jsdoc)]
+    pub fn set_border_diagonal_type(&self, border: FormatDiagonalBorder) -> Format {
+        impl_method!(self.set_border_diagonal_type(border.into()));
+    }
+
+    /// Set the hyperlink style.
+    ///
+    /// Set the hyperlink style for use with urls. This is usually set
+    /// automatically when writing urls without a format applied.
+    ///
+    /// @return {Format} - The Format instance.
+    #[wasm_bindgen(js_name = "setHyperlink", skip_jsdoc)]
+    pub fn set_hyperlink(&self) -> Format {
+        impl_method!(self.set_hyperlink());
+    }
+
     /// Set the color property for the Format font.
     ///
     /// The `setFontColor()` method is used to set the font color in a cell.
@@ -527,6 +549,15 @@ impl Format {
         impl_method!(self.set_font_strikethrough());
     }
 
+    /// Set the Format font strikethrough property.
+    ///
+    /// @param {boolean} strikethrough - The strikethrough property.
+    /// @return {Format} - The Format instance.
+    #[wasm_bindgen(js_name = "setFormatScript", skip_jsdoc)]
+    pub fn set_format_script(&self, script: FormatScript) -> Format {
+        impl_method!(self.set_font_script(script.into()));
+    }
+
     /// Set the Format pattern foreground color property.
     ///
     /// The `set_foreground_color` method can be used to set the
@@ -587,10 +618,11 @@ impl Format {
     /// To set the pattern colors see {@link Format#setBackgroundColor} and
     /// {@link Format#setForegroundColor}
     ///
+    /// TODO: example omitted
+    ///
     /// @param {FormatPattern} pattern - The pattern property defined by a {@link FormatPattern} enum
     ///   value.
-    ///
-    /// TODO: example omitted
+    /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setPattern", skip_jsdoc)]
     pub fn set_pattern(&self, pattern: FormatPattern) -> Format {
         impl_method!(self.set_pattern(pattern.into()));
@@ -605,19 +637,47 @@ impl Format {
     /// {@link Worksheet#protect} method.
     ///
     /// TODO: example omitted
+    ///
+    /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setHidden", skip_jsdoc)]
     pub fn set_hidden(&self) -> Format {
         impl_method!(self.set_hidden());
     }
 
-    #[wasm_bindgen(js_name = "setLocked")]
+    /// Set the locked Format property back to its default "on" state.
+    ///
+    /// The opposite of {Format#setUnlocked}.
+    ///
+    /// @return {Format} - The Format instance.
+    #[wasm_bindgen(js_name = "setLocked", skip_jsdoc)]
     pub fn set_locked(&self) -> Format {
         impl_method!(self.set_locked());
     }
 
-    #[wasm_bindgen(js_name = "setUnlocked")]
+    /// Set the Format cell unlocked state.
+    ///
+    /// This method can be used to allow modification of a cell in a protected
+    /// worksheet. In Excel, cell locking is turned on by default for all cells.
+    /// However, it only has an effect if the worksheet has been protected using
+    /// the {@link Worksheet#protect} method.
+    ///
+    /// @return {Format} - The Format instance.
+    #[wasm_bindgen(js_name = "setUnlocked", skip_jsdoc)]
     pub fn set_unlocked(&self) -> Format {
         impl_method!(self.set_unlocked());
+    }
+
+    /// Set the `quote_prefix` property for a Format.
+    ///
+    /// Set the quote prefix property of a format to ensure a string is treated
+    /// as a string after editing. This is the same as prefixing the string with
+    /// a single quote in Excel. You don't need to add the quote to the string
+    /// but you do need to add the format.
+    ///
+    /// @return {Format} - The Format instance.
+    #[wasm_bindgen(js_name = "setQuotePrefix", skip_jsdoc)]
+    pub fn set_quote_prefix(&self) -> Format {
+        impl_method!(self.set_quote_prefix());
     }
 }
 
@@ -680,10 +740,11 @@ impl From<FormatAlign> for xlsx::FormatAlign {
 
 /// The `FormatBorder` enum defines the Excel border types that can be added to
 /// a {@link Format} pattern.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 #[wasm_bindgen]
 pub enum FormatBorder {
     /// No border.
+    #[default]
     None,
     /// Thin border style.
     Thin,
@@ -733,11 +794,40 @@ impl From<FormatBorder> for xlsx::FormatBorder {
         }
     }
 }
+/// The `FormatDiagonalBorder` enum defines {@link Format} diagonal border types.
+///
+/// This is used with the {@link Format#setBorderDiagonal} method.
+///
+#[wasm_bindgen]
+#[derive(Debug, Clone, Copy, Default)]
+pub enum FormatDiagonalBorder {
+    /// The default/automatic format for an Excel font.
+    #[default]
+    None,
+    /// Cell diagonal border from bottom left to top right.
+    BorderUp,
+    /// Cell diagonal border from top left to bottom right.
+    BorderDown,
+    /// Cell diagonal border in both directions.
+    BorderUpDown,
+}
 
-#[derive(Debug, Clone, Copy)]
+impl From<FormatDiagonalBorder> for xlsx::FormatDiagonalBorder {
+    fn from(border: FormatDiagonalBorder) -> xlsx::FormatDiagonalBorder {
+        match border {
+            FormatDiagonalBorder::None => xlsx::FormatDiagonalBorder::None,
+            FormatDiagonalBorder::BorderUp => xlsx::FormatDiagonalBorder::BorderUp,
+            FormatDiagonalBorder::BorderDown => xlsx::FormatDiagonalBorder::BorderDown,
+            FormatDiagonalBorder::BorderUpDown => xlsx::FormatDiagonalBorder::BorderUpDown,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
 #[wasm_bindgen]
 pub enum FormatPattern {
     /// Automatic or Empty pattern.
+    #[default]
     None,
     /// Solid pattern.
     Solid,
@@ -810,10 +900,11 @@ impl From<FormatPattern> for xlsx::FormatPattern {
 /// accounting underline underlines the entire cell width.
 ///
 /// TODO: example omitted
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 #[wasm_bindgen]
 pub enum FormatUnderline {
     /// The default/automatic underline for an Excel font.
+    #[default]
     None,
     /// A single underline under the text/number in a cell.
     Single,
@@ -833,6 +924,31 @@ impl From<FormatUnderline> for xlsx::FormatUnderline {
             FormatUnderline::Double => xlsx::FormatUnderline::Double,
             FormatUnderline::SingleAccounting => xlsx::FormatUnderline::SingleAccounting,
             FormatUnderline::DoubleAccounting => xlsx::FormatUnderline::DoubleAccounting,
+        }
+    }
+}
+
+/// The `FormatScript` enum defines the {@link Format} font superscript and subscript
+/// properties.
+///
+#[derive(Clone, Copy, Default)]
+#[wasm_bindgen]
+pub enum FormatScript {
+    /// The default/automatic format for an Excel font.
+    #[default]
+    None,
+    /// The cell text is superscripted.
+    Superscript,
+    /// The cell text is subscripted.
+    Subscript,
+}
+
+impl From<FormatScript> for xlsx::FormatScript {
+    fn from(script: FormatScript) -> xlsx::FormatScript {
+        match script {
+            FormatScript::None => xlsx::FormatScript::None,
+            FormatScript::Superscript => xlsx::FormatScript::Superscript,
+            FormatScript::Subscript => xlsx::FormatScript::Subscript,
         }
     }
 }
