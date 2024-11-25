@@ -2,12 +2,16 @@
     "name": "wasm-xlsxwriter",
     "version": "0.1.7",
     "type": "module",
-    "main": "rust/pkg/wasm_xlsxwriter.js",
+    "main": "rust/pkg/nodejs/wasm_xlsxwriter.js",
+	"browser": "rust/pkg/web/wasm_xlsxwriter.js",
     "types": "rust/pkg/wasm_xlsxwriter.d.ts",
     "files": [
-        "rust/pkg/wasm_xlsxwriter_bg.wasm",
-        "rust/pkg/wasm_xlsxwriter.js",
-        "rust/pkg/wasm_xlsxwriter.d.ts"
+        "rust/pkg/web/wasm_xlsxwriter_bg.wasm",
+        "rust/pkg/web/wasm_xlsxwriter.js",
+        "rust/pkg/web/wasm_xlsxwriter.d.ts",
+        "rust/pkg/nodejs/wasm_xlsxwriter_bg.wasm",
+        "rust/pkg/nodejs/wasm_xlsxwriter.js",
+        "rust/pkg/nodejs/wasm_xlsxwriter.d.ts"
     ],
     "license": "MIT",
     "repository": {
@@ -15,7 +19,7 @@
         "url": "https://github.com/estie-inc/wasm-xlsxwriter"
     },
     "scripts": {
-        "build": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust --target web --release && rm rust/pkg/.gitignore",
+        "build": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust --target nodejs --out-dir pkg/nodejs --release && wasm-pack build ./rust --target web --out-dir pkg/web --release && rm rust/pkg/.gitignore",
         "test": "vitest"
     },
     "devDependencies": {
