@@ -102,6 +102,145 @@ impl Worksheet {
         Ok(self.clone())
     }
 
+
+/// Freeze panes in a worksheet.
+    ///
+    /// The `set_freeze_panes()` method can be used to divide a worksheet into
+    /// horizontal or vertical regions known as panes and to “freeze” these
+    /// panes so that the splitter bars are not visible.
+    ///
+    /// As with Excel the split is to the top and left of the cell. So to freeze
+    /// the top row and leftmost column you would use `(1, 1)` (zero-indexed).
+    /// Also, you can set one of the row and col parameters as 0 if you do not
+    /// want either the vertical or horizontal split. See the example below.
+    ///
+    /// In Excel it is also possible to set "split" panes without freezing them.
+    /// That feature isn't currently supported by `rust_xlsxwriter`.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    ///
+    /// # Errors
+    ///
+    /// - [`XlsxError::RowColumnLimitError`] - Row or column exceeds Excel's
+    ///   worksheet limits.
+    ///
+    /// # Examples
+    ///
+    /// The following example demonstrates setting the worksheet panes.
+    ///
+    /// ```
+    /// # // This code is available in examples/doc_worksheet_set_freeze_panes.rs
+    /// #
+    /// # use rust_xlsxwriter::{Workbook, Worksheet, XlsxError};
+    /// #
+    /// # fn main() -> Result<(), XlsxError> {
+    /// #     let mut workbook = Workbook::new();
+    /// #
+    /// #     let mut worksheet1 = Worksheet::new();
+    /// #     let mut worksheet2 = Worksheet::new();
+    /// #     let mut worksheet3 = Worksheet::new();
+    /// #
+    /// #     worksheet1.write_string(0, 0, "Scroll down")?;
+    /// #     worksheet2.write_string(0, 0, "Scroll across")?;
+    /// #     worksheet3.write_string(0, 0, "Scroll down or across")?;
+    /// #
+    ///     // Freeze the top row only.
+    ///     worksheet1.set_freeze_panes(1, 0)?;
+    ///
+    ///     // Freeze the leftmost column only.
+    ///     worksheet2.set_freeze_panes(0, 1)?;
+    ///
+    ///     // Freeze the top row and leftmost column.
+    ///     worksheet3.set_freeze_panes(1, 1)?;
+    /// #
+    /// #     workbook.push_worksheet(worksheet1);
+    /// #     workbook.push_worksheet(worksheet2);
+    /// #     workbook.push_worksheet(worksheet3);
+    /// #
+    /// #     workbook.save("worksheet.xlsx")?;
+    /// #
+    /// #     Ok(())
+    /// # }
+    /// ```
+    ///
+    /// Output file:
+    ///
+    /// <img src="https://rustxlsxwriter.github.io/images/worksheet_set_freeze_panes.png">
+    ///
+
+
+ 	#[wasm_bindgen(js_name = "setFreezePanes", skip_jsdoc)]
+    pub fn set_freeze_panes(&self, row: xlsx::RowNum, col: xlsx::ColNum,) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = map_xlsx_error(sheet.set_freeze_panes(row, col))?;
+        Ok(self.clone())
+    }
+
+/// Set the top most cell in the scrolling area of a freeze pane.
+    ///
+    /// This method is used in conjunction with the
+    /// [`Worksheet::set_freeze_panes()`] method to set the top most visible
+    /// cell in the scrolling range. For example you may want to freeze the top
+    /// row but have the worksheet pre-scrolled so that cell `A20` is visible in
+    /// the scrolled area. See the example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    ///
+    /// # Errors
+    ///
+    /// - [`XlsxError::RowColumnLimitError`] - Row or column exceeds Excel's
+    ///   worksheet limits.
+    ///
+    /// # Examples
+    ///
+    /// The following example demonstrates setting the worksheet panes and also
+    /// setting the topmost visible cell in the scrolled area.
+    ///
+    /// ```
+    /// # // This code is available in examples/doc_worksheet_set_freeze_panes_top_cell.rs
+    /// #
+    /// # use rust_xlsxwriter::{Workbook, XlsxError};
+    /// #
+    /// # fn main() -> Result<(), XlsxError> {
+    /// #     let mut workbook = Workbook::new();
+    /// #
+    /// #     let worksheet = workbook.add_worksheet();
+    /// #
+    /// #     worksheet.write_string(0, 0, "Scroll down")?;
+    /// #
+    ///     // Freeze the top row only.
+    ///     worksheet.set_freeze_panes(1, 0)?;
+    ///
+    ///     // Pre-scroll to the row 20.
+    ///     worksheet.set_freeze_panes_top_cell(19, 0)?;
+    /// #
+    /// #     workbook.save("worksheet.xlsx")?;
+    /// #
+    /// #     Ok(())
+    /// # }
+    /// ```
+    ///
+    /// Output file:
+    ///
+    /// <img
+    /// src="https://rustxlsxwriter.github.io/images/worksheet_set_freeze_panes_top_cell.png">
+    ///
+	#[wasm_bindgen(js_name = "setFreezePanesTopCell", skip_jsdoc)]
+    pub fn set_freeze_panes_top_cell(&self, row: xlsx::RowNum, col: xlsx::ColNum,) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = map_xlsx_error(sheet.set_freeze_panes_top_cell(row, col))?;
+        Ok(self.clone())
+    }
+
+
     /// Make a worksheet the active/initially visible worksheet in a workbook.
     ///
     /// The `set_active()` method is used to specify which worksheet is
