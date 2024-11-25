@@ -102,8 +102,7 @@ impl Worksheet {
         Ok(self.clone())
     }
 
-
-/// Freeze panes in a worksheet.
+    /// Freeze panes in a worksheet.
     ///
     /// The `set_freeze_panes()` method can be used to divide a worksheet into
     /// horizontal or vertical regions known as panes and to “freeze” these
@@ -127,7 +126,7 @@ impl Worksheet {
     /// - [`XlsxError::RowColumnLimitError`] - Row or column exceeds Excel's
     ///   worksheet limits.
     ///
- 	#[wasm_bindgen(js_name = "setFreezePanes", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "setFreezePanes", skip_jsdoc)]
     pub fn set_freeze_panes(&self, row: xlsx::RowNum, col: xlsx::ColNum) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
@@ -135,7 +134,7 @@ impl Worksheet {
         Ok(self.clone())
     }
 
-/// Set the top most cell in the scrolling area of a freeze pane.
+    /// Set the top most cell in the scrolling area of a freeze pane.
     ///
     /// This method is used in conjunction with the
     /// [`Worksheet::set_freeze_panes()`] method to set the top most visible
@@ -153,14 +152,17 @@ impl Worksheet {
     /// - [`XlsxError::RowColumnLimitError`] - Row or column exceeds Excel's
     ///   worksheet limits.
     ///
-	#[wasm_bindgen(js_name = "setFreezePanesTopCell", skip_jsdoc)]
-    pub fn set_freeze_panes_top_cell(&self, row: xlsx::RowNum, col: xlsx::ColNum) -> WasmResult<Worksheet> {
+    #[wasm_bindgen(js_name = "setFreezePanesTopCell", skip_jsdoc)]
+    pub fn set_freeze_panes_top_cell(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+    ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = map_xlsx_error(sheet.set_freeze_panes_top_cell(row, col))?;
         Ok(self.clone())
     }
-
 
     /// Make a worksheet the active/initially visible worksheet in a workbook.
     ///
