@@ -142,7 +142,10 @@ describe("xlsx-wasm test", () => {
 	  const worksheet = workbook.addWorksheet();
 	  worksheet.write(0, 0, "Hello");
 	  worksheet.write(1, 0, "world");
+	  worksheet.write(2, 0, "Should be at top after hello row when opening");
+	  worksheet.write(3, 0, "Another row");
 	  worksheet.setFreezePanes(1, 0);
+	  worksheet.setFreezePanesTopCell(2, 0);
 
 	  // Assert
 	  const actual = await readXlsx(workbook.saveToBufferSync());
