@@ -19,7 +19,7 @@
         "url": "https://github.com/estie-inc/wasm-xlsxwriter"
     },
     "scripts": {
-        "build": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust --target nodejs --out-dir pkg/nodejs --release && wasm-pack build ./rust --target web --out-dir pkg/web --release && rm rust/pkg/.gitignore",
+        "build": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust --target nodejs --out-dir pkg/nodejs --release && wasm-pack build ./rust --target web --out-dir pkg/web --release && rm rust/pkg/web/.gitignore && rm rust/pkg/nodejs/.gitignore",
         "test": "vitest"
     },
     "devDependencies": {
