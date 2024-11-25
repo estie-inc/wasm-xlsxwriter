@@ -2,11 +2,11 @@ import fs from "fs";
 import path from "path";
 import { assert } from "console";
 import unzipper from "unzipper";
-import initWasmBindgen from "../rust/pkg";
+import initWasmBindgen from "../rust/pkg/web";
 
 export async function initWasModule() {
   const wasmSource = await fs.promises.readFile(
-    "rust/pkg/wasm_xlsxwriter_bg.wasm"
+    "rust/pkg/web/wasm_xlsxwriter_bg.wasm"
   );
   const wasmModule = await WebAssembly.compile(wasmSource);
   await initWasmBindgen({ module_or_path: wasmModule });
