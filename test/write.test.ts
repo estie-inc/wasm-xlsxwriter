@@ -115,7 +115,8 @@ describe("xlsx-wasm test", () => {
   test("write rich string", async () => {
     // Arrange
     const workbook = new Workbook();
-    const richStr1 = new RichString().append(new Format(), "Hello, ")
+    const richStr1 = new RichString()
+      .append(new Format(), "Hello, ")
       .append(new Format().setBold(), "World!");
     const richStr2 = new RichString();
     richStr2.append(new Format().setItalic(), "Bonjour, ");
@@ -134,22 +135,23 @@ describe("xlsx-wasm test", () => {
   });
 });
 
-
 describe("xlsx-wasm test", () => {
-	test("freeze header", async () => {
-	  // Arrange
-	  const workbook = new Workbook();
-	  const worksheet = workbook.addWorksheet();
-	  worksheet.write(0, 0, "Hello");
-	  worksheet.write(1, 0, "world");
-	  worksheet.write(2, 0, "Should be at top after hello row when opening");
-	  worksheet.write(3, 0, "Another row");
-	  worksheet.setFreezePanes(1, 0);
-	  worksheet.setFreezePanesTopCell(2, 0);
+  test("freeze header", async () => {
+    // Arrange
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, "Hello");
+    worksheet.write(1, 0, "world");
+    worksheet.write(2, 0, "Should be at top after hello row when opening");
+    worksheet.write(3, 0, "Another row");
 
-	  // Assert
-	  const actual = await readXlsx(workbook.saveToBufferSync());
-	  const expected = await readXlsxFile("./expected/write_freeze_panes.xlsx");
-	  expect(actual).matchXlsx(expected);
-	});
+    // Act
+    worksheet.setFreezePanes(1, 0);
+    worksheet.setFreezePanesTopCell(2, 0);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/write_freeze_panes.xlsx");
+    expect(actual).matchXlsx(expected);
   });
+});
