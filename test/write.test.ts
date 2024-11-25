@@ -133,3 +133,20 @@ describe("xlsx-wasm test", () => {
     expect(actual).matchXlsx(expected);
   });
 });
+
+
+describe("xlsx-wasm test", () => {
+	test("freeze header", async () => {
+	  // Arrange
+	  const workbook = new Workbook();
+	  const worksheet = workbook.addWorksheet();
+	  worksheet.write(0, 0, "Hello");
+	  worksheet.write(1, 0, "world");
+	  worksheet.setFreezePanes(1, 0);
+
+	  // Assert
+	  const actual = await readXlsx(workbook.saveToBufferSync());
+	  const expected = await readXlsxFile("./expected/write_freeze_panes.xlsx");
+	  expect(actual).matchXlsx(expected);
+	});
+  });
