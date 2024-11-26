@@ -123,7 +123,7 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
     worksheet.autofit();
 
     // Freeze header
-    worksheet.setFreezePanes(0, 0);
+    worksheet.setFreezePanes(1, 0);
 
     // Add autofilter to header
     worksheet.autofilter(0, 0, rows.length, header.length - 1);
