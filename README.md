@@ -83,69 +83,55 @@ const buf = workbook.saveToBufferSync();
 ```
 
 ### Usage Node.js
-```js
-const {
-	Format,
-	FormatAlign,
-	FormatBorder,
-	FormatScript,
-	DocProperties,
-	Color,
-	Workbook
-} = require('wasm-xlsxwriter');
+```ts
+import { Color, DocProperties, Format, FormatAlign, Workbook } from "wasm_xlsxwriter";
 
 /**
  * Demo function that create a xlsx buffer from a header array and data rows 
  *
- * @param {Array.<String>} header - Sheet header strings
- * @param {Array.<Array<*>>} rows - Array of arrays containing sheet rows
- * @returns {Buffer} xlsx file data
+ * @param {string[]} header - Sheet header strings
+ * @param {(string | number)[][]} rows - Array of arrays containing sheet rows
+ * @returns {Buffer} Excel file data
  */
-function exportXlsx(header, rows) {
-	// Create a new Excel file object.
-	const workbook = new Workbook();
+function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
+    // Create a new Excel file object.
+    const workbook = new Workbook();
 
-	// Set a doc property
-	const props = new DocProperties();
-	props.setCompany('Test Inc.');
-	workbook.setProperties(props);
+    // Set a doc property
+    const props = new DocProperties()
+        .setCompany('Test, Inc.');
+    workbook.setProperties(props);
 
-	// Add a worksheet with name to the workbook.
-	const worksheet = workbook.addWorksheet();
-	worksheet.setName('Export');
+    // Add a worksheet with name to the workbook.
+    const worksheet = workbook.addWorksheet();
+    worksheet.setName('Export');
 
-	// Create some formats to use in the worksheet.
-	const headerStyle = new Format();
-	headerStyle.setAlign(FormatAlign.Top).setAlign(FormatAlign.Left).setTextWrap().setBackgroundColor(Color.rgb(0xe2eee8));
-	headerStyle.setBorderBottom(FormatBorder.Medium).setBorderBottomColor(Color.rgb(0x0B703D));
-	headerStyle.setBorderRight(FormatBorder.Thin).setBorderRightColor(Color.rgb(0x0B703D));
-	const defaultStyle = new Format().setTextWrap().setAlign(FormatAlign.Top);
+    // Create some formats to use in the worksheet.
+    const headerStyle = new Format();
+    headerStyle
+        .setAlign(FormatAlign.Top)
+        .setTextWrap()
+        .setBackgroundColor(Color.red());
 
-	// Write sheet header
-	for (const [x, col] of header.entries()) {
-		worksheet.writeWithFormat(0, x, col, headerStyle);
-	}
+    // Write sheet header
+    worksheet.writeRowWithFormat(0, 0, header, headerStyle)
 
-	// Write sheet data
-	for (const [y, row] of rows.entries()) {
-		for (const [x, col] of row.entries()) {
-			worksheet.writeWithFormat(y + 1, x, col, defaultStyle);
-		}
-	}
+    // Write sheet data
+    worksheet.writeRowMatrix(1, 0, rows);
 
-	// Autofit columns
-	worksheet.autofit();
+    // Autofit columns
+    worksheet.autofit();
 
-	// Freeze header
-	worksheet.setFreezePanes(1, 0);
+    // Freeze header
+    worksheet.setFreezePanes(0, 0);
 
-	// Add autofilter to header
-	worksheet.autofilter(0, 0, rows.length, header.length - 1);
+    // Add autofilter to header
+    worksheet.autofilter(0, 0, rows.length, header.length - 1);
 
-	// Return buffer with xlsx data
-	return workbook.saveToBufferSync();
-});
-```
+    // Return buffer with xlsx data
+    const uint8Array = workbook.saveToBufferSync();
+    return Buffer.from(uint8Array);
+}
 
 
 ## License
