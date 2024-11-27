@@ -19,15 +19,16 @@
         "url": "https://github.com/estie-inc/wasm-xlsxwriter"
     },
     "scripts": {
-        "build": "RUSTFLAGS='-C target-feature=+bulk-memory' node ./build.js",
+        "build": "cross-env RUSTFLAGS='-C target-feature=+bulk-memory' node ./build.js",
         "test": "vitest"
     },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.5",
         "@types/node": "22.9.4",
         "@types/unzipper": "0.10.10",
-        "shelljs": "^0.8.5",
+        "cross-env": "^7.0.3",
         "jsdom": "25.0.1",
+        "shelljs": "^0.8.5",
         "typescript": "5.7.2",
         "unzipper": "0.12.3",
         "vitest": "2.1.5",
