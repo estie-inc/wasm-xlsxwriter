@@ -1,6 +1,6 @@
 {
     "name": "wasm-xlsxwriter",
-    "version": "0.1.8",
+    "version": "0.3.0",
     "type": "module",
     "main": "rust/pkg/nodejs/wasm_xlsxwriter.js",
     "browser": "rust/pkg/web/wasm_xlsxwriter.js",
