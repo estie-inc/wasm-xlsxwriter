@@ -15,4 +15,4 @@ shell.exec('wasm-pack build ./rust --target nodejs --out-dir pkg/nodejs --releas
 shell.exec('wasm-pack build ./rust --target web --out-dir pkg/web --release');
 
 // Clean up
-shell.rm('rust/pkg/*/{package.json,.gitignore}');
+shell.rm('rust/pkg/*/.gitignore');
