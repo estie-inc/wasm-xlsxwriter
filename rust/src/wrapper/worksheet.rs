@@ -1100,7 +1100,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.embed_image(row, col, &image.inner))?;
+        let _ = map_xlsx_error(sheet.embed_image(row, col, &image.lock()))?;
         Ok(self.clone())
     }
 
@@ -1115,7 +1115,7 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ =
-            map_xlsx_error(sheet.embed_image_with_format(row, col, &image.inner, &format.lock()))?;
+            map_xlsx_error(sheet.embed_image_with_format(row, col, &image.lock(), &format.lock()))?;
         Ok(self.clone())
     }
 
@@ -1167,7 +1167,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.insert_image(row, col, &image.inner))?;
+        let _ = map_xlsx_error(sheet.insert_image(row, col, &image.lock()))?;
         Ok(self.clone())
     }
 
@@ -1185,7 +1185,7 @@ impl Worksheet {
         let _ = map_xlsx_error(sheet.insert_image_with_offset(
             row,
             col,
-            &image.inner,
+            &image.lock(),
             x_offset,
             y_offset,
         ))?;
@@ -1205,7 +1205,7 @@ impl Worksheet {
         let _ = map_xlsx_error(sheet.insert_image_fit_to_cell(
             row,
             col,
-            &image.inner,
+            &image.lock(),
             keep_aspect_ratio,
         ))?;
         Ok(self.clone())
