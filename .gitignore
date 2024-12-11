@@ -1,5 +1,6 @@
 rust/target
 rust/pkg
+pkg.*
 
 **/node_modules
 **/*.xlsx

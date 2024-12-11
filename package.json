@@ -2,16 +2,12 @@
     "name": "wasm-xlsxwriter",
     "version": "0.3.0",
     "type": "module",
-    "main": "rust/pkg/nodejs/wasm_xlsxwriter.js",
-    "browser": "rust/pkg/web/wasm_xlsxwriter.js",
-    "types": "rust/pkg/wasm_xlsxwriter.d.ts",
+    "types": "./pkg.node/wasm_xlsxwriter.d.ts",
+    "main": "./pkg.node/wasm_xlsxwriter.js",
+    "browser": "./pkg.web/wasm_xlsxwriter.js",
     "files": [
-        "rust/pkg/web/wasm_xlsxwriter_bg.wasm",
-        "rust/pkg/web/wasm_xlsxwriter.js",
-        "rust/pkg/web/wasm_xlsxwriter.d.ts",
-        "rust/pkg/nodejs/wasm_xlsxwriter_bg.wasm",
-        "rust/pkg/nodejs/wasm_xlsxwriter.js",
-        "rust/pkg/nodejs/wasm_xlsxwriter.d.ts"
+        "pkg.web",
+        "pkg.node"
     ],
     "license": "MIT",
     "repository": {
