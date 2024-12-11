@@ -4,7 +4,7 @@ import {
   TableColumn,
   Formula,
   Table,
-} from "../rust/pkg/web";
+} from "../pkg.web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 

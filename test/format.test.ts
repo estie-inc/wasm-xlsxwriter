@@ -8,7 +8,7 @@ import {
   FormatUnderline,
   Formula,
   Workbook,
-} from "../rust/pkg/web";
+} from "../pkg.web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile, saveFile } from "./common";
 

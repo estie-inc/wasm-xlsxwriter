@@ -1,4 +1,4 @@
-import { Workbook } from "../rust/pkg/web";
+import { Workbook } from "../pkg.web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 
