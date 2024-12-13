@@ -1,5 +1,5 @@
 "use client";
-import initModule, { Workbook } from "../../../pkg.web/";
+import initModule, { Workbook } from "wasm-xlsxwriter/pkg.web";
 
 export default function Page() {
   return (
