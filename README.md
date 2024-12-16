@@ -132,7 +132,7 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
     const uint8Array = workbook.saveToBufferSync();
     return Buffer.from(uint8Array);
 }
-
+```
 
 ## License
 
