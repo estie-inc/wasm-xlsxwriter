@@ -1,6 +1,6 @@
 rust/target
-rust/pkg
-pkg.*
+nodejs/
+web/
 
 **/node_modules
 **/*.xlsx
@@ -9,3 +9,4 @@ pkg.*
 **/dist
 
 docs/
+

@@ -2,12 +2,10 @@ import fs from "fs";
 import path from "path";
 import { assert } from "console";
 import unzipper from "unzipper";
-import initWasmBindgen from "../pkg.web";
+import initWasmBindgen from "../web";
 
 export async function initWasModule() {
-  const wasmSource = await fs.promises.readFile(
-    "pkg.web/wasm_xlsxwriter_bg.wasm"
-  );
+  const wasmSource = await fs.promises.readFile("web/wasm_xlsxwriter_bg.wasm");
   const wasmModule = await WebAssembly.compile(wasmSource);
   await initWasmBindgen({ module_or_path: wasmModule });
 }

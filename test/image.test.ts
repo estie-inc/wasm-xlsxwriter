@@ -1,4 +1,4 @@
-import { Workbook, Image } from "../pkg.web";
+import { Workbook, Image } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 

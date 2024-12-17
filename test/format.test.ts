@@ -8,7 +8,7 @@ import {
   FormatUnderline,
   Formula,
   Workbook,
-} from "../pkg.web";
+} from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile, saveFile } from "./common";
 
@@ -168,7 +168,7 @@ describe("xlsx-wasm test", () => {
 });
 
 describe("xlsx-wasm test", () => {
-  test('use width and height', async () => {
+  test("use width and height", async () => {
     // Arrange
     const workbook = new Workbook();
     const worksheet = workbook.addWorksheet();
@@ -197,13 +197,13 @@ describe("xlsx-wasm test", () => {
     const worksheet = workbook.addWorksheet();
     const format = new Format();
     format
-      .setFontName('Meiryo UI')
+      .setFontName("Meiryo UI")
       .setFontSize(16)
       .setAlign(FormatAlign.Center)
       .setBorder(FormatBorder.Thin);
 
-    worksheet.writeWithFormat(0, 0, 'foo', format);
-    worksheet.writeWithFormat(1, 1, 'bar', format);
+    worksheet.writeWithFormat(0, 0, "foo", format);
+    worksheet.writeWithFormat(1, 1, "bar", format);
 
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
@@ -270,7 +270,9 @@ describe("xlsx-wasm test", () => {
 
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
-    const expected = await readXlsxFile("./expected/format_locked_unlocked.xlsx");
+    const expected = await readXlsxFile(
+      "./expected/format_locked_unlocked.xlsx"
+    );
     expect(actual).matchXlsx(expected);
   });
 });

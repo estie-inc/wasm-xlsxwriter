@@ -2,12 +2,12 @@
     "name": "wasm-xlsxwriter",
     "version": "0.3.0",
     "type": "module",
-    "types": "./pkg.node/wasm_xlsxwriter.d.ts",
-    "main": "./pkg.node/wasm_xlsxwriter.js",
-    "browser": "./pkg.web/wasm_xlsxwriter.js",
+    "main": "nodejs/wasm_xlsxwriter.js",
+    "types": "nodejs/wasm_xlsxwriter.d.ts",
+    "browser": "web/wasm_xlsxwriter.js",
     "files": [
-        "pkg.web",
-        "pkg.node"
+        "web",
+        "nodejs"
     ],
     "license": "MIT",
     "repository": {
@@ -15,18 +15,19 @@
         "url": "https://github.com/estie-inc/wasm-xlsxwriter"
     },
     "scripts": {
-        "build": "RUSTFLAGS='-C target-feature=+bulk-memory' node ./build.js",
+        "build": "npm run build:web && npm run build:nodejs",
+        "build:web": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust -t web -d ../web --release && rm ./web/.gitignore",
+        "build:nodejs": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust -t nodejs -d ../nodejs --release && rm ./nodejs/.gitignore",
         "test": "vitest"
     },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.5",
-        "@types/node": "22.9.4",
+        "@types/node": "22.10.1",
         "@types/unzipper": "0.10.10",
         "jsdom": "25.0.1",
-        "shelljs": "^0.8.5",
         "typescript": "5.7.2",
         "unzipper": "0.12.3",
-        "vitest": "2.1.5",
+        "vitest": "2.1.8",
         "wasm-pack": "0.13.1"
     }
 }
