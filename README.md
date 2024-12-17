@@ -25,7 +25,7 @@ import xlsxInit, {
   Workbook,
   Image,
   Url,
-} from "wasm-xlsxwriter";
+} from "wasm-xlsxwriter/web";
 
 // Load the WebAssembly module and initialize the library.
 await xlsxInit();
