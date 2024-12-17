@@ -1,8 +1,8 @@
 # wasm-xlsxwriter [![NPM Version](https://img.shields.io/npm/v/wasm-xlsxwriter)](https://www.npmjs.com/package/wasm-xlsxwriter)
 
-The `wasm-xlsxwriter` library is a lightweight wrapper around the write API of Rust's [`rust_xlsxwriter`](https://crates.io/crates/rust_xlsxwriter), compiled to WebAssembly (Wasm) with minimal setup to make it easily usable from JavaScript.
+The `wasm-xlsxwriter` library is a lightweight wrapper around the write API of Rust's [`rust_xlsxwriter`](https://crates.io/crates/rust_xlsxwriter), compiled to WebAssembly (Wasm) with minimal setup to make it easily usable from JavaScript or Node.js.
 
-With this library, you can generate Excel files in the browser using JavaScript, complete with support for custom formatting, formulas, links, images, and more.
+With this library, you can generate Excel files in the browser or Node.js using JavaScript, complete with support for custom formatting, formulas, links, images, and more.
 
 ## Getting Started
 
@@ -12,7 +12,7 @@ To get started, install the library via npm:
 npm install wasm-xlsxwriter
 ```
 
-### Usage
+### Usage Web
 
 Here’s an example of how to use `wasm-xlsxwriter` to create an Excel file:
 
@@ -25,7 +25,7 @@ import xlsxInit, {
   Workbook,
   Image,
   Url,
-} from "wasm-xlsxwriter";
+} from "wasm-xlsxwriter/web";
 
 // Load the WebAssembly module and initialize the library.
 await xlsxInit();
@@ -80,6 +80,64 @@ worksheet.insertImage(1, 2, image);
 
 // Save the file to a buffer.
 const buf = workbook.saveToBufferSync();
+```
+
+### Usage Node.js
+
+```ts
+import {
+  Color,
+  DocProperties,
+  Format,
+  FormatAlign,
+  Workbook,
+} from "wasm-xlsxwriter";
+
+/**
+ * Demo function that create a xlsx buffer from a header array and data rows
+ *
+ * @param {string[]} header - Sheet header strings
+ * @param {(string | number)[][]} rows - Array of arrays containing sheet rows
+ * @returns {Buffer} Excel file data
+ */
+function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
+  // Create a new Excel file object.
+  const workbook = new Workbook();
+
+  // Set a doc property
+  const props = new DocProperties().setCompany("Test, Inc.");
+  workbook.setProperties(props);
+
+  // Add a worksheet with name to the workbook.
+  const worksheet = workbook.addWorksheet();
+  worksheet.setName("Export");
+
+  // Create some formats to use in the worksheet.
+  const headerStyle = new Format();
+  headerStyle
+    .setAlign(FormatAlign.Top)
+    .setTextWrap()
+    .setBackgroundColor(Color.red());
+
+  // Write sheet header
+  worksheet.writeRowWithFormat(0, 0, header, headerStyle);
+
+  // Write sheet data
+  worksheet.writeRowMatrix(1, 0, rows);
+
+  // Autofit columns
+  worksheet.autofit();
+
+  // Freeze header
+  worksheet.setFreezePanes(1, 0);
+
+  // Add autofilter to header
+  worksheet.autofilter(0, 0, rows.length, header.length - 1);
+
+  // Return buffer with xlsx data
+  const uint8Array = workbook.saveToBufferSync();
+  return Buffer.from(uint8Array);
+}
 ```
 
 ## License

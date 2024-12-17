@@ -21,3 +21,8 @@ jobs:
           cd examples/nextjs
           npm ci
           npm run build
+      - run: |
+          cd examples/nodejs
+          npm ci
+          npm run build
+          npm run start
