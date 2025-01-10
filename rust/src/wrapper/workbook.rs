@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::XlsxError,
-    wrapper::{doc_properties::DocProperties, map_xlsx_error, worksheet::Worksheet},
+    wrapper::{doc_properties::DocProperties, worksheet::Worksheet},
 };
 
 use super::WasmResult;
@@ -34,6 +34,7 @@ impl Workbook {
     /// TODO: example omitted
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
+        console_error_panic_hook::set_once();
         Workbook {
             inner: Arc::new(Mutex::new(xlsx::Workbook::new())),
             next_sheet_index: 0,
@@ -71,10 +72,7 @@ impl Workbook {
         self.next_sheet_index += 1;
         let mut workbook = self.inner.lock().unwrap();
         let _ = workbook.add_worksheet();
-        Worksheet {
-            workbook: Arc::clone(&self.inner),
-            index,
-        }
+        Worksheet::new(Arc::clone(&self.inner), index)
     }
 
     /// Get a worksheet reference by index.
@@ -112,11 +110,8 @@ impl Workbook {
     pub fn worksheet_from_index(&self, index: usize) -> WasmResult<Worksheet> {
         // Reimplementation of [`rust_xlsxwriter::Workbook::worksheet_from_name()`]
         let mut workbook = self.inner.lock().unwrap();
-        let _ = map_xlsx_error(workbook.worksheet_from_index(index))?;
-        Ok(Worksheet {
-            workbook: Arc::clone(&self.inner),
-            index,
-        })
+        let _ = workbook.worksheet_from_index(index)?;
+        Ok(Worksheet::new(Arc::clone(&self.inner), index))
     }
 
     /// Get a worksheet reference by name.
@@ -160,10 +155,7 @@ impl Workbook {
         let mut workbook = self.inner.lock().unwrap();
         for (index, worksheet) in workbook.worksheets().iter().enumerate() {
             if worksheet.name() == name {
-                return Ok(Worksheet {
-                    workbook: Arc::clone(&self.inner),
-                    index,
-                });
+                return Ok(Worksheet::new(Arc::clone(&self.inner), index));
             }
         }
         Err(XlsxError::Xlsx(
@@ -253,7 +245,7 @@ impl Workbook {
     #[wasm_bindgen(js_name = "saveToBufferSync")]
     pub fn save_to_buffer_sync(&self) -> WasmResult<Vec<u8>> {
         let mut workbook = self.inner.lock().unwrap();
-        let buf = map_xlsx_error(workbook.save_to_buffer())?;
+        let buf = workbook.save_to_buffer()?;
         Ok(buf)
     }
 

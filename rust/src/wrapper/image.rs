@@ -5,8 +5,6 @@ use wasm_bindgen::prelude::*;
 
 use crate::wrapper::WasmResult;
 
-use super::map_xlsx_error;
-
 /// Since the xlsx::Image does not have a default value, we use the smallest PNG image data as a dummy data.
 fn new_dummy_image() -> xlsx::Image {
     // Smallest PNG in bytes.
@@ -81,7 +79,7 @@ impl Image {
     ///   the dimensions couldn't be read.
     #[wasm_bindgen(constructor, skip_jsdoc)]
     pub fn new(buffer: Vec<u8>) -> WasmResult<Image> {
-        let image = map_xlsx_error(xlsx::Image::new_from_buffer(&buffer))?;
+        let image = xlsx::Image::new_from_buffer(&buffer)?;
         Ok(Image {
             inner: Arc::new(Mutex::new(image)),
         })
