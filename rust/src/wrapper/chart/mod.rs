@@ -33,6 +33,10 @@ impl Chart {
         }
     }
 
+    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Chart> {
+        self.inner.lock().unwrap()
+    }
+
     #[wasm_bindgen(js_name = "newArea")]
     pub fn new_area() -> Chart {
         Chart {
