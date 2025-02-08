@@ -5,8 +5,8 @@ use rust_xlsxwriter as xlsx;
 use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::wrapper::{
-    excel_data::ExcelData, format::Format, image::Image, map_xlsx_error, table::Table, utils,
-    WasmResult,
+    chart::Chart, excel_data::ExcelData, format::Format, image::Image, map_xlsx_error,
+    table::Table, utils, WasmResult,
 };
 
 use super::{
@@ -1207,6 +1207,58 @@ impl Worksheet {
             col,
             &image.lock(),
             keep_aspect_ratio,
+        ))?;
+        Ok(self.clone())
+    }
+
+    /// Add an chart to a worksheet.
+    ///
+    /// Add a chart to a worksheet at a cell location. The chart should be
+    /// encapsulated in an {@link Chart} object.
+    ///
+    /// The chart can be inserted as an object or as a background image.
+    ///
+    /// @param {number} row - The zero indexed row number.
+    /// @param {number} col - The zero indexed column number.
+    /// @param {Chart} chart - The {@link Chart} to insert into the cell.
+    /// @returns {Worksheet} - The worksheet object.
+    ///
+    /// # Errors
+    ///
+    /// - [`XlsxError::RowColumnLimitError`] - Row or column exceeds Excel's
+    ///   worksheet limits.
+    ///
+    /// TODO: example omitted
+    #[wasm_bindgen(js_name = "insertChart", skip_jsdoc)]
+    pub fn insert_chart(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        chart: &Chart,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = map_xlsx_error(sheet.insert_chart(row, col, &chart.lock()))?;
+        Ok(self.clone())
+    }
+
+    #[wasm_bindgen(js_name = "insertChartWithOffset")]
+    pub fn insert_chart_with_offset(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        chart: &Chart,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = map_xlsx_error(sheet.insert_chart_with_offset(
+            row,
+            col,
+            &chart.lock(),
+            x_offset,
+            y_offset,
         ))?;
         Ok(self.clone())
     }
