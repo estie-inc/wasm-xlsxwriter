@@ -1,6 +1,6 @@
 {
     "name": "wasm-xlsxwriter",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "type": "module",
     "main": "nodejs/wasm_xlsxwriter.js",
     "types": "nodejs/wasm_xlsxwriter.d.ts",
