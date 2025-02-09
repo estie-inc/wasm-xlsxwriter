@@ -53,6 +53,9 @@ describe("xlsx-wasm test", () => {
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
     chart.setWidth(640).setHeight(480);
+    // TODO: setName is not working
+    chart.xAxis().setName("x-axis");
+    chart.yAxis().setName("y-axis");
 
     worksheet.insertChart(0, 3, chart);
 

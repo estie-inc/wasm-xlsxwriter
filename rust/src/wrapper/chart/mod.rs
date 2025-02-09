@@ -1,3 +1,4 @@
+mod chart_axis;
 mod chart_format;
 mod chart_point;
 mod chart_range;
@@ -7,6 +8,7 @@ mod chart_type;
 
 use std::sync::{Arc, Mutex};
 
+use chart_axis::ChartAxis;
 use chart_series::ChartSeries;
 use chart_title::ChartTitle;
 use chart_type::ChartType;
@@ -163,6 +165,24 @@ impl Chart {
         chart.set_height(height);
         Chart {
             inner: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "xAxis", skip_jsdoc)]
+    pub fn x_axis(&self) -> ChartAxis {
+        let mut chart = self.inner.lock().unwrap();
+        let axis = chart.x_axis();
+        ChartAxis {
+            inner: Arc::new(Mutex::new(axis.clone())),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "yAxis", skip_jsdoc)]
+    pub fn y_axis(&self) -> ChartAxis {
+        let mut chart = self.inner.lock().unwrap();
+        let axis = chart.y_axis();
+        ChartAxis {
+            inner: Arc::new(Mutex::new(axis.clone())),
         }
     }
 }
