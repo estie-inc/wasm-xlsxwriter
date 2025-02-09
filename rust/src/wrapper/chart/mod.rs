@@ -1,5 +1,7 @@
 mod chart_axis;
 mod chart_format;
+mod chart_legend;
+mod chart_legend_position;
 mod chart_point;
 mod chart_range;
 mod chart_series;
@@ -9,6 +11,7 @@ mod chart_type;
 use std::sync::{Arc, Mutex};
 
 use chart_axis::ChartAxis;
+use chart_legend::ChartLegend;
 use chart_series::ChartSeries;
 use chart_title::ChartTitle;
 use chart_type::ChartType;
@@ -183,6 +186,15 @@ impl Chart {
         let axis = chart.y_axis();
         ChartAxis {
             inner: Arc::new(Mutex::new(axis.clone())),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "legend", skip_jsdoc)]
+    pub fn legend(&self) -> ChartLegend {
+        let mut chart = self.inner.lock().unwrap();
+        let legend = chart.legend();
+        ChartLegend {
+            inner: Arc::new(Mutex::new(legend.clone())),
         }
     }
 }
