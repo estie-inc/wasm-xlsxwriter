@@ -4,6 +4,7 @@ import {
   ChartType,
   ChartSeries,
   ChartRange,
+  ChartLegendPosition,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -52,6 +53,12 @@ describe("xlsx-wasm test", () => {
       .setName("Score Transition")
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
+    chart.setWidth(640).setHeight(480);
+    // TODO: axis is not working
+    chart.xAxis().setName("x-axis");
+    chart.yAxis().setName("y-axis");
+    // TODO: legend is not working
+    chart.legend().setPosition(ChartLegendPosition.Bottom);
 
     worksheet.insertChart(0, 3, chart);
 
