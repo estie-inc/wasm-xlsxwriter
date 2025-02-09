@@ -13,11 +13,11 @@ pub struct ChartAxis {
 #[wasm_bindgen]
 impl ChartAxis {
     #[wasm_bindgen(js_name = "setName", skip_jsdoc)]
-    pub fn set_name(&mut self, name: &str) -> ChartAxis {
+    pub fn set_name(&self, name: &str) -> ChartAxis {
         let mut axis = self.inner.lock().unwrap();
         axis.set_name(name);
         ChartAxis {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -26,16 +26,16 @@ impl ChartAxis {
         let mut axis = self.inner.lock().unwrap();
         axis.set_format(&mut format.inner);
         ChartAxis {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
     #[wasm_bindgen(js_name = "setNumFormat", skip_jsdoc)]
-    pub fn set_num_format(&mut self, num_format: &str) -> ChartAxis {
+    pub fn set_num_format(&self, num_format: &str) -> ChartAxis {
         let mut axis = self.inner.lock().unwrap();
         axis.set_num_format(num_format);
         ChartAxis {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -44,7 +44,7 @@ impl ChartAxis {
         let mut axis = self.inner.lock().unwrap();
         axis.set_min(min);
         ChartAxis {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -53,7 +53,7 @@ impl ChartAxis {
         let mut axis = self.inner.lock().unwrap();
         axis.set_max(max);
         ChartAxis {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 }

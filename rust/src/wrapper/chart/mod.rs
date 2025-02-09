@@ -174,27 +174,40 @@ impl Chart {
     #[wasm_bindgen(js_name = "xAxis", skip_jsdoc)]
     pub fn x_axis(&self) -> ChartAxis {
         let mut chart = self.inner.lock().unwrap();
-        let axis = chart.x_axis();
         ChartAxis {
-            inner: Arc::new(Mutex::new(axis.clone())),
+            inner: Arc::new(Mutex::new(chart.x_axis().clone())),
         }
     }
 
     #[wasm_bindgen(js_name = "yAxis", skip_jsdoc)]
     pub fn y_axis(&self) -> ChartAxis {
         let mut chart = self.inner.lock().unwrap();
-        let axis = chart.y_axis();
         ChartAxis {
-            inner: Arc::new(Mutex::new(axis.clone())),
+            inner: Arc::new(Mutex::new(chart.y_axis().clone())),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "x2Axis", skip_jsdoc)]
+    pub fn x2_axis(&self) -> ChartAxis {
+        let mut chart = self.inner.lock().unwrap();
+        ChartAxis {
+            inner: Arc::new(Mutex::new(chart.x2_axis().clone())),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "y2Axis", skip_jsdoc)]
+    pub fn y2_axis(&self) -> ChartAxis {
+        let mut chart = self.inner.lock().unwrap();
+        ChartAxis {
+            inner: Arc::new(Mutex::new(chart.y2_axis().clone())),
         }
     }
 
     #[wasm_bindgen(js_name = "legend", skip_jsdoc)]
     pub fn legend(&self) -> ChartLegend {
         let mut chart = self.inner.lock().unwrap();
-        let legend = chart.legend();
         ChartLegend {
-            inner: Arc::new(Mutex::new(legend.clone())),
+            inner: Arc::new(Mutex::new(chart.legend().clone())),
         }
     }
 }

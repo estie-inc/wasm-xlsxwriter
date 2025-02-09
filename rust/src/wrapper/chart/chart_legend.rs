@@ -13,29 +13,29 @@ pub struct ChartLegend {
 #[wasm_bindgen]
 impl ChartLegend {
     #[wasm_bindgen(js_name = "setHidden", skip_jsdoc)]
-    pub fn set_hidden(&mut self) -> ChartLegend {
+    pub fn set_hidden(&self) -> ChartLegend {
         let mut legend = self.inner.lock().unwrap();
         legend.set_hidden();
         ChartLegend {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
     #[wasm_bindgen(js_name = "setPosition", skip_jsdoc)]
-    pub fn set_position(&mut self, position: ChartLegendPosition) -> ChartLegend {
+    pub fn set_position(&self, position: ChartLegendPosition) -> ChartLegend {
         let mut legend = self.inner.lock().unwrap();
         legend.set_position(position.into());
         ChartLegend {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
     #[wasm_bindgen(js_name = "setOverlay", skip_jsdoc)]
-    pub fn set_overlay(&mut self, enable: bool) -> ChartLegend {
+    pub fn set_overlay(&self, enable: bool) -> ChartLegend {
         let mut legend = self.inner.lock().unwrap();
         legend.set_overlay(enable);
         ChartLegend {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 
@@ -44,7 +44,7 @@ impl ChartLegend {
         let mut legend = self.inner.lock().unwrap();
         legend.set_format(&mut format.inner);
         ChartLegend {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 }
