@@ -147,4 +147,22 @@ impl Chart {
             inner: Arc::clone(&self.inner),
         }
     }
+
+    #[wasm_bindgen(js_name = "setWidth", skip_jsdoc)]
+    pub fn set_width(&self, width: u32) -> Chart {
+        let mut chart = self.inner.lock().unwrap();
+        chart.set_width(width);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setHeight", skip_jsdoc)]
+    pub fn set_height(&self, height: u32) -> Chart {
+        let mut chart = self.inner.lock().unwrap();
+        chart.set_height(height);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }

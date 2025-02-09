@@ -52,6 +52,7 @@ describe("xlsx-wasm test", () => {
       .setName("Score Transition")
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
+    chart.setWidth(640).setHeight(480);
 
     worksheet.insertChart(0, 3, chart);
 
