@@ -57,7 +57,6 @@ describe("xlsx-wasm test", () => {
     // TODO: axis is not working
     chart.xAxis().setName("x-axis");
     chart.yAxis().setName("y-axis");
-    // TODO: legend is not working
     chart.legend().setPosition(ChartLegendPosition.Bottom);
 
     worksheet.insertChart(0, 3, chart);

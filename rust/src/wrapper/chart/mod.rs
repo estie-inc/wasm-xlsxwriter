@@ -205,9 +205,8 @@ impl Chart {
 
     #[wasm_bindgen(js_name = "legend", skip_jsdoc)]
     pub fn legend(&self) -> ChartLegend {
-        let mut chart = self.inner.lock().unwrap();
         ChartLegend {
-            inner: Arc::new(Mutex::new(chart.legend().clone())),
+            chart: Arc::clone(&self.inner),
         }
     }
 }
