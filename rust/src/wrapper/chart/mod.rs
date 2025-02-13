@@ -1,4 +1,7 @@
+mod chart_axis;
 mod chart_format;
+mod chart_legend;
+mod chart_legend_position;
 mod chart_point;
 mod chart_range;
 mod chart_series;
@@ -7,6 +10,8 @@ mod chart_type;
 
 use std::sync::{Arc, Mutex};
 
+use chart_axis::ChartAxis;
+use chart_legend::ChartLegend;
 use chart_series::ChartSeries;
 use chart_title::ChartTitle;
 use chart_type::ChartType;
@@ -145,6 +150,63 @@ impl Chart {
         chart.set_alt_text(alt_text);
         Chart {
             inner: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setWidth", skip_jsdoc)]
+    pub fn set_width(&self, width: u32) -> Chart {
+        let mut chart = self.inner.lock().unwrap();
+        chart.set_width(width);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setHeight", skip_jsdoc)]
+    pub fn set_height(&self, height: u32) -> Chart {
+        let mut chart = self.inner.lock().unwrap();
+        chart.set_height(height);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "xAxis", skip_jsdoc)]
+    pub fn x_axis(&self) -> ChartAxis {
+        ChartAxis {
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::X,
+        }
+    }
+
+    #[wasm_bindgen(js_name = "yAxis", skip_jsdoc)]
+    pub fn y_axis(&self) -> ChartAxis {
+        ChartAxis {
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::Y,
+        }
+    }
+
+    #[wasm_bindgen(js_name = "x2Axis", skip_jsdoc)]
+    pub fn x2_axis(&self) -> ChartAxis {
+        ChartAxis {
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::X2,
+        }
+    }
+
+    #[wasm_bindgen(js_name = "y2Axis", skip_jsdoc)]
+    pub fn y2_axis(&self) -> ChartAxis {
+        ChartAxis {
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::Y2,
+        }
+    }
+
+    #[wasm_bindgen(js_name = "legend", skip_jsdoc)]
+    pub fn legend(&self) -> ChartLegend {
+        ChartLegend {
+            chart: Arc::clone(&self.inner),
         }
     }
 }

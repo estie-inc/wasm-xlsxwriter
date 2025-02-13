@@ -1511,4 +1511,18 @@ impl Worksheet {
         ))?;
         Ok(self.clone())
     }
+
+    #[wasm_bindgen(js_name = "setPrintArea", skip_jsdoc)]
+    pub fn set_print_area(
+        &self,
+        first_row: xlsx::RowNum,
+        first_col: xlsx::ColNum,
+        last_row: xlsx::RowNum,
+        last_col: xlsx::ColNum,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = map_xlsx_error(sheet.set_print_area(first_row, first_col, last_row, last_col))?;
+        Ok(self.clone())
+    }
 }
