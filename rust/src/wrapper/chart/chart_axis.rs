@@ -3,8 +3,6 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use super::chart_format::ChartFormat;
-
 #[derive(Copy, Clone)]
 pub enum AxisType {
     X,
@@ -45,13 +43,6 @@ impl ChartAxis {
     pub fn set_name(&self, name: &str) -> ChartAxis {
         self.with_chart(|axis| {
             axis.set_name(name);
-        })
-    }
-
-    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
-    pub fn set_format(&self, format: &mut ChartFormat) -> ChartAxis {
-        self.with_chart(|axis| {
-            axis.set_format(&mut format.inner);
         })
     }
 
