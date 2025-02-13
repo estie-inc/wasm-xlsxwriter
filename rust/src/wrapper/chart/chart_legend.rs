@@ -7,7 +7,7 @@ use super::{chart_format::ChartFormat, chart_legend_position::ChartLegendPositio
 
 #[wasm_bindgen]
 pub struct ChartLegend {
-    pub(crate) chart: Arc<Mutex<xlsx::Chart>>,
+    chart: Arc<Mutex<xlsx::Chart>>,
 }
 
 #[wasm_bindgen]
