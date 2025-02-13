@@ -173,33 +173,33 @@ impl Chart {
 
     #[wasm_bindgen(js_name = "xAxis", skip_jsdoc)]
     pub fn x_axis(&self) -> ChartAxis {
-        let mut chart = self.inner.lock().unwrap();
         ChartAxis {
-            inner: Arc::new(Mutex::new(chart.x_axis().clone())),
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::X,
         }
     }
 
     #[wasm_bindgen(js_name = "yAxis", skip_jsdoc)]
     pub fn y_axis(&self) -> ChartAxis {
-        let mut chart = self.inner.lock().unwrap();
         ChartAxis {
-            inner: Arc::new(Mutex::new(chart.y_axis().clone())),
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::Y,
         }
     }
 
     #[wasm_bindgen(js_name = "x2Axis", skip_jsdoc)]
     pub fn x2_axis(&self) -> ChartAxis {
-        let mut chart = self.inner.lock().unwrap();
         ChartAxis {
-            inner: Arc::new(Mutex::new(chart.x2_axis().clone())),
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::X2,
         }
     }
 
     #[wasm_bindgen(js_name = "y2Axis", skip_jsdoc)]
     pub fn y2_axis(&self) -> ChartAxis {
-        let mut chart = self.inner.lock().unwrap();
         ChartAxis {
-            inner: Arc::new(Mutex::new(chart.y2_axis().clone())),
+            inner: Arc::clone(&self.inner),
+            axis: chart_axis::AxisType::Y2,
         }
     }
 

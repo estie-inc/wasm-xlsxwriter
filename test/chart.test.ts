@@ -54,7 +54,6 @@ describe("xlsx-wasm test", () => {
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
     chart.setWidth(640).setHeight(480);
-    // TODO: axis is not working
     chart.xAxis().setName("x-axis");
     chart.yAxis().setName("y-axis");
     chart.legend().setPosition(ChartLegendPosition.Bottom);
