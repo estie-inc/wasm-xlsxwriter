@@ -250,9 +250,9 @@ dependencies = [
 
 [[package]]
 name = "rust_xlsxwriter"
-version = "0.82.0"
+version = "0.84.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d61a82de4e7b30fc427909f2c5aafaada88cc7ae8316edabae435f74341f9278"
+checksum = "086ca9ee5ae2dfa36dd9fbab02232df2df10971c677b8a8aa44dc18db3773c1c"
 dependencies = [
  "chrono",
  "js-sys",
