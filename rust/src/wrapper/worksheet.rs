@@ -1512,6 +1512,110 @@ impl Worksheet {
         Ok(self.clone())
     }
 
+    #[wasm_bindgen(js_name = "setLandscape")]
+    pub fn set_landscape(&self) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_landscape();
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPortrait")]
+    pub fn set_portrait(&self) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_portrait();
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPaperSize")]
+    pub fn set_paper_size(&self, paper_size: u8) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_paper_size(paper_size);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintFirstPageNumber")]
+    pub fn set_print_first_page_number(&self, number: u16) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_first_page_number(number);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintScale")]
+    pub fn set_print_scale(&self, scale: u16) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_scale(scale);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintFitToPages")]
+    pub fn set_print_fit_to_pages(&self, width: u16, height: u16) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_fit_to_pages(width, height);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintCenterHorizontally")]
+    pub fn set_print_center_horizontally(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_center_horizontally(enable);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintCenterVertically")]
+    pub fn set_print_center_vertically(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_center_vertically(enable);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setScreenGridlines")]
+    pub fn set_screen_gridlines(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_screen_gridlines(enable);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintGridlines")]
+    pub fn set_print_gridlines(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_gridlines(enable);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintBlackAndWhite")]
+    pub fn set_print_black_and_white(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_black_and_white(enable);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintDraft")]
+    pub fn set_print_draft(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_draft(enable);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setPrintHeadings")]
+    pub fn set_print_headings(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_print_headings(enable);
+        self.clone()
+    }
+
     #[wasm_bindgen(js_name = "setPrintArea", skip_jsdoc)]
     pub fn set_print_area(
         &self,
