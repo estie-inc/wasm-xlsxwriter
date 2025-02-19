@@ -56,9 +56,9 @@ impl ChartSeries {
     ///
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setCategories", skip_jsdoc)]
-    pub fn set_categories(&self, categories: &str) -> ChartSeries {
+    pub fn set_categories(&self, range: &ChartRange) -> ChartSeries {
         let mut series = self.inner.lock().unwrap();
-        series.set_categories(categories);
+        series.set_categories(&range.inner);
         ChartSeries {
             inner: Arc::clone(&self.inner),
         }
