@@ -37,18 +37,21 @@ describe("xlsx-wasm test", () => {
     });
 
     const chart = new Chart(ChartType.Line);
+
     const chartSeries1 = new ChartSeries();
-    const range1 = new ChartRange("Sheet1", 1, 1, 6, 1);
+    const categoriesRange1 = new ChartRange("Sheet1", 1, 0, 6, 0);
+    const valuesRange1 = new ChartRange("Sheet1", 1, 1, 6, 1);
     chartSeries1
       .setName("Score 1")
-      .setCategories("Sheet1!$A$2:$A$7")
-      .setValues(range1);
+      .setCategories(categoriesRange1)
+      .setValues(valuesRange1);
     const chartSeries2 = new ChartSeries();
-    const range2 = new ChartRange("Sheet1", 1, 2, 6, 2);
+    const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
+    const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
-      .setCategories("Sheet1!$A$2:$A$7")
-      .setValues(range2);
+      .setCategories(categoriesRange2)
+      .setValues(valuesRange2);
     chart
       .setName("Score Transition")
       .pushSeries(chartSeries1)
