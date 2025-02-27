@@ -142,7 +142,6 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
 
 ## Browser Support
 
-Browser Support
 This library is built with Rust v1.81.0, enabling the following WebAssembly features:
 * `mutable-globals`
 * `sign-ext`
