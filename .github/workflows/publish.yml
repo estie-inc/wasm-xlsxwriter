@@ -1,14 +1,13 @@
-name: test
+name: npm publish
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  build:
+  npm-publish:
+    name: Publish npm package
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust 1.81
@@ -19,13 +18,7 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: npm test
-      - run: |
-          cd examples/nextjs
-          npm ci
-          npm run build
-      - run: |
-          cd examples/nodejs
-          npm ci
-          npm run build
-          npm run start
+      - name: Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
