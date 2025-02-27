@@ -1,0 +1,5 @@
+[toolchain]
+channel = "1.81.0" # see: https://github.com/estie-inc/wasm-xlsxwriter/blob/a2696f5e9e729dfe08798309e777cc0e1f3d285b/README.md#browser-support
+components = ["rustc", "cargo"]
+profile = "minimal"
+targets = ["wasm32-unknown-unknown"]
