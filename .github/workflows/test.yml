@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Rust 1.81
+      - name: Install Rust 1.81 # https://github.com/estie-inc/wasm-xlsxwriter/blob/a2696f5e9e729dfe08798309e777cc0e1f3d285b/README.md#browser-support
         run: rustup install 1.81.0 && rustup default 1.81.0
       - uses: actions/setup-node@v4
         with:
