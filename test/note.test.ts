@@ -1,4 +1,4 @@
-import { Color, Format, Note, Workbook } from "../web";
+import { Color, Format, Note, Workbook, ObjectMovement } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 
@@ -10,40 +10,33 @@ describe("xlsx-wasm test", () => {
   test("insert note", async () => {
     // Arrange
     const workbook = new Workbook();
-
     // Act
     const worksheet = workbook.addWorksheet();
+    const note1 = new Note("This is a note")
+      .setAuthor("Yuya Ryuzaki")
+      .addAuthorPrefix(false)
+      .setWidth(200)
+      .setHeight(100)
+      .setBackgroundColor(Color.purple())
+      .setFontName("Meiryo UI")
+      .setFontSize(20)
+      .setAltText("Alt text")
+      .setObjectMovement(ObjectMovement.DontMoveOrSizeWithCells);
+    note1.resetText("This is other note");
+    const format = new Format()
+      .setBackgroundColor(Color.green())
+      .setFontName("Meiryo UI")
+      .setFontSize(11);
+    const note2 = new Note("This is a note")
+      .addAuthorPrefix(true)
+      .setWidth(100)
+      .setHeight(100)
+      .setFormat(format)
+      .setVisible(true)
+      .setObjectMovement(ObjectMovement.MoveAndSizeWithCells);
 
-    const purple = Color.purple();
-    const format = new Format().setFontColor(purple);
-    worksheet.writeWithFormat(0, 0, "Hello, World!", format);
-
-    worksheet.setLandscape();
-    worksheet.setScreenGridlines(false);
-    worksheet.setPrintGridlines(true);
-    worksheet.setPrintArea(0, 0, 10, 10);
-    worksheet.setPrintScale(110);
-    worksheet.setPaperSize(9); // A4
-    worksheet.setPrintBlackAndWhite(true);
-    worksheet.setPrintFirstPageNumber(0);
-    worksheet.setPrintDraft(true);
-    worksheet.setPrintCenterHorizontally(true);
-    worksheet.setPrintCenterVertically(true);
-    worksheet.setPrintHeadings(true);
-
-    // Assert
-    const actual = await readXlsx(workbook.saveToBufferSync());
-    const expected = await readXlsxFile("./expected/print.xlsx");
-    expect(actual).matchXlsx(expected);
-  });
-
-  test("worksheet print portrait", async () => {
-    // Arrange
-    const workbook = new Workbook();
-
-    // Act
-    const worksheet = workbook.addWorksheet();
-    worksheet.insertNote(0, 0, new Note('This is a note'));
+    worksheet.insertNote(0, 0, note1);
+    worksheet.insertNote(0, 1, note2);
 
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
