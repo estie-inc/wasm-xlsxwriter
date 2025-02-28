@@ -5,6 +5,7 @@ mod excel_data;
 mod format;
 mod formula;
 mod image;
+mod note;
 mod rich_string;
 mod table;
 mod url;

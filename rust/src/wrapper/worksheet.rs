@@ -12,6 +12,7 @@ use crate::wrapper::{
 use super::{
     excel_data::{JsExcelData, JsExcelDataArray, JsExcelDataMatrix},
     formula::Formula,
+    note::Note,
     rich_string::RichString,
     url::Url,
 };
@@ -1627,6 +1628,19 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = map_xlsx_error(sheet.set_print_area(first_row, first_col, last_row, last_col))?;
+        Ok(self.clone())
+    }
+
+    #[wasm_bindgen(js_name = "insertNote", skip_jsdoc)]
+    pub fn insert_note(
+        &mut self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        note: &Note,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = map_xlsx_error(sheet.insert_note(row, col, &*note.lock()))?;
         Ok(self.clone())
     }
 }
