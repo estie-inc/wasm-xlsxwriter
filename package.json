@@ -3,16 +3,20 @@
     "version": "0.8.1",
     "type": "module",
     "main": "nodejs/wasm_xlsxwriter.js",
-    "types": "nodejs/wasm_xlsxwriter.d.ts",
+    "types": "web/wasm_xlsxwriter.d.ts",
     "browser": "web/wasm_xlsxwriter.js",
     "files": [
-        "web",
-        "nodejs"
+        "web/wasm_xlsxwriter_bg.wasm",
+        "web/wasm_xlsxwriter_bg.wasm.d.ts",
+        "web/wasm_xlsxwriter.js",
+        "web/wasm_xlsxwriter.d.ts",
+        "nodejs/wasm_xlsxwriter_bg.wasm",
+        "nodejs/wasm_xlsxwriter.js"
     ],
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/estie-inc/wasm-xlsxwriter"
+        "url": "git+https://github.com/estie-inc/wasm-xlsxwriter.git"
     },
     "scripts": {
         "build": "npm run build:web && npm run build:nodejs",
