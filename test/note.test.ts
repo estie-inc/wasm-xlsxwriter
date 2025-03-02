@@ -1,10 +1,6 @@
-import { Color, Format, Note, Workbook, ObjectMovement } from "../web";
-import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile } from "./common";
-
-beforeAll(async () => {
-  await initWasModule();
-});
+import { Color, Format, Note, Workbook, ObjectMovement } from "wasm-xlsxwriter";
+import { describe, test, expect } from "vitest";
+import { readXlsx, readXlsxFile } from "./common";
 
 describe("xlsx-wasm test", () => {
   test("insert note", async () => {

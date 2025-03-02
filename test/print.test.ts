@@ -1,10 +1,6 @@
-import { Color, Format, Workbook } from "../web";
-import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile } from "./common";
-
-beforeAll(async () => {
-  await initWasModule();
-});
+import { Color, Format, Workbook } from "wasm-xlsxwriter";
+import { describe, test, expect } from "vitest";
+import { readXlsx, readXlsxFile } from "./common";
 
 describe("xlsx-wasm test", () => {
   test("worksheet print", async () => {
