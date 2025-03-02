@@ -5,13 +5,9 @@ import {
   ChartSeries,
   ChartRange,
   ChartLegendPosition,
-} from "../web/wasm_xlsxwriter";
-import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile } from "./common";
-
-beforeAll(async () => {
-  await initWasModule();
-});
+} from "wasm-xlsxwriter";
+import { describe, test, expect } from "vitest";
+import { readXlsx, readXlsxFile } from "./common";
 
 const DATA = [
   [2, 3, 4, 5, 6, 7],

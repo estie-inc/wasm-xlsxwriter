@@ -1,10 +1,6 @@
-import { Workbook, Image } from "../web";
-import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
-
-beforeAll(async () => {
-  await initWasModule();
-});
+import { Workbook, Image } from "wasm-xlsxwriter";
+import { describe, test, expect } from "vitest";
+import { loadFile, readXlsx, readXlsxFile } from "./common";
 
 describe("xlsx-wasm test", () => {
   test("insert image", async () => {
