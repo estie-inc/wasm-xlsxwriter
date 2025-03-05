@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::XlsxError,
-    wrapper::{doc_properties::DocProperties, map_xlsx_error, worksheet::Worksheet},
+    wrapper::{doc_properties::DocProperties, worksheet::Worksheet},
 };
 
 use super::WasmResult;
@@ -112,7 +112,7 @@ impl Workbook {
     pub fn worksheet_from_index(&self, index: usize) -> WasmResult<Worksheet> {
         // Reimplementation of [`rust_xlsxwriter::Workbook::worksheet_from_name()`]
         let mut workbook = self.inner.lock().unwrap();
-        let _ = map_xlsx_error(workbook.worksheet_from_index(index))?;
+        let _ = workbook.worksheet_from_index(index)?;
         Ok(Worksheet {
             workbook: Arc::clone(&self.inner),
             index,
@@ -253,7 +253,7 @@ impl Workbook {
     #[wasm_bindgen(js_name = "saveToBufferSync")]
     pub fn save_to_buffer_sync(&self) -> WasmResult<Vec<u8>> {
         let mut workbook = self.inner.lock().unwrap();
-        let buf = map_xlsx_error(workbook.save_to_buffer())?;
+        let buf = workbook.save_to_buffer()?;
         Ok(buf)
     }
 

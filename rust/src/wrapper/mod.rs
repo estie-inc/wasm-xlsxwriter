@@ -13,12 +13,15 @@ mod utils;
 mod workbook;
 mod worksheet;
 
-use rust_xlsxwriter as xlsx;
-
 use crate::error::XlsxError;
+use wasm_bindgen::prelude::wasm_bindgen;
 
-fn map_xlsx_error<T>(e: Result<T, xlsx::XlsxError>) -> Result<T, XlsxError> {
-    e.map_err(|e| e.into())
-}
 
 type WasmResult<T> = std::result::Result<T, XlsxError>;
+
+// This runs once when the wasm module is instantiated
+// https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-rust-exports/start.html
+#[wasm_bindgen(start)]
+pub fn start() {
+    console_error_panic_hook::set_once();
+}
