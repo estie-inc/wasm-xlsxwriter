@@ -1,6 +1,6 @@
 # wasm-xlsxwriter [![NPM Version](https://img.shields.io/npm/v/wasm-xlsxwriter)](https://www.npmjs.com/package/wasm-xlsxwriter)
 
-The `wasm-xlsxwriter` library is a lightweight wrapper around the write API of Rust's [`rust_xlsxwriter`](https://crates.io/crates/rust_xlsxwriter), compiled to WebAssembly (Wasm) with minimal setup to make it easily usable from JavaScript or Node.js.
+The `wasm-xlsxwriter` library is a lightweight wrapper around the write API of Rust's [`rust_xlsxwriter`](https://crates.io/crates/rust_xlsxwriter), compiled to WebAssembly (Wasm) with minimal setup to make it easily usable from JavaScript.
 
 With this library, you can generate Excel files in the browser or Node.js using JavaScript, complete with support for custom formatting, formulas, links, images, and more.
 
@@ -25,7 +25,7 @@ import xlsxInit, {
   Workbook,
   Image,
   Url,
-} from "wasm-xlsxwriter/web";
+} from "wasm-xlsxwriter";
 
 // Load the WebAssembly module and initialize the library.
 await xlsxInit();
