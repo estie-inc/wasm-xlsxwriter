@@ -34,7 +34,6 @@ impl Workbook {
     /// TODO: example omitted
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        console_error_panic_hook::set_once();
         Workbook {
             inner: Arc::new(Mutex::new(xlsx::Workbook::new())),
             next_sheet_index: 0,
@@ -72,7 +71,10 @@ impl Workbook {
         self.next_sheet_index += 1;
         let mut workbook = self.inner.lock().unwrap();
         let _ = workbook.add_worksheet();
-        Worksheet::new(Arc::clone(&self.inner), index)
+        Worksheet {
+            workbook: Arc::clone(&self.inner),
+            index,
+        }
     }
 
     /// Get a worksheet reference by index.
@@ -111,7 +113,10 @@ impl Workbook {
         // Reimplementation of [`rust_xlsxwriter::Workbook::worksheet_from_name()`]
         let mut workbook = self.inner.lock().unwrap();
         let _ = workbook.worksheet_from_index(index)?;
-        Ok(Worksheet::new(Arc::clone(&self.inner), index))
+        Ok(Worksheet {
+            workbook: Arc::clone(&self.inner),
+            index,
+        })
     }
 
     /// Get a worksheet reference by name.
@@ -155,7 +160,10 @@ impl Workbook {
         let mut workbook = self.inner.lock().unwrap();
         for (index, worksheet) in workbook.worksheets().iter().enumerate() {
             if worksheet.name() == name {
-                return Ok(Worksheet::new(Arc::clone(&self.inner), index));
+                return Ok(Worksheet {
+                    workbook: Arc::clone(&self.inner),
+                    index,
+                });
             }
         }
         Err(XlsxError::Xlsx(

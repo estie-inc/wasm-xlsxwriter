@@ -25,28 +25,14 @@ use super::{
 pub struct Worksheet {
     pub(crate) workbook: Arc<Mutex<xlsx::Workbook>>,
     pub(crate) index: usize,
-
-    /// This field is used to prevent the creation of the struct outside the module,
-    /// ensuring that the `new()` function is always called when creating a new instance.
-    /// This enforces the use of `console_error_panic_hook` by requiring the struct to be
-    /// created through the `new()` function.
-    _private: (),
-}
-
-impl Worksheet {
-    pub(crate) fn new(workbook: Arc<Mutex<xlsx::Workbook>>, index: usize) -> Self {
-        console_error_panic_hook::set_once();
-        Worksheet {
-            workbook,
-            index,
-            _private: (),
-        }
-    }
 }
 
 impl Clone for Worksheet {
     fn clone(&self) -> Self {
-        Worksheet::new(Arc::clone(&self.workbook), self.index)
+        Worksheet {
+            workbook: Arc::clone(&self.workbook),
+            index: self.index,
+        }
     }
 }
 
@@ -1230,7 +1216,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.insert_chart(row, col, &chart.lock()))?;
+        let _ = sheet.insert_chart(row, col, &chart.lock())?;
         Ok(self.clone())
     }
 
@@ -1245,13 +1231,13 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.insert_chart_with_offset(
+        let _ = sheet.insert_chart_with_offset(
             row,
             col,
             &chart.lock(),
             x_offset,
             y_offset,
-        ))?;
+        )?;
         Ok(self.clone())
     }
 
@@ -1612,7 +1598,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.set_print_area(first_row, first_col, last_row, last_col))?;
+        let _ = sheet.set_print_area(first_row, first_col, last_row, last_col)?;
         Ok(self.clone())
     }
 
@@ -1625,7 +1611,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = map_xlsx_error(sheet.insert_note(row, col, &*note.lock()))?;
+        let _ = sheet.insert_note(row, col, &*note.lock())?;
         Ok(self.clone())
     }
 }
