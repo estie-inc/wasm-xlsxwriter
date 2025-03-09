@@ -1614,4 +1614,21 @@ impl Worksheet {
         let _ = sheet.insert_note(row, col, &*note.lock())?;
         Ok(self.clone())
     }
+
+    /// Group a range of rows into a worksheet outline group.
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. Zero indexed.
+    /// - `last_row`: The last row of the range.
+     #[wasm_bindgen(js_name = "groupRows", skip_jsdoc)]
+    pub fn group_rows(
+        &mut self,
+        first_row: xlsx::RowNum,
+        last_row: xlsx::ColNum,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.group_rows(row, col)?;
+        Ok(self.clone())
+    }
 }
