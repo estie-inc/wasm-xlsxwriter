@@ -1624,7 +1624,7 @@ impl Worksheet {
     pub fn group_rows(
         &mut self,
         first_row: xlsx::RowNum,
-        last_row: xlsx::ColNum,
+        last_row: xlsx::RowNum,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
