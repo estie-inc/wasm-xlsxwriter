@@ -8,7 +8,7 @@ import {
   FormatUnderline,
   Formula,
   Workbook,
-} from "wasm-xlsxwriter";
+} from "..";
 import { describe, test, expect } from "vitest";
 import { readXlsx, readXlsxFile } from "./common";
 

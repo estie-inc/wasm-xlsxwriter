@@ -1,4 +1,4 @@
-import { Color, Format, Note, Workbook, ObjectMovement } from "wasm-xlsxwriter";
+import { Color, Format, Note, Workbook, ObjectMovement } from "..";
 import { describe, test, expect } from "vitest";
 import { readXlsx, readXlsxFile } from "./common";
 

@@ -1,10 +1,5 @@
 import { Image } from "../web";
-import { describe, test, beforeAll, beforeEach, afterEach, expect, vi } from "vitest";
-import { initWasModule } from "./common";
-
-beforeAll(async () => {
-  await initWasModule();
-});
+import { describe, test, beforeEach, afterEach, expect, vi } from "vitest";
 
 describe("xlsx-wasm test", () => {
   // spy console.error to test panic hook

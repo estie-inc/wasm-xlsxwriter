@@ -1,4 +1,4 @@
-import { Workbook, Image } from "wasm-xlsxwriter";
+import { Workbook, Image } from "..";
 import { describe, test, expect } from "vitest";
 import { loadFile, readXlsx, readXlsxFile } from "./common";
 

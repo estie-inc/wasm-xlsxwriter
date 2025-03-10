@@ -1,4 +1,4 @@
-import { Workbook, Format, Formula, RichString } from "wasm-xlsxwriter";
+import { Workbook, Format, Formula, RichString } from "..";
 import { describe, test, expect } from "vitest";
 import { readXlsx, readXlsxFile } from "./common";
 
