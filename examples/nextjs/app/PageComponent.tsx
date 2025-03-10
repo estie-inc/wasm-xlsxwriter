@@ -1,7 +1,7 @@
 "use client";
-import initModule, { Workbook } from "wasm-xlsxwriter/web";
+import initModule, { Workbook } from "wasm-xlsxwriter";
 
-export default function Page() {
+export default function PageComponent() {
   return (
     <button
       onClick={async () => {

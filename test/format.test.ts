@@ -8,13 +8,9 @@ import {
   FormatUnderline,
   Formula,
   Workbook,
-} from "../web";
-import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile, saveFile } from "./common";
-
-beforeAll(async () => {
-  await initWasModule();
-});
+} from "..";
+import { describe, test, expect } from "vitest";
+import { readXlsx, readXlsxFile } from "./common";
 
 describe("xlsx-wasm test", () => {
   test("use format", async () => {
