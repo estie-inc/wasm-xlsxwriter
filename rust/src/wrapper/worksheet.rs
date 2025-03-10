@@ -1628,7 +1628,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.group_rows(row, col)?;
+        let _ = sheet.group_rows(first_row, last_row)?;
         Ok(self.clone())
     }
 }
