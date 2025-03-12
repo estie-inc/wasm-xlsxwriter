@@ -165,6 +165,22 @@ impl Worksheet {
         Ok(self.clone())
     }
 
+    #[wasm_bindgen(js_name = "setHeader", skip_jsdoc)]
+    pub fn set_header(&self, header: &str) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_header(header);
+        self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setFooter", skip_jsdoc)]
+    pub fn set_footer(&self, footer: &str) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_footer(footer);
+        self.clone()
+    }
+
     /// Make a worksheet the active/initially visible worksheet in a workbook.
     ///
     /// The `set_active()` method is used to specify which worksheet is
@@ -1599,6 +1615,22 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = sheet.set_print_area(first_row, first_col, last_row, last_col)?;
+        Ok(self.clone())
+    }
+
+    #[wasm_bindgen(js_name = "setRepeatRows", skip_jsdoc)]
+    pub fn set_repeat_rows(&self, first_row: xlsx::RowNum, last_row: xlsx::RowNum) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.set_repeat_rows(first_row, last_row)?;
+        Ok(self.clone())
+    }
+
+    #[wasm_bindgen(js_name = "setRepeatColumns", skip_jsdoc)]
+    pub fn set_repeat_columns(&self, first_col: xlsx::ColNum, last_col: xlsx::ColNum) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.set_repeat_columns(first_col, last_col)?;
         Ok(self.clone())
     }
 
