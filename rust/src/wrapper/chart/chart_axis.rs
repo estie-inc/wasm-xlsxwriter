@@ -75,4 +75,11 @@ impl ChartAxis {
             axis.set_font(&font.inner);
         })
     }
+
+    #[wasm_bindgen(js_name = "setNameFont", skip_jsdoc)]
+    pub fn set_name_font(&self, font: &ChartFont) -> ChartAxis {
+        self.with_chart(|axis| {
+            axis.set_name_font(&font.inner);
+        })
+    }
 }

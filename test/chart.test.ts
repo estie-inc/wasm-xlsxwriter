@@ -5,6 +5,9 @@ import {
   ChartSeries,
   ChartRange,
   ChartLegendPosition,
+  ChartFont,
+  ChartDataLabel,
+  ChartDataLabelPosition,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -29,37 +32,41 @@ describe("xlsx-wasm test", () => {
     worksheet.write(0, 0, "Number");
     worksheet.write(0, 1, "Score 1");
     worksheet.write(0, 2, "Score 2");
-
+  
     DATA.forEach((col_data, col_num) => {
       col_data.forEach((row_data, row_num) => {
         worksheet.write(row_num + 1, col_num, row_data);
       });
     });
-
+  
     const chart = new Chart(ChartType.Line);
-
+    const chartFont = new ChartFont().setName("Meiryo UI");
+    const chartDataLabel = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
+  
     const chartSeries1 = new ChartSeries();
     const categoriesRange1 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange1 = new ChartRange("Sheet1", 1, 1, 6, 1);
     chartSeries1
       .setName("Score 1")
       .setCategories(categoriesRange1)
-      .setValues(valuesRange1);
+      .setValues(valuesRange1)
+      .setDataLabel(chartDataLabel);
     const chartSeries2 = new ChartSeries();
     const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
       .setCategories(categoriesRange2)
-      .setValues(valuesRange2);
+      .setValues(valuesRange2)
+      .setDataLabel(chartDataLabel);
     chart
-      .setName("Score Transition")
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
+    chart.title().setName("Score Transition").setFont(chartFont);
     chart.setWidth(640).setHeight(480);
-    chart.xAxis().setName("x-axis");
-    chart.yAxis().setName("y-axis");
-    chart.legend().setPosition(ChartLegendPosition.Bottom);
+    chart.xAxis().setName("x-axis").setFont(chartFont).setNameFont(chartFont);
+    chart.yAxis().setName("y-axis").setFont(chartFont).setNameFont(chartFont);
+    chart.legend().setPosition(ChartLegendPosition.Bottom).setFont(chartFont);
 
     worksheet.insertChart(0, 3, chart);
 
