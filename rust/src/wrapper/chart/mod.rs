@@ -5,6 +5,8 @@ mod chart_font;
 mod chart_format;
 mod chart_legend;
 mod chart_legend_position;
+mod chart_marker;
+mod chart_marker_type;
 mod chart_point;
 mod chart_range;
 mod chart_series;

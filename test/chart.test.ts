@@ -8,6 +8,8 @@ import {
   ChartFont,
   ChartDataLabel,
   ChartDataLabelPosition,
+  ChartMarker,
+  ChartMarkerType,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -39,26 +41,30 @@ describe("xlsx-wasm test", () => {
       });
     });
   
-    const chart = new Chart(ChartType.Line);
+    const chart = new Chart(ChartType.Stock);
     const chartFont = new ChartFont().setName("Meiryo UI");
     const chartDataLabel = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
   
     const chartSeries1 = new ChartSeries();
+    const chartMarker1 = new ChartMarker().setType(ChartMarkerType.Circle).setSize(10);
     const categoriesRange1 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange1 = new ChartRange("Sheet1", 1, 1, 6, 1);
     chartSeries1
       .setName("Score 1")
       .setCategories(categoriesRange1)
       .setValues(valuesRange1)
-      .setDataLabel(chartDataLabel);
+      .setDataLabel(chartDataLabel)
+      .setMarker(chartMarker1);
     const chartSeries2 = new ChartSeries();
+    const chartMarker2 = new ChartMarker().setType(ChartMarkerType.Diamond).setSize(10);
     const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
       .setCategories(categoriesRange2)
       .setValues(valuesRange2)
-      .setDataLabel(chartDataLabel);
+      .setDataLabel(chartDataLabel)
+      .setMarker(chartMarker2);
     chart
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
