@@ -8,6 +8,7 @@ import {
   ChartFont,
   ChartDataLabel,
   ChartDataLabelPosition,
+  ChartMarker,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -44,20 +45,24 @@ describe("xlsx-wasm test", () => {
     const chartDataLabel = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
   
     const chartSeries1 = new ChartSeries();
+    const chartMarker1 = new ChartMarker().setAutomatic();
     const categoriesRange1 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange1 = new ChartRange("Sheet1", 1, 1, 6, 1);
     chartSeries1
       .setName("Score 1")
       .setCategories(categoriesRange1)
       .setValues(valuesRange1)
+      .setMarker(chartMarker1)
       .setDataLabel(chartDataLabel);
     const chartSeries2 = new ChartSeries();
+    const chartMarker2 = new ChartMarker().setAutomatic();
     const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
       .setCategories(categoriesRange2)
       .setValues(valuesRange2)
+      .setMarker(chartMarker2)
       .setDataLabel(chartDataLabel);
     chart
       .pushSeries(chartSeries1)
