@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use super::{chart_format::ChartFormat, chart_legend_position::ChartLegendPosition};
+use super::{chart_font::ChartFont, chart_format::ChartFormat, chart_legend_position::ChartLegendPosition};
 
 #[wasm_bindgen]
 pub struct ChartLegend {
@@ -43,6 +43,15 @@ impl ChartLegend {
     pub fn set_format(&self, format: &mut ChartFormat) -> ChartLegend {
         let mut chart = self.chart.lock().unwrap();
         chart.legend().set_format(&mut format.inner);
+        ChartLegend {
+            chart: Arc::clone(&self.chart),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
+    pub fn set_font(&self, font: &ChartFont) -> ChartLegend {
+        let mut chart = self.chart.lock().unwrap();
+        chart.legend().set_font(&font.inner);
         ChartLegend {
             chart: Arc::clone(&self.chart),
         }

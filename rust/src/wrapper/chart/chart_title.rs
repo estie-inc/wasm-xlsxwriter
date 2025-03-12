@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::chart::chart_format::ChartFormat;
+use crate::wrapper::chart::{chart_font::ChartFont, chart_format::ChartFormat};
 
 /// The `ChartTitle` struct represents a chart title.
 ///
@@ -71,6 +71,15 @@ impl ChartTitle {
     pub fn set_format(&self, format: &mut ChartFormat) -> ChartTitle {
         let mut chart = self.chart.lock().unwrap();
         chart.title().set_format(&mut format.inner);
+        ChartTitle {
+            chart: Arc::clone(&self.chart),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
+    pub fn set_font(&self, font: &ChartFont) -> ChartTitle {
+        let mut chart = self.chart.lock().unwrap();
+        chart.title().set_font(&font.inner);
         ChartTitle {
             chart: Arc::clone(&self.chart),
         }
