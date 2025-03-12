@@ -41,7 +41,7 @@ describe("xlsx-wasm test", () => {
       });
     });
   
-    const chart = new Chart(ChartType.Line);
+    const chart = new Chart(ChartType.Stock);
     const chartFont = new ChartFont().setName("Meiryo UI");
     const chartDataLabel = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
   

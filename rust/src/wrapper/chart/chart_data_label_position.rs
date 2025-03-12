@@ -1,7 +1,7 @@
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[wasm_bindgen]
 pub enum ChartDataLabelPosition {
     Default,
