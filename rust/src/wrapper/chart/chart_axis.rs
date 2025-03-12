@@ -3,6 +3,8 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
+use crate::wrapper::chart::chart_font::ChartFont;
+
 #[derive(Copy, Clone)]
 pub enum AxisType {
     X,
@@ -64,6 +66,20 @@ impl ChartAxis {
     pub fn set_max(&self, max: f64) -> ChartAxis {
         self.with_chart(|axis| {
             axis.set_max(max);
+        })
+    }
+
+    #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
+    pub fn set_font(&self, font: &ChartFont) -> ChartAxis {
+        self.with_chart(|axis| {
+            axis.set_font(&font.inner);
+        })
+    }
+
+    #[wasm_bindgen(js_name = "setNameFont", skip_jsdoc)]
+    pub fn set_name_font(&self, font: &ChartFont) -> ChartAxis {
+        self.with_chart(|axis| {
+            axis.set_name_font(&font.inner);
         })
     }
 }

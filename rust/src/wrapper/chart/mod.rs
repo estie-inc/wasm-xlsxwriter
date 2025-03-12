@@ -1,4 +1,7 @@
 mod chart_axis;
+mod chart_data_label;
+mod chart_data_label_position;
+mod chart_font;
 mod chart_format;
 mod chart_legend;
 mod chart_legend_position;
