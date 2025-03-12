@@ -30,6 +30,10 @@ describe("xlsx-wasm test", () => {
     worksheet.setPrintCenterHorizontally(true);
     worksheet.setPrintCenterVertically(true);
     worksheet.setPrintHeadings(true);
+    worksheet.setHeader("&CHello");
+    worksheet.setFooter("&CPage &[Page] of &[Pages]");
+    worksheet.setRepeatColumns(0, 1);
+    worksheet.setRepeatRows(0, 1);
 
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
