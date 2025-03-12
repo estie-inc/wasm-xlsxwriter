@@ -1,7 +1,8 @@
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::chart::{chart_format::ChartFormat, chart_marker_type::ChartMarkerType};
+use crate::wrapper::chart::chart_format::ChartFormat;
+use crate::wrapper::chart::chart_marker_type::ChartMarkerType;
 
 #[wasm_bindgen]
 pub struct ChartMarker {
