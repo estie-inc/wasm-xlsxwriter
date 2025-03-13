@@ -10,6 +10,10 @@ import {
   ChartDataLabelPosition,
   ChartMarker,
   ChartMarkerType,
+  ChartSolidFill,
+  ChartFormat,
+  Color,
+  ChartLine,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -46,23 +50,29 @@ describe("xlsx-wasm test", () => {
     const chartDataLabel = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
   
     const chartSeries1 = new ChartSeries();
-    const chartMarker1 = new ChartMarker().setType(ChartMarkerType.Circle).setSize(10);
+    const chartLine1 = new ChartLine().setColor(Color.green());
+    const chartFormat1 = new ChartFormat().setLine(chartLine1);
+    const chartMarker1 = new ChartMarker().setType(ChartMarkerType.Circle).setSize(10).setFormat(chartFormat1);
     const categoriesRange1 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange1 = new ChartRange("Sheet1", 1, 1, 6, 1);
     chartSeries1
       .setName("Score 1")
       .setCategories(categoriesRange1)
       .setValues(valuesRange1)
+      .setFormat(chartFormat1)
       .setDataLabel(chartDataLabel)
       .setMarker(chartMarker1);
     const chartSeries2 = new ChartSeries();
-    const chartMarker2 = new ChartMarker().setType(ChartMarkerType.Diamond).setSize(10);
+    const chartLine2 = new ChartLine().setColor(Color.purple());
+    const chartFormat2 = new ChartFormat().setLine(chartLine2);
+    const chartMarker2 = new ChartMarker().setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2);
     const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
       .setCategories(categoriesRange2)
       .setValues(valuesRange2)
+      .setFormat(chartFormat2)
       .setDataLabel(chartDataLabel)
       .setMarker(chartMarker2);
     chart

@@ -38,6 +38,7 @@ impl ChartPoint {
         }
     }
 
+    #[wasm_bindgen(js_name = "setFormat")]
     pub fn set_format(&self, format: &mut ChartFormat) -> ChartPoint {
         ChartPoint {
             inner: self.clone().inner.set_format(&mut format.inner),
