@@ -2,6 +2,7 @@ use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
 use crate::wrapper::color::Color;
+use crate::wrapper::chart::chart_solid_fill::ChartSolidFill;
 
 /// The `ChartFormat` struct represents formatting for various chart objects.
 ///
@@ -79,7 +80,12 @@ impl ChartFormat {
         self
     }
 
-    // TODO: set_gradient_fill, set_pattern_fill, set_solid_fill
+    // TODO: set_gradient_fill, set_pattern_fill
+    #[wasm_bindgen(js_name = "setSolidFill")]
+    pub fn set_solid_fill(mut self, fill: &ChartSolidFill) -> ChartFormat {
+        self.inner.set_solid_fill(&fill.inner);
+        self
+    }
 }
 
 /// The `ChartLine` struct represents a chart line/border.

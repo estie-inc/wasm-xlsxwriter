@@ -51,7 +51,8 @@ describe("xlsx-wasm test", () => {
   
     const chartSeries1 = new ChartSeries();
     const chartLine1 = new ChartLine().setColor(Color.green());
-    const chartFormat1 = new ChartFormat().setLine(chartLine1);
+    const chartSolidFill1 = new ChartSolidFill().setColor(Color.green());
+    const chartFormat1 = new ChartFormat().setLine(chartLine1).setSolidFill(chartSolidFill1);
     const chartMarker1 = new ChartMarker().setType(ChartMarkerType.Circle).setSize(10).setFormat(chartFormat1);
     const categoriesRange1 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange1 = new ChartRange("Sheet1", 1, 1, 6, 1);
@@ -64,7 +65,8 @@ describe("xlsx-wasm test", () => {
       .setMarker(chartMarker1);
     const chartSeries2 = new ChartSeries();
     const chartLine2 = new ChartLine().setColor(Color.purple());
-    const chartFormat2 = new ChartFormat().setLine(chartLine2);
+    const chartSolidFill2 = new ChartSolidFill().setColor(Color.purple());  
+    const chartFormat2 = new ChartFormat().setLine(chartLine2).setSolidFill(chartSolidFill2);
     const chartMarker2 = new ChartMarker().setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2);
     const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);

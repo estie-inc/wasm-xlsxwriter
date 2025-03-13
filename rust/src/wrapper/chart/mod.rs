@@ -10,6 +10,7 @@ mod chart_marker_type;
 mod chart_point;
 mod chart_range;
 mod chart_series;
+mod chart_solid_fill;
 mod chart_title;
 mod chart_type;
 
