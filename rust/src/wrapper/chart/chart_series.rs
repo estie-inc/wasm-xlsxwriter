@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use super::{chart_data_label::ChartDataLabel, chart_marker::ChartMarker, chart_point::ChartPoint, chart_range::ChartRange};
+use super::{chart_data_label::ChartDataLabel, chart_format::ChartFormat, chart_marker::ChartMarker, chart_point::ChartPoint, chart_range::ChartRange};
 
 #[wasm_bindgen]
 pub struct ChartSeries {
@@ -147,6 +147,15 @@ impl ChartSeries {
     pub fn set_marker(&self, marker: &ChartMarker) -> ChartSeries {
         let mut series = self.inner.lock().unwrap();
         series.set_marker(&marker.inner);
+        ChartSeries {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &mut ChartFormat) -> ChartSeries {
+        let mut series = self.inner.lock().unwrap();
+        series.set_format(&mut format.inner);
         ChartSeries {
             inner: Arc::clone(&self.inner),
         }
