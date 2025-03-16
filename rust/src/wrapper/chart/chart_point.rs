@@ -2,6 +2,7 @@ use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
 use crate::wrapper::chart::chart_format::ChartFormat;
+use crate::macros::wrap_struct;
 
 /// The `ChartPoint` struct represents a chart point.
 ///
@@ -22,26 +23,9 @@ use crate::wrapper::chart::chart_format::ChartFormat;
 /// It is used in conjunction with the {@link Chart} struct.
 ///
 /// TODO: example omitted
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct ChartPoint {
-    pub(crate) inner: xlsx::ChartPoint,
-}
 
-#[wasm_bindgen]
-impl ChartPoint {
-    /// Create a new `ChartPoint` object to represent a Chart point.
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> ChartPoint {
-        ChartPoint {
-            inner: xlsx::ChartPoint::new(),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setFormat")]
-    pub fn set_format(&self, format: &mut ChartFormat) -> ChartPoint {
-        ChartPoint {
-            inner: self.clone().inner.set_format(&mut format.inner),
-        }
-    }
-}
+wrap_struct!(
+    ChartPoint,
+    xlsx::ChartPoint,
+    set_format(format: &mut ChartFormat)
+);

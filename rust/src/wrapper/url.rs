@@ -1,7 +1,7 @@
-use std::sync::{Arc, Mutex};
-
-use rust_xlsxwriter::{self as xlsx};
+use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
+
+use crate::macros::wrap_struct;
 
 /// The `Url` struct is used to define a worksheet url.
 ///
@@ -73,60 +73,10 @@ use wasm_bindgen::prelude::*;
 ///
 /// Excel has a limit of around 2080 characters in the url string. Urls beyond
 /// this limit will raise an error when written.
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Url {
-    pub(crate) inner: Arc<Mutex<xlsx::Url>>,
-}
 
-macro_rules! impl_method {
-    ($self:ident.$method:ident($($arg:expr),*)) => {
-        let mut lock = $self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
-        inner = inner.$method($($arg),*);
-        let _ = std::mem::replace(&mut *lock, inner);
-        return Url {
-            inner: Arc::clone(&$self.inner),
-        }
-    };
-}
-
-#[wasm_bindgen]
-impl Url {
-    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Url> {
-        self.inner.lock().unwrap()
-    }
-
-    /// Create a new Url struct.
-    ///
-    /// @param {string} link - A string like type representing a URL.
-    /// @returns {Url} - The url object.
-    #[wasm_bindgen(constructor, skip_jsdoc)]
-    pub fn new(link: &str) -> Url {
-        Url {
-            inner: Arc::new(Mutex::new(xlsx::Url::new(link))),
-        }
-    }
-
-    /// Set the alternative text for the url.
-    ///
-    /// Set an alternative, user friendly, text for the url.
-    ///
-    /// @param {string} text - The alternative text, as a string or string like type.
-    /// @returns {Url} - The url object.
-    #[wasm_bindgen(js_name = "setText", skip_jsdoc)]
-    pub fn set_text(&self, text: &str) -> Url {
-        impl_method!(self.set_text(text));
-    }
-
-    /// Set the screen tip for the url.
-    ///
-    /// Set a screen tip when the user does a mouseover of the url.
-    ///
-    /// @param {string} tip - The url tip, as a string or string like type.
-    /// @returns {Url} - The url object.
-    #[wasm_bindgen(js_name = "setTip", skip_jsdoc)]
-    pub fn set_tip(&self, tip: &str) -> Url {
-        impl_method!(self.set_tip(tip));
-    }
-}
+wrap_struct!(
+    Url,
+    xlsx::Url,
+    set_text(text: &str),
+    set_tip(tip: &str)
+);

@@ -4,6 +4,7 @@ use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
 use crate::wrapper::WasmResult;
+use crate::macros::wrap_struct;
 
 /// Since the xlsx::Image does not have a default value, we use the smallest PNG image data as a dummy data.
 fn new_dummy_image() -> xlsx::Image {
@@ -21,26 +22,13 @@ fn new_dummy_image() -> xlsx::Image {
 
 /// The `Image` struct is used to create an object to represent an image that
 /// can be inserted into a worksheet.
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Image {
-    pub(crate) inner: Arc<Mutex<xlsx::Image>>,
-}
 
-macro_rules! impl_method {
-    ($self:ident.$method:ident($($arg:expr),*)) => {
-        let mut lock = $self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(
-            &mut *lock,
-            new_dummy_image(),
-        );
-        inner = inner.$method($($arg),*);
-        let _ = std::mem::replace(&mut *lock, inner);
-        return Image {
-            inner: Arc::clone(&$self.inner),
-        }
-    };
-}
+wrap_struct!(
+    Image,
+    xlsx::Image,
+    set_scale_width(scale: f64),
+    set_scale_height(scale: f64)
+);
 
 #[wasm_bindgen]
 impl Image {
@@ -83,33 +71,5 @@ impl Image {
         Ok(Image {
             inner: Arc::new(Mutex::new(image)),
         })
-    }
-
-    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Image> {
-        self.inner.lock().unwrap()
-    }
-
-    /// Set the width scale for the image.
-    ///
-    /// Set the width scale for the image relative to 1.0 (i.e. 100%). See the
-    /// {@link Image#setScaleHeight} method for details.
-    ///
-    /// @param {number} scale - The scale ratio.
-    /// @returns {Image} - The Image object.
-    #[wasm_bindgen(js_name = "setScaleWidth", skip_jsdoc)]
-    pub fn set_scale_width(&self, scale: f64) -> Image {
-        impl_method!(self.set_scale_width(scale));
-    }
-
-    /// Set the width scale for the image.
-    ///
-    /// Set the width scale for the image relative to 1.0 (i.e. 100%). See the
-    /// {@link Image#setScaleHeight} method for details.
-    ///
-    /// @param {number} scale - The scale ratio.
-    /// @returns {Image} - The Image object.
-    #[wasm_bindgen(js_name = "setScaleHeight", skip_jsdoc)]
-    pub fn set_scale_height(&self, scale: f64) -> Image {
-        impl_method!(self.set_scale_height(scale));
     }
 }

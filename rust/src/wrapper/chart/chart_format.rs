@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::wrapper::color::Color;
 use crate::wrapper::chart::chart_solid_fill::ChartSolidFill;
+use crate::macros::wrap_struct;
 
 /// The `ChartFormat` struct represents formatting for various chart objects.
 ///
@@ -35,124 +36,33 @@ use crate::wrapper::chart::chart_solid_fill::ChartSolidFill;
 ///   object.
 ///
 /// TODO: example omitted
-#[wasm_bindgen]
-pub struct ChartFormat {
-    pub(crate) inner: xlsx::ChartFormat,
-}
 
-#[wasm_bindgen]
-impl ChartFormat {
-    /// Create a new `ChartFormat` instance to set formatting for a chart element.
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> ChartFormat {
-        ChartFormat {
-            inner: xlsx::ChartFormat::new(),
-        }
-    }
+wrap_struct!(
+    ChartFormat,
+    xlsx::ChartFormat,
+    set_line(line: &ChartLine),
+    set_border(border: &ChartLine),
+    set_no_line(),
+    set_no_border(),
+    set_no_fill(),
+    set_solid_fill(fill: &ChartSolidFill)
+);
 
-    #[wasm_bindgen(js_name = "setLine")]
-    pub fn set_line(mut self, line: &ChartLine) -> ChartFormat {
-        self.inner.set_line(&line.inner);
-        self
-    }
+wrap_struct!(
+    ChartLine,
+    xlsx::ChartLine,
+    set_color(color: &Color),
+    set_width(width: f64),
+    set_dash_type(dash_type: ChartLineDashType),
+    set_transparency(transparency: u8),
+    set_hidden(enable: bool)
+);
 
-    #[wasm_bindgen(js_name = "setBorder")]
-    pub fn set_border(mut self, border: &ChartLine) -> ChartFormat {
-        self.inner.set_border(&border.inner);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setNoLine")]
-    pub fn set_no_line(mut self) -> ChartFormat {
-        self.inner.set_no_line();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setNoBorder")]
-    pub fn set_no_border(mut self) -> ChartFormat {
-        self.inner.set_no_border();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setNoFill")]
-    pub fn set_no_fill(mut self) -> ChartFormat {
-        self.inner.set_no_fill();
-        self
-    }
-
-    // TODO: set_gradient_fill, set_pattern_fill
-    #[wasm_bindgen(js_name = "setSolidFill")]
-    pub fn set_solid_fill(mut self, fill: &ChartSolidFill) -> ChartFormat {
-        self.inner.set_solid_fill(&fill.inner);
-        self
-    }
-}
-
-/// The `ChartLine` struct represents a chart line/border.
+/// The `ChartLineDashType` enum defines the dash types for chart lines and borders.
 ///
-/// The `ChartLine` struct represents the formatting properties for a line or
-/// border for a Chart element. It is a sub property of the {@link ChartFormat}
-/// struct and is used with the {@link ChartFormat#setLine} or
-/// {@link ChartFormat#setBorder} methods.
-///
-/// Excel uses the element names "Line" and "Border" depending on the context.
-/// For a Line chart the line is represented by a line property but for a Column
-/// chart the line becomes the border. Both of these share the same properties
-/// and are both represented in `rust_xlsxwriter` by the {@link ChartLine} struct.
-///
-/// As a syntactic shortcut you can use the type alias {@link ChartBorder} instead
-/// of `ChartLine`.
-///
-/// It is used in conjunction with the {@link Chart} struct.
-///
-/// TODO: example omitted
-#[wasm_bindgen]
-pub struct ChartLine {
-    pub(crate) inner: xlsx::ChartLine,
-}
-
-#[wasm_bindgen]
-impl ChartLine {
-    /// Create a new `ChartLine` instance to set formatting for a chart line.
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> ChartLine {
-        ChartLine {
-            inner: xlsx::ChartLine::new(),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(mut self, color: &Color) -> ChartLine {
-        self.inner.set_color(color.inner);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setWidth")]
-    pub fn set_width(mut self, width: f64) -> ChartLine {
-        self.inner.set_width(width);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setDashType")]
-    pub fn set_dash_type(mut self, dash_type: ChartLineDashType) -> ChartLine {
-        self.inner.set_dash_type(dash_type.into());
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setTransparency")]
-    pub fn set_transparency(mut self, transparency: u8) -> ChartLine {
-        self.inner.set_transparency(transparency);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setHidden")]
-    pub fn set_hidden(mut self, enable: bool) -> ChartLine {
-        self.inner.set_hidden(enable);
-        self
-    }
-}
-
-#[derive(Clone, Copy)]
+/// The `ChartLineDashType` enum defines the dash types for chart lines and
+/// borders. It is used in conjunction with the {@link ChartLine#setDashType}
+/// method.
 #[wasm_bindgen]
 pub enum ChartLineDashType {
     /// Solid - chart line/border dash type.

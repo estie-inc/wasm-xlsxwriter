@@ -2,6 +2,7 @@ use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
 use crate::wrapper::format::Format;
+use crate::macros::wrap_struct;
 
 use super::formula::Formula;
 
@@ -30,80 +31,19 @@ use super::formula::Formula;
 ///
 /// [Overview of Excel tables]:
 ///     https://support.microsoft.com/en-us/office/overview-of-excel-tables-7ab0bb7d-3a9e-4b56-a3c9-6c94334e492c
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Table {
-    pub(crate) inner: xlsx::Table,
-}
 
-#[wasm_bindgen]
-impl Table {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Table {
-            inner: xlsx::Table::new(),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setName")]
-    pub fn set_name(&self, name: &str) -> Table {
-        Table {
-            inner: self.clone().inner.set_name(name),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setStyle")]
-    pub fn set_style(&self, style: TableStyle) -> Table {
-        let style = xlsx::TableStyle::from(style);
-        Table {
-            inner: self.clone().inner.set_style(style),
-        }
-    }
-
-    // FIXME: ownership?
-    #[wasm_bindgen(js_name = "setColumns")]
-    pub fn set_columns(&self, columns: Vec<TableColumn>) -> Table {
-        let columns: Vec<_> = columns.into_iter().map(|c| c.inner).collect();
-        Table {
-            inner: self.clone().inner.set_columns(&columns),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setFirstColumn")]
-    pub fn set_first_column(&self, enable: bool) -> Table {
-        Table {
-            inner: self.clone().inner.set_first_column(enable),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setHeaderRow")]
-    pub fn set_header_row(&self, enable: bool) -> Table {
-        Table {
-            inner: self.clone().inner.set_header_row(enable),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setTotalRow")]
-    pub fn set_total_row(&self, enable: bool) -> Table {
-        Table {
-            inner: self.clone().inner.set_total_row(enable),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setBandedColumns")]
-    pub fn set_banded_columns(&self, enable: bool) -> Table {
-        Table {
-            inner: self.clone().inner.set_banded_columns(enable),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setBandedRows")]
-    pub fn set_banded_rows(&self, enable: bool) -> Table {
-        Table {
-            inner: self.clone().inner.set_banded_rows(enable),
-        }
-    }
-}
+wrap_struct!(
+    Table,
+    xlsx::Table,
+    set_name(name: &str),
+    set_style(style: TableStyle),
+    set_columns(columns: Vec<TableColumn>),
+    set_first_column(enable: bool),
+    set_header_row(enable: bool),
+    set_total_row(enable: bool),
+    set_banded_columns(enable: bool),
+    set_banded_rows(enable: bool)
+);
 
 /// The `TableColumn` struct represents a table column.
 ///

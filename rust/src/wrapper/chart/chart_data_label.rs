@@ -4,115 +4,26 @@ use wasm_bindgen::prelude::*;
 use crate::wrapper::chart::chart_data_label_position::ChartDataLabelPosition;
 use crate::wrapper::chart::chart_font::ChartFont;
 use crate::wrapper::chart::chart_format::ChartFormat;
+use crate::macros::wrap_struct;
 
-#[wasm_bindgen]
-pub struct ChartDataLabel {
-    pub(crate) inner: xlsx::ChartDataLabel,
-}
-
-#[wasm_bindgen]
-impl ChartDataLabel {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> ChartDataLabel {
-        ChartDataLabel {
-            inner: xlsx::ChartDataLabel::new(),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "showValue")]
-    pub fn show_value(mut self) -> ChartDataLabel {
-        self.inner.show_value();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showCategoryName")]
-    pub fn show_category_name(mut self) -> ChartDataLabel {
-        self.inner.show_category_name();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showSeriesName")]
-    pub fn show_series_name(mut self) -> ChartDataLabel {
-        self.inner.show_series_name();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showLeaderLines")]
-    pub fn show_leader_lines(mut self) -> ChartDataLabel {
-        self.inner.show_leader_lines();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showLegendKey")]
-    pub fn show_legend_key(mut self) -> ChartDataLabel {
-        self.inner.show_legend_key();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showPercentage")]
-    pub fn show_percentage(mut self) -> ChartDataLabel {
-        self.inner.show_percentage();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setPosition")]
-    pub fn set_position(mut self, position: ChartDataLabelPosition) -> ChartDataLabel {
-        self.inner.set_position(position.into());
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setFont")]
-    pub fn set_font(mut self, font: &ChartFont) -> ChartDataLabel {
-        self.inner.set_font(&font.inner);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setFormat")]
-    pub fn set_format(mut self, format: &mut ChartFormat) -> ChartDataLabel {
-        self.inner.set_format(&mut format.inner);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setNumFormat")]
-    pub fn set_num_format(mut self, num_format: &str) -> ChartDataLabel {
-        self.inner.set_num_format(num_format);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setSeparator")]
-    pub fn set_separator(mut self, separator: char) -> ChartDataLabel {
-        self.inner.set_separator(separator);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showYValue")]
-    pub fn show_y_value(mut self) -> ChartDataLabel {
-        self.inner.show_y_value();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "showXValue")]
-    pub fn show_x_value(mut self) -> ChartDataLabel {
-        self.inner.show_x_value();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setHidden")]
-    pub fn set_hidden(mut self) -> ChartDataLabel {
-        self.inner.set_hidden();
-        self
-    }
-
-    #[wasm_bindgen(js_name = "setValue")]
-    pub fn set_value(mut self, value: &str) -> ChartDataLabel {
-        self.inner.set_value(value);
-        self
-    }
-
-    #[wasm_bindgen(js_name = "toCustom")]
-    pub fn to_custom(mut self) -> ChartDataLabel {
-        self.inner.to_custom();
-        self
-    }
-}
+wrap_struct!(
+    ChartDataLabel,
+    xlsx::ChartDataLabel,
+    show_value(),
+    show_category_name(),
+    show_series_name(),
+    show_leader_lines(),
+    show_legend_key(),
+    show_percentage(),
+    set_position(position: ChartDataLabelPosition),
+    set_font(font: &ChartFont),
+    set_format(format: &mut ChartFormat),
+    set_num_format(num_format: &str),
+    set_separator(separator: char),
+    show_y_value(),
+    show_x_value(),
+    set_hidden(),
+    set_value(value: &str),
+    to_custom()
+);
 
