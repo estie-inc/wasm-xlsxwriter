@@ -5,6 +5,7 @@ use crate::wrapper::chart::chart_format::ChartFormat;
 use crate::wrapper::chart::chart_marker_type::ChartMarkerType;
 
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct ChartMarker {
     pub(crate) inner: xlsx::ChartMarker,
 }
@@ -24,9 +25,9 @@ impl ChartMarker {
     ///
     /// @return {ChartMarker} - The ChartMarker instance.
     #[wasm_bindgen(js_name = "setAutomatic")]
-    pub fn set_automatic(mut self) -> ChartMarker {
+    pub fn set_automatic(&mut self) -> ChartMarker {
         self.inner.set_automatic();
-        self
+        self.clone()
     }
 
     /// Set the formatting properties for a chart marker.
@@ -34,9 +35,9 @@ impl ChartMarker {
     /// @param {ChartFormat} format - The chart format properties.
     /// @return {ChartMarker} - The ChartMarker instance.
     #[wasm_bindgen(js_name = "setFormat")]
-    pub fn set_format(mut self, format: &mut ChartFormat) -> ChartMarker {
+    pub fn set_format(&mut self, format: &mut ChartFormat) -> ChartMarker {
         self.inner.set_format(&mut format.inner);
-        self
+        self.clone()
     }
 
     /// Turn off/hide a chart marker.
@@ -46,9 +47,9 @@ impl ChartMarker {
     ///
     /// @return {ChartMarker} - The ChartMarker instance.
     #[wasm_bindgen(js_name = "setNone")]
-    pub fn set_none(mut self) -> ChartMarker {
+    pub fn set_none(&mut self) -> ChartMarker {
         self.inner.set_none();
-        self
+        self.clone()
     }
 
     /// Set the marker size.
@@ -56,9 +57,9 @@ impl ChartMarker {
     /// @param {number} size - The marker size.
     /// @return {ChartMarker} - The ChartMarker instance.
     #[wasm_bindgen(js_name = "setSize")]
-    pub fn set_size(mut self, size: u8) -> ChartMarker {
+    pub fn set_size(&mut self, size: u8) -> ChartMarker {
         self.inner.set_size(size);
-        self
+        self.clone()
     }
 
     /// Set the marker type.
@@ -66,8 +67,8 @@ impl ChartMarker {
     /// @param {number} marker_type - The marker type.
     /// @return {ChartMarker} - The ChartMarker instance.
     #[wasm_bindgen(js_name = "setType")]
-    pub fn set_type(mut self, marker_type: ChartMarkerType) -> ChartMarker {
+    pub fn set_type(&mut self, marker_type: ChartMarkerType) -> ChartMarker {
         self.inner.set_type(marker_type.into());
-        self
+        self.clone()
     }
 }

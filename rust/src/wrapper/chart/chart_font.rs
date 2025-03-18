@@ -10,6 +10,7 @@ use crate::wrapper::color::Color;
 ///
 /// It is used in conjunction with the {@link Chart} struct.
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct ChartFont {
     pub(crate) inner: xlsx::ChartFont,
 }
@@ -28,9 +29,9 @@ impl ChartFont {
     ///
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setBold")]
-    pub fn set_bold(mut self) -> ChartFont {
+    pub fn set_bold(&mut self) -> ChartFont {
         self.inner.set_bold();
-        self
+        self.clone()
     }
 
     /// Set the font character set value.
@@ -41,9 +42,9 @@ impl ChartFont {
     /// @param {number} charset - The font character set value.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setCharacterSet")]
-    pub fn set_character_set(mut self, character_set: u8) -> ChartFont {
+    pub fn set_character_set(&mut self, character_set: u8) -> ChartFont {
         self.inner.set_character_set(character_set);
-        self
+        self.clone()
     }
 
     /// Set the font color property.
@@ -51,18 +52,18 @@ impl ChartFont {
     /// @param {Color} color - The font color property.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(mut self, color: &Color) -> ChartFont {
+    pub fn set_color(&mut self, color: &Color) -> ChartFont {
         self.inner.set_color(color.inner);
-        self
+        self.clone()
     }
 
     /// Set the font italic property.
     ///
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setItalic")]
-    pub fn set_italic(mut self) -> ChartFont {
+    pub fn set_italic(&mut self) -> ChartFont {
         self.inner.set_italic();
-        self
+        self.clone()
     }
 
     /// Set the font name/family property.
@@ -74,9 +75,9 @@ impl ChartFont {
     /// @param {string} name - The font name property.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setName")]
-    pub fn set_name(mut self, name: &str) -> ChartFont {
+    pub fn set_name(&mut self, name: &str) -> ChartFont {
         self.inner.set_name(name);
-        self
+        self.clone()
     }
 
     /// Set the font pitch and family value.
@@ -87,9 +88,9 @@ impl ChartFont {
     /// @param {number} pitch_family - The font pitch and family value.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setPitchFamily")]
-    pub fn set_pitch_family(mut self, pitch_family: u8) -> ChartFont {
+    pub fn set_pitch_family(&mut self, pitch_family: u8) -> ChartFont {
         self.inner.set_pitch_family(pitch_family);
-        self
+        self.clone()
     }
 
     /// Set the right to left property.
@@ -100,9 +101,9 @@ impl ChartFont {
     /// @param {boolean} enable - Turn the property on/off. Defaults to true.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setRightToLeft")]
-    pub fn set_right_to_left(mut self, enable: bool) -> ChartFont {
+    pub fn set_right_to_left(&mut self, enable: bool) -> ChartFont {
         self.inner.set_right_to_left(enable);
-        self
+        self.clone()
     }
 
     /// Set the font rotation angle.
@@ -112,9 +113,9 @@ impl ChartFont {
     /// @param {number} rotation - The rotation angle in degrees.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setRotation")]
-    pub fn set_rotation(mut self, rotation: i16) -> ChartFont {
+    pub fn set_rotation(&mut self, rotation: i16) -> ChartFont {
         self.inner.set_rotation(rotation);
-        self
+        self.clone()
     }
 
     /// Set the font size property.
@@ -124,9 +125,9 @@ impl ChartFont {
     /// @param {number} size - The font size property.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setSize")]
-    pub fn set_size(mut self, size: f64) -> ChartFont {
+    pub fn set_size(&mut self, size: f64) -> ChartFont {
         self.inner.set_size(size);
-        self
+        self.clone()
     }
 
     /// Set the font strikethrough property.
@@ -136,9 +137,9 @@ impl ChartFont {
     ///
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setStrikethrough")]
-    pub fn set_strikethrough(mut self) -> ChartFont {
+    pub fn set_strikethrough(&mut self) -> ChartFont {
         self.inner.set_strikethrough();
-        self
+        self.clone()
     }
 
     /// Set the font underline property.
@@ -149,9 +150,9 @@ impl ChartFont {
     /// @param {number} underline - The font underline value.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setUnderline")]
-    pub fn set_underline(mut self) -> ChartFont {
+    pub fn set_underline(&mut self) -> ChartFont {
         self.inner.set_underline();
-        self
+        self.clone()
     }
 
     /// Unset bold property.
@@ -161,8 +162,8 @@ impl ChartFont {
     ///
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "unsetBold")]
-    pub fn unset_bold(mut self) -> ChartFont {
+    pub fn unset_bold(&mut self) -> ChartFont {
         self.inner.unset_bold();
-        self
+        self.clone()
     }
 }

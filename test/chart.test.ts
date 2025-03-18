@@ -47,7 +47,7 @@ describe("xlsx-wasm test", () => {
   
     const chart = new Chart(ChartType.Stock);
     const chartFont = new ChartFont().setName("Meiryo UI");
-    const chartDataLabel = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
+    const chartDataLabel1 = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
   
     const chartSeries1 = new ChartSeries();
     const chartLine1 = new ChartLine().setColor(Color.green());
@@ -61,22 +61,24 @@ describe("xlsx-wasm test", () => {
       .setCategories(categoriesRange1)
       .setValues(valuesRange1)
       .setFormat(chartFormat1)
-      .setDataLabel(chartDataLabel)
+      .setDataLabel(chartDataLabel1)
       .setMarker(chartMarker1);
+
+    const chartDataLabel2 = new ChartDataLabel();
     const chartSeries2 = new ChartSeries();
-    const chartLine2 = new ChartLine().setColor(Color.purple());
-    const chartSolidFill2 = new ChartSolidFill().setColor(Color.purple());  
-    const chartFormat2 = new ChartFormat().setLine(chartLine2).setSolidFill(chartSolidFill2);
-    const chartMarker2 = new ChartMarker().setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2);
+    const chartLine2 = new ChartLine();
+    const chartSolidFill2 = new ChartSolidFill();
+    const chartFormat2 = new ChartFormat();
+    const chartMarker2 = new ChartMarker();
     const categoriesRange2 = new ChartRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = new ChartRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
       .setCategories(categoriesRange2)
       .setValues(valuesRange2)
-      .setFormat(chartFormat2)
-      .setDataLabel(chartDataLabel)
-      .setMarker(chartMarker2);
+      .setFormat(chartFormat2.setLine(chartLine2.setColor(Color.purple())).setSolidFill(chartSolidFill2.setColor(Color.purple())))
+      .setDataLabel(chartDataLabel2.setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left))
+      .setMarker(chartMarker2.setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2.setLine(chartLine2.setColor(Color.purple())).setSolidFill(chartSolidFill2.setColor(Color.purple()))));
     chart
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);

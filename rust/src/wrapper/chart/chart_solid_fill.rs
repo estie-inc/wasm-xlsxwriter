@@ -11,6 +11,7 @@ use crate::wrapper::color::Color;
 ///
 /// It is used in conjunction with the {@link Chart} struct.
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct ChartSolidFill {
     pub(crate) inner: xlsx::ChartSolidFill,
 }
@@ -30,9 +31,9 @@ impl ChartSolidFill {
     /// @param {Color} color - The color property.
     /// @return {ChartSolidFill} - The ChartSolidFill instance.
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(mut self, color: &Color) -> ChartSolidFill {
+    pub fn set_color(&mut self, color: &Color) -> ChartSolidFill {
         self.inner.set_color(color.inner);
-        self
+        self.clone()
     }
 
     /// Set the transparency of a solid fill.
@@ -43,8 +44,8 @@ impl ChartSolidFill {
     /// @param {number} transparency - The color transparency in the range 0-100.
     /// @return {ChartSolidFill} - The ChartSolidFill instance.
     #[wasm_bindgen(js_name = "setTransparency")]
-    pub fn set_transparency(mut self, transparency: u8) -> ChartSolidFill {
+    pub fn set_transparency(&mut self, transparency: u8) -> ChartSolidFill {
         self.inner.set_transparency(transparency);
-        self
+        self.clone()
     }
 }
