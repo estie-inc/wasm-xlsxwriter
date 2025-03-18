@@ -13,6 +13,7 @@ mod chart_series;
 mod chart_solid_fill;
 mod chart_title;
 mod chart_type;
+mod chart_line;
 
 use std::sync::{Arc, Mutex};
 
