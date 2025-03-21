@@ -2,3 +2,4 @@
 
 mod error;
 mod wrapper;
+mod macros;
