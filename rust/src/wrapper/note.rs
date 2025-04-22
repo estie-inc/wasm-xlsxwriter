@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
-use super::{color::Color, format::Format};
+use super::{color::Color, format::Format, object_movement::ObjectMovement};
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct Note {
@@ -95,41 +95,5 @@ impl Note {
     #[wasm_bindgen(js_name = "setObjectMovement", skip_jsdoc)]
     pub fn set_object_movement(&self, option: ObjectMovement) -> Note {
         impl_method!(self.set_object_movement(option.into()));
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Copy)]
-#[wasm_bindgen]
-pub enum ObjectMovement {
-    /// Move and size the worksheet object with the cells. Default for charts.
-    MoveAndSizeWithCells,
-
-    /// Move but don't size the worksheet object with the cells. Default for
-    /// images.
-    MoveButDontSizeWithCells,
-
-    /// Don't move or size the worksheet object with the cells.
-    DontMoveOrSizeWithCells,
-
-    /// Same as `MoveAndSizeWithCells` except hidden cells are applied after the
-    /// object is inserted. This allows the insertion of objects into hidden
-    /// rows or columns.
-    MoveAndSizeWithCellsAfter,
-}
-
-impl From<ObjectMovement> for xlsx::ObjectMovement {
-    fn from(underline: ObjectMovement) -> xlsx::ObjectMovement {
-        match underline {
-            ObjectMovement::MoveAndSizeWithCells => xlsx::ObjectMovement::MoveAndSizeWithCells,
-            ObjectMovement::MoveButDontSizeWithCells => {
-                xlsx::ObjectMovement::MoveButDontSizeWithCells
-            }
-            ObjectMovement::DontMoveOrSizeWithCells => {
-                xlsx::ObjectMovement::DontMoveOrSizeWithCells
-            }
-            ObjectMovement::MoveAndSizeWithCellsAfter => {
-                xlsx::ObjectMovement::MoveAndSizeWithCellsAfter
-            }
-        }
     }
 }

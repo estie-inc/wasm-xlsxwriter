@@ -1,4 +1,4 @@
-import { Workbook, Image } from "../web";
+import { Workbook, Image, ObjectMovement } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
@@ -15,6 +15,8 @@ describe("xlsx-wasm test", () => {
 
     // Act
     const worksheet = workbook.addWorksheet();
+    image.setAltText("rust logo");
+    image.setObjectMovement(ObjectMovement.MoveAndSizeWithCells);
     worksheet.insertImage(0, 0, image);
 
     // Assert
@@ -33,6 +35,7 @@ describe("xlsx-wasm test", () => {
 
     // Act
     const worksheet = workbook.addWorksheet();
+    image.setDecorative(true);
     worksheet.embedImage(1, 1, image);
 
     // Assert
@@ -57,6 +60,15 @@ describe("xlsx-wasm test", () => {
     tallImage.setScaleHeight(2);
     worksheet.insertImage(0, 0, wideImage);
     worksheet.insertImage(10, 0, tallImage);
+    // set width, height
+    const image = new Image(imageBuf);
+    image.setWidth(50);
+    image.setHeight(50);
+    worksheet.insertImage(20, 0, image);
+    // set scale to size
+    const scaleImage = new Image(imageBuf);
+    scaleImage.setScaleToSize(50, 100, false);
+    worksheet.insertImage(30, 0, scaleImage);
 
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
