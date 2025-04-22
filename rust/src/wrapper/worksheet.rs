@@ -5,8 +5,8 @@ use rust_xlsxwriter as xlsx;
 use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::wrapper::{
-    chart::Chart, excel_data::ExcelData, format::Format, image::Image,
-    table::Table, utils, WasmResult,
+    chart::Chart, excel_data::ExcelData, format::Format, header_image_position::HeaderImagePosition,
+    image::Image, table::Table, utils, WasmResult,
 };
 
 use super::{
@@ -173,12 +173,28 @@ impl Worksheet {
         self.clone()
     }
 
+    #[wasm_bindgen(js_name = "setHeaderImage", skip_jsdoc)]
+    pub fn set_header_image(&self, image: &Image, position: HeaderImagePosition) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.set_header_image(&image.lock(), position.into())?;
+        Ok(self.clone())
+    }
+
     #[wasm_bindgen(js_name = "setFooter", skip_jsdoc)]
     pub fn set_footer(&self, footer: &str) -> Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         sheet.set_footer(footer);
         self.clone()
+    }
+
+    #[wasm_bindgen(js_name = "setFooterImage", skip_jsdoc)]
+    pub fn set_footer_image(&self, image: &Image, position: HeaderImagePosition) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.set_footer_image(&image.lock(), position.into())?;
+        Ok(self.clone())
     }
 
     /// Make a worksheet the active/initially visible worksheet in a workbook.

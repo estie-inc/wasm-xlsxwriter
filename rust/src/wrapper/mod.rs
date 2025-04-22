@@ -4,6 +4,7 @@ mod doc_properties;
 mod excel_data;
 mod format;
 mod formula;
+mod header_image_position;
 mod image;
 mod note;
 mod rich_string;
