@@ -7,6 +7,7 @@ mod formula;
 mod header_image_position;
 mod image;
 mod note;
+mod object_movement;
 mod rich_string;
 mod table;
 mod url;
