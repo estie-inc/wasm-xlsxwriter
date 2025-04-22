@@ -1,6 +1,6 @@
-import { Color, Format, Workbook } from "../web";
+import { Color, Format, HeaderImagePosition, Image, Workbook } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile } from "./common";
+import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
 beforeAll(async () => {
   await initWasModule();
@@ -10,6 +10,8 @@ describe("xlsx-wasm test", () => {
   test("worksheet print", async () => {
     // Arrange
     const workbook = new Workbook();
+    const imageBuf = loadFile("./fixtures/rust.png");
+    const image = new Image(imageBuf).setScaleHeight(0.5).setScaleWidth(0.5);
 
     // Act
     const worksheet = workbook.addWorksheet();
@@ -30,8 +32,10 @@ describe("xlsx-wasm test", () => {
     worksheet.setPrintCenterHorizontally(true);
     worksheet.setPrintCenterVertically(true);
     worksheet.setPrintHeadings(true);
-    worksheet.setHeader("&CHello");
-    worksheet.setFooter("&CPage &[Page] of &[Pages]");
+    worksheet.setHeader("&C&[Picture]");
+    worksheet.setHeaderImage(image, HeaderImagePosition.Center);
+    worksheet.setFooter("&C&[Picture]&RPage &[Page] of &[Pages]");
+    worksheet.setFooterImage(image, HeaderImagePosition.Center);
     worksheet.setRepeatColumns(0, 1);
     worksheet.setRepeatRows(0, 1);
 
