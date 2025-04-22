@@ -4,6 +4,7 @@ use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
 use crate::wrapper::WasmResult;
+use crate::wrapper::object_movement::ObjectMovement;
 
 /// Since the xlsx::Image does not have a default value, we use the smallest PNG image data as a dummy data.
 fn new_dummy_image() -> xlsx::Image {
@@ -111,5 +112,81 @@ impl Image {
     #[wasm_bindgen(js_name = "setScaleHeight", skip_jsdoc)]
     pub fn set_scale_height(&self, scale: f64) -> Image {
         impl_method!(self.set_scale_height(scale));
+    }
+
+    /// Set the width of the image.
+    ///
+    /// Set the displayed width of the image in pixels. As with Excel this sets a logical size for the image,
+    /// it doesn't rescale the actual image. This allows the user to get back the original unscaled image.
+    ///
+    /// @param {number} width - The logical image width in pixels.
+    /// @returns {Image} - The Image object.
+    #[wasm_bindgen(js_name = "setWidth", skip_jsdoc)]
+    pub fn set_width(&self, width: u32) -> Image {
+        impl_method!(self.set_width(width));
+    }
+
+    /// Set the height of the image.
+    ///
+    /// Set the displayed height of the image in pixels. As with Excel this sets a logical size for the image,
+    /// it doesn't rescale the actual image. This allows the user to get back the original unscaled image.
+    ///
+    /// @param {number} height - The logical image height in pixels.
+    /// @returns {Image} - The Image object.
+    #[wasm_bindgen(js_name = "setHeight", skip_jsdoc)]
+    pub fn set_height(&self, height: u32) -> Image {
+        impl_method!(self.set_height(height));
+    }
+
+    /// Set the alternative text for the image.
+    ///
+    /// Set the alternative text for the image. This is used for accessibility and screen readers.
+    ///
+    /// @param {string} text - The alternative text for the image.
+    /// @returns {Image} - The Image object.
+    #[wasm_bindgen(js_name = "setAltText", skip_jsdoc)]
+    pub fn set_alt_text(&self, text: &str) -> Image {
+        impl_method!(self.set_alt_text(text));
+    }
+
+    /// Set the image as decorative.
+    ///
+    /// Set the image as decorative. This is used for accessibility and screen readers.
+    /// A decorative image is one that is used for visual purposes only and does not convey any meaning.
+    ///
+    /// @param {boolean} decorative - Whether the image is decorative.
+    /// @returns {Image} - The Image object.
+    #[wasm_bindgen(js_name = "setDecorative", skip_jsdoc)]
+    pub fn set_decorative(&self, decorative: bool) -> Image {
+        impl_method!(self.set_decorative(decorative));
+    }
+
+    /// Set the object movement options for a worksheet image.
+    ///
+    /// Set the option to define how an image will behave in Excel if the cells under the image are moved,
+    /// deleted, or have their size changed. In Excel the options are:
+    ///
+    /// 1. Move and size with cells.
+    /// 2. Move but don't size with cells.
+    /// 3. Don't move or size with cells.
+    ///
+    /// @param {ObjectMovement} movement - The object movement option.
+    /// @returns {Image} - The Image object.
+    #[wasm_bindgen(js_name = "setObjectMovement", skip_jsdoc)]
+    pub fn set_object_movement(&self, movement: ObjectMovement) -> Image {
+        impl_method!(self.set_object_movement(movement.into()));
+    }
+
+    /// Set the image to scale to a specific size.
+    ///
+    /// Set the image to scale to a specific size while maintaining the aspect ratio.
+    ///
+    /// @param {number} width - The target width in pixels.
+    /// @param {number} height - The target height in pixels.
+    /// @param {boolean} keep_aspect_ratio - Whether to maintain the aspect ratio.
+    /// @returns {Image} - The Image object.
+    #[wasm_bindgen(js_name = "setScaleToSize", skip_jsdoc)]
+    pub fn set_scale_to_size(&self, width: u32, height: u32, keep_aspect_ratio: bool) -> Image {
+        impl_method!(self.set_scale_to_size(width, height, keep_aspect_ratio));
     }
 }
