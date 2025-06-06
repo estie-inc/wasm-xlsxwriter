@@ -61,15 +61,15 @@ worksheet.write(3, 0, 2.34);
 worksheet.writeWithFormat(4, 0, 3.0, decimalFormat);
 
 // Write a formula.
-worksheet.write(5, 0, new Formula("=SIN(PI()/4)"));
+worksheet.writeFormula(5, 0, new Formula("=SIN(PI()/4)"));
 
 // Write a date.
 const date = new Date(2023, 1, 25);
 worksheet.writeWithFormat(6, 0, date, dateFormat);
 
 // Write some links.
-worksheet.write(7, 0, new Url("https://www.rust-lang.org"));
-worksheet.write(8, 0, new Url("https://www.rust-lang.org").setText("Rust"));
+worksheet.writeUrl(7, 0, new Url("https://www.rust-lang.org"));
+worksheet.writeUrl(8, 0, new Url("https://www.rust-lang.org").setText("Rust"));
 
 // Write some merged cells.
 worksheet.mergeRange(9, 0, 9, 1, "Merged cells", mergeFormat);
