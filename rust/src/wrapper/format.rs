@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
+use wasm_xlsxwriter_macros::wasm_wrapper;
 
 use super::color::Color;
 
@@ -170,23 +171,8 @@ use super::color::Color;
 /// In order to replicate Excel's behavior all `rust_xlsxwriter` programs should
 /// use US locale formatting which will then be rendered in the settings of your
 /// host OS.
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Format {
-    pub(crate) inner: Arc<Mutex<xlsx::Format>>,
-}
-
-macro_rules! impl_method {
-    ($self:ident.$method:ident($($arg:expr),*)) => {
-        let mut lock = $self.inner.lock().unwrap();
-        let mut inner = std::mem::take(&mut *lock);
-        inner = inner.$method($($arg),*);
-        let _ = std::mem::replace(&mut *lock, inner);
-        return Format {
-            inner: Arc::clone(&$self.inner),
-        }
-    };
-}
+#[wasm_wrapper(xlsx::Format)]
+pub struct Format;
 
 #[wasm_bindgen]
 impl Format {

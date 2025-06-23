@@ -2,25 +2,15 @@ use std::sync::{Arc, Mutex};
 
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
+use wasm_xlsxwriter_macros::wasm_wrapper;
 
 use super::{color::Color, format::Format, object_movement::ObjectMovement};
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Note {
-    pub(crate) inner: Arc<Mutex<xlsx::Note>>,
+fn new_dummy_note() -> xlsx::Note {
+    xlsx::Note::new("")
 }
 
-macro_rules! impl_method {
-    ($self:ident.$method:ident($($arg:expr),*)) => {
-        let mut lock = $self.inner.lock().unwrap();
-        let mut inner = std::mem::replace(&mut *lock, xlsx::Note::new(""));
-        inner = inner.$method($($arg),*);
-        let _ = std::mem::replace(&mut *lock, inner);
-        return Note {
-            inner: Arc::clone(&$self.inner),
-        }
-    };
-}
+#[wasm_wrapper(xlsx::Note, new_dummy_note)]
+pub struct Note;
 
 #[wasm_bindgen]
 impl Note {
