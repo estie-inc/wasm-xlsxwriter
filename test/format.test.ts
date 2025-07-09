@@ -1,5 +1,6 @@
 import {
   Color,
+  ExcelDateTime,
   Format,
   FormatAlign,
   FormatBorder,
@@ -10,7 +11,7 @@ import {
   Workbook,
 } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
-import { initWasModule, readXlsx, readXlsxFile, saveFile } from "./common";
+import { initWasModule, readXlsx, readXlsxFile } from "./common";
 
 beforeAll(async () => {
   await initWasModule();
@@ -59,16 +60,18 @@ describe("xlsx-wasm test", () => {
     worksheet.writeStringWithFormat(0, 12, "font charset 1", format10);
 
     const numFormat = new Format().setNumFormat("yyyy/m/d h:mm");
+    const datetime = ExcelDateTime.fromYMD(2001, 1, 12).andHMS(0, 0, 0);
     worksheet.writeDatetimeWithFormat(
       0,
       4,
-      new Date(Date.UTC(2000, 12, 12)),
+      datetime,
       numFormat
     );
+    const datetime2 = ExcelDateTime.fromYMD(2030, 9, 30).andHMS(23, 59, 59);
     worksheet.writeDatetimeWithFormat(
       0,
       5,
-      new Date(Date.UTC(2030, 8, 30, 23, 59, 59)),
+      datetime2,
       numFormat
     );
 

@@ -23,7 +23,7 @@ impl ExcelDateTime {
     }
 
     // Create a `ExcelDateTime` instance from years, months and days.
-    #[wasm_bindgen(js_name = "fromYMD", constructor)]
+    #[wasm_bindgen(js_name = "fromYMD")]
     pub fn from_ymd(year: u16, month: u8, day: u8) -> Result<ExcelDateTime, JsValue> {
         let dt = xlsx::ExcelDateTime::from_ymd(year, month, day)
             .map_err(|e| JsValue::from_str(&format!("{:?}", e)))?;

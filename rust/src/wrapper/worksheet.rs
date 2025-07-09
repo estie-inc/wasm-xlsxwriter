@@ -1,12 +1,11 @@
 use std::sync::{Arc, Mutex};
 
-use crate::error::XlsxError;
 use rust_xlsxwriter as xlsx;
-use wasm_bindgen::{prelude::*, JsValue};
+use wasm_bindgen::prelude::*;
 
 use crate::wrapper::{
-    chart::Chart, excel_data::ExcelData, format::Format, header_image_position::HeaderImagePosition,
-    image::Image, table::Table, utils, WasmResult,
+    chart::Chart, datetime::ExcelDateTime, excel_data::ExcelData, format::Format,
+    header_image_position::HeaderImagePosition, image::Image, table::Table, WasmResult,
 };
 
 use super::{
@@ -106,7 +105,7 @@ impl Worksheet {
     /// Freeze panes in a worksheet.
     ///
     /// The `set_freeze_panes()` method can be used to divide a worksheet into
-    /// horizontal or vertical regions known as panes and to “freeze” these
+    /// horizontal or vertical regions known as panes and to "freeze" these
     /// panes so that the splitter bars are not visible.
     ///
     /// As with Excel the split is to the top and left of the cell. So to freeze
@@ -387,10 +386,10 @@ impl Worksheet {
     /// Write a blank cell with formatting to a worksheet cell. The format is
     /// set via a {@link Format} struct.
     ///
-    /// Excel differentiates between an “Empty” cell and a “Blank” cell. An
-    /// “Empty” cell is a cell which doesn’t contain data or formatting whilst a
-    /// “Blank” cell doesn’t contain data but does contain formatting. Excel
-    /// stores “Blank” cells but ignores “Empty” cells.
+    /// Excel differentiates between an "Empty" cell and a "Blank" cell. An
+    /// "Empty" cell is a cell which doesn't contain data or formatting whilst a
+    /// "Blank" cell doesn't contain data but does contain formatting. Excel
+    /// stores "Blank" cells but ignores "Empty" cells.
     ///
     /// The most common case for a formatted blank cell is to write a background
     /// or a border, see the example below.
@@ -681,16 +680,13 @@ impl Worksheet {
         &self,
         row: xlsx::RowNum,
         col: xlsx::ColNum,
-        datetime: &JsValue,
+        datetime: &ExcelDateTime,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
-            let _ = sheet.write_datetime(row, col, dt)?;
-            Ok(self.clone())
-        } else {
-            Err(XlsxError::InvalidDate)
-        }
+        let datetime = datetime.inner.lock().unwrap().clone();
+        let _ = sheet.write_datetime(row, col, &datetime)?;
+        Ok(self.clone())
     }
 
     /// Write a formatted date and/or time to a worksheet cell.
@@ -717,17 +713,43 @@ impl Worksheet {
         &self,
         row: xlsx::RowNum,
         col: xlsx::ColNum,
-        datetime: &JsValue,
+        datetime: &ExcelDateTime,
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
-            let _ = sheet.write_datetime_with_format(row, col, dt, &format.lock())?;
-            Ok(self.clone())
-        } else {
-            Err(XlsxError::InvalidDate)
-        }
+        let datetime = datetime.inner.lock().unwrap().clone();
+        let _ = sheet.write_datetime_with_format(row, col, &datetime, &format.lock())?;
+        Ok(self.clone())
+    }
+
+    /// Write a formatted date to a worksheet cell.
+    ///
+    /// Write a date/time value with formatting to a worksheet cell. The format is set
+    /// via a {@link Format} struct which can control the numerical formatting of
+    /// the number, for example as a currency or a percentage value, or the
+    /// visual format, such as bold and italic text.
+    ///
+    /// @param {number} row - The zero indexed row number.
+    /// @param {number} col - The zero indexed column number.
+    /// @param {Date} datetime - A date/time to write.
+    /// @param {Format} format - The {@link Format} property for the cell.
+    /// @return {Worksheet} - The worksheet object.
+    ///
+    /// TODO: example omitted
+    #[wasm_bindgen(js_name = "writeDateWithFormat", skip_jsdoc)]
+    pub fn write_date_with_format(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        date: &ExcelDateTime,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let date = date.inner.lock().unwrap().clone();
+        let _ = sheet.write_date_with_format(row, col, &date, &format.lock())?;
+        Ok(self.clone())
     }
 
     #[wasm_bindgen(js_name = "writeFormula")]
