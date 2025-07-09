@@ -60,18 +60,16 @@ describe("xlsx-wasm test", () => {
     worksheet.writeStringWithFormat(0, 12, "font charset 1", format10);
 
     const numFormat1 = new Format().setNumFormat("yyyy/m/d h:mm");
-    const datetime1 = ExcelDateTime.fromYMD(2001, 1, 12).andHMS(0, 0, 0);
     worksheet.writeDatetimeWithFormat(
       0,
       13,
-      datetime1,
+      new Date(Date.UTC(2000, 12, 12)),
       numFormat1
     );
-    const datetime2 = ExcelDateTime.fromYMD(2030, 9, 30).andHMS(23, 59, 59);
     worksheet.writeDatetimeWithFormat(
       0,
       14,
-      datetime2,
+      new Date(Date.UTC(2030, 8, 30, 23, 59, 59)),
       numFormat1
     );
 

@@ -3,9 +3,10 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
+use crate::error::XlsxError;
 use crate::wrapper::{
     chart::Chart, datetime::ExcelDateTime, excel_data::ExcelData, format::Format,
-    header_image_position::HeaderImagePosition, image::Image, table::Table, WasmResult,
+    header_image_position::HeaderImagePosition, image::Image, table::Table, utils, WasmResult,
 };
 
 use super::{
@@ -680,13 +681,16 @@ impl Worksheet {
         &self,
         row: xlsx::RowNum,
         col: xlsx::ColNum,
-        datetime: &ExcelDateTime,
+        datetime: &JsValue,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
-        let sheet = book.worksheet_from_index(self.index).unwrap();
-        let datetime = datetime.inner.lock().unwrap().clone();
-        let _ = sheet.write_datetime(row, col, &datetime)?;
-        Ok(self.clone())
+        let sheet = book.worksheet_from_index(self.index)?;
+        if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
+            let _ = sheet.write_datetime(row, col, dt)?;
+            Ok(self.clone())
+        } else {
+            Err(XlsxError::InvalidDate)
+        }
     }
 
     /// Write a formatted date and/or time to a worksheet cell.
@@ -713,14 +717,17 @@ impl Worksheet {
         &self,
         row: xlsx::RowNum,
         col: xlsx::ColNum,
-        datetime: &ExcelDateTime,
+        datetime: &JsValue,
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
-        let sheet = book.worksheet_from_index(self.index).unwrap();
-        let datetime = datetime.inner.lock().unwrap().clone();
-        let _ = sheet.write_datetime_with_format(row, col, &datetime, &format.lock())?;
-        Ok(self.clone())
+        let sheet = book.worksheet_from_index(self.index)?;
+        if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
+            let _ = sheet.write_datetime_with_format(row, col, dt, &format.lock())?;
+            Ok(self.clone())
+        } else {
+            Err(XlsxError::InvalidDate)
+        }
     }
 
     /// Write a formatted date to a worksheet cell.
@@ -746,9 +753,8 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
-        let sheet = book.worksheet_from_index(self.index).unwrap();
-        let date = date.inner.lock().unwrap().clone();
-        let _ = sheet.write_date_with_format(row, col, &date, &format.lock())?;
+        let sheet = book.worksheet_from_index(self.index)?;
+        let _ = sheet.write_date_with_format(row, col, &date.inner.lock().unwrap().clone(), &format.lock())?;
         Ok(self.clone())
     }
 
