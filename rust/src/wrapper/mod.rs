@@ -1,5 +1,6 @@
 mod chart;
 mod color;
+mod datetime;
 mod doc_properties;
 mod excel_data;
 mod format;
