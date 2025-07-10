@@ -688,6 +688,9 @@ impl Worksheet {
         if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
             let _ = sheet.write_datetime(row, col, dt)?;
             Ok(self.clone())
+        } else if let Some(dt) = utils::excel_datetime_of_jsval(datetime) {
+            let _ = sheet.write_datetime(row, col, dt)?;
+            Ok(self.clone())
         } else {
             Err(XlsxError::InvalidDate)
         }
@@ -723,6 +726,9 @@ impl Worksheet {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index)?;
         if let Some(dt) = utils::datetime_of_jsval(datetime.clone()) {
+            let _ = sheet.write_datetime_with_format(row, col, dt, &format.lock())?;
+            Ok(self.clone())
+        } else if let Some(dt) = utils::excel_datetime_of_jsval(datetime) {
             let _ = sheet.write_datetime_with_format(row, col, dt, &format.lock())?;
             Ok(self.clone())
         } else {

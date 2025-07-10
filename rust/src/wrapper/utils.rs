@@ -7,6 +7,7 @@ use wasm_bindgen::convert::RefFromWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
+use super::datetime::ExcelDateTime;
 use super::formula::Formula;
 use super::rich_string::RichString;
 use super::url::Url;
@@ -40,6 +41,12 @@ pub fn datetime_of_jsval(obj: JsValue) -> Option<chrono::NaiveDateTime> {
     } else {
         None
     }
+}
+
+pub fn excel_datetime_of_jsval(obj: &JsValue) -> Option<ExcelDateTime> {
+    generic_of_jsval::<ExcelDateTime>(obj, "ExcelDateTime")
+        .ok()
+        .map(|f| f.clone())
 }
 
 // https://github.com/rustwasm/wasm-bindgen/issues/2231#issuecomment-656293288

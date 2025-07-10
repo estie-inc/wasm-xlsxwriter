@@ -1,12 +1,12 @@
 //! Glue code to make up for the lack of `rust_xlsxwriter::IntoExcelData` trait
 
-use js_sys::{wasm_bindgen, Object};
+use js_sys::wasm_bindgen;
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::error::XlsxError;
 
-use super::{formula::Formula, rich_string::RichString, url::Url, utils};
+use super::{datetime::ExcelDateTime, formula::Formula, rich_string::RichString, url::Url, utils};
 
 // We only export the ExcelData type since ExcelDataArray and ExcelDataMatrix are used for
 #[wasm_bindgen(typescript_custom_section)]
@@ -106,6 +106,7 @@ pub enum ExcelData {
     Number(f64),
     Bool(bool),
     DateTime(chrono::NaiveDateTime),
+    ExcelDateTime(ExcelDateTime),
     Formula(Formula),
     Url(Url),
     RichString(RichString),
@@ -133,6 +134,8 @@ impl TryInto<ExcelData> for JsValue {
                 } else if utils::jsval_is_datetime(&self) {
                     let dt = utils::datetime_of_jsval(self).unwrap();
                     Ok(ExcelData::DateTime(dt))
+                } else if let Some(excel_dt) = utils::excel_datetime_of_jsval(&self) {
+                    Ok(ExcelData::ExcelDateTime(excel_dt.clone()))
                 } else if let Some(formula) = utils::formula_of_jsval(&self) {
                     Ok(ExcelData::Formula(formula))
                 } else if let Some(url) = utils::url_of_jsval(&self) {
@@ -140,7 +143,7 @@ impl TryInto<ExcelData> for JsValue {
                 } else if let Some(rich_string) = utils::rich_string_of_jsval(&self) {
                     Ok(ExcelData::RichString(rich_string))
                 } else {
-                    let ctor = Object::get_prototype_of(&self).constructor().name();
+                    let ctor = js_sys::Object::get_prototype_of(&self).constructor().name();
                     Err(XlsxError::Type(format!(
                         "Cannot write {} (instance of {}) to a cell",
                         js_type, ctor
@@ -168,6 +171,10 @@ impl xlsx::IntoExcelData for ExcelData {
             ExcelData::Number(n) => worksheet.write_number(row, col, n),
             ExcelData::Bool(b) => worksheet.write_boolean(row, col, b),
             ExcelData::DateTime(dt) => worksheet.write_datetime(row, col, dt),
+            ExcelData::ExcelDateTime(excel_dt) => {
+                let dt = excel_dt.inner.lock().unwrap().clone();
+                worksheet.write_datetime(row, col, dt)
+            }
             ExcelData::RichString(rich_string) => {
                 let rich_string = rich_string.lock();
                 let rich_string: Vec<_> =
@@ -192,6 +199,10 @@ impl xlsx::IntoExcelData for ExcelData {
             ExcelData::Number(n) => worksheet.write_number_with_format(row, col, n, format),
             ExcelData::Bool(b) => worksheet.write_boolean_with_format(row, col, b, format),
             ExcelData::DateTime(dt) => worksheet.write_datetime_with_format(row, col, dt, format),
+            ExcelData::ExcelDateTime(excel_dt) => {
+                let dt = excel_dt.inner.lock().unwrap().clone();
+                worksheet.write_datetime_with_format(row, col, dt, format)
+            }
             ExcelData::Formula(f) => {
                 worksheet.write_formula_with_format(row, col, &*f.lock(), format)
             }

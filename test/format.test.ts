@@ -66,26 +66,27 @@ describe("xlsx-wasm test", () => {
       new Date(Date.UTC(2000, 12, 12)),
       numFormat1
     );
+    const datetime1 = ExcelDateTime.fromYMD(2030, 9, 30).andHMS(23, 59, 59);
     worksheet.writeDatetimeWithFormat(
       0,
       14,
-      new Date(Date.UTC(2030, 8, 30, 23, 59, 59)),
+      datetime1,
       numFormat1
     );
 
     const numFormat2 = new Format().setNumFormat("yyyy/mm/dd");
-    const datetime3 = ExcelDateTime.fromYMD(2001, 1, 12);
+    const datetime2 = ExcelDateTime.fromYMD(2001, 1, 12);
     worksheet.writeDateWithFormat(
       0,
       15,
-      datetime3,
+      datetime2,
       numFormat2
     );
-    const datetime4 = ExcelDateTime.fromYMD(2030, 9, 30);
+    const datetime3 = ExcelDateTime.fromYMD(2030, 9, 30);
     worksheet.writeDateWithFormat(
       0,
       16,
-      datetime4,
+      datetime3,
       numFormat2
     );
 
