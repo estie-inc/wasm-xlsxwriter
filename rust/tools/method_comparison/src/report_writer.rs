@@ -63,7 +63,7 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
             report.push_str(&format!("  ### {}\n", struct_comp.name));
 
             // Summary
-            report.push_str("    #### Summary\n");
+            report.push_str("    Summary\n");
             report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
             report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
             report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
@@ -71,7 +71,7 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
 
             // Methods Not Yet Migrated
             if !struct_comp.rust_only_methods.is_empty() {
-                report.push_str("    #### ❌ Methods Not Yet Migrated\n");
+                report.push_str("    ❌ Methods Not Yet Migrated\n");
                 for method in &struct_comp.rust_only_methods {
                     report.push_str(&format!("      - {}\n", method));
                 }
@@ -79,7 +79,7 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
 
             // Functions Not Yet Migrated
             if !struct_comp.rust_only_functions.is_empty() {
-                report.push_str("    #### ❌ Functions Not Yet Migrated\n");
+                report.push_str("    ❌ Functions Not Yet Migrated\n");
                 for function in &struct_comp.rust_only_functions {
                     report.push_str(&format!("      - {}\n", function));
                 }
@@ -99,7 +99,7 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
             report.push_str(&format!("  ### {}\n", struct_comp.name));
 
             // Summary
-            report.push_str("    #### Summary\n");
+            report.push_str("    Summary\n");
             report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
             report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
             report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
@@ -107,7 +107,7 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
 
             // Methods Not Yet Migrated
             if !struct_comp.rust_only_methods.is_empty() {
-                report.push_str("    #### ❌ Methods Not Yet Migrated\n");
+                report.push_str("    ❌ Methods Not Yet Migrated\n");
                 for method in &struct_comp.rust_only_methods {
                     report.push_str(&format!("      - {}\n", method));
                 }
@@ -115,7 +115,7 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
 
             // Functions Not Yet Migrated
             if !struct_comp.rust_only_functions.is_empty() {
-                report.push_str("    #### ❌ Functions Not Yet Migrated\n");
+                report.push_str("    ❌ Functions Not Yet Migrated\n");
                 for function in &struct_comp.rust_only_functions {
                     report.push_str(&format!("      - {}\n", function));
                 }
