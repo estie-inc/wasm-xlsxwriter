@@ -3,13 +3,25 @@ mod repo_downloader;
 mod report_writer;
 
 use anyhow::Result;
+use clap::Parser;
 use crate::crate_info_extractor::{get_crate_info, extract_crate_items};
 use crate::repo_downloader::download_repository;
 use crate::report_writer::write_comparison_report;
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Output file path for the comparison report
+    #[arg(short, long, default_value = "method_comparison.md")]
+    output: String,
+}
+
 /// A tool to compare methods implemented in wasm-xlsxwriter and rustxlsxwriter
 
 fn main() -> Result<()> {
+    // Parse command line arguments
+    let args = Args::parse();
+
     // Hardcoded values
     let wasm_manifest_path = "../../Cargo.toml";
     let wasm_crate = get_crate_info(wasm_manifest_path)?;
@@ -25,9 +37,8 @@ fn main() -> Result<()> {
 
     let comparison = report_writer::compare_methods(&wasm_items, &rust_items);
 
-    let output_file = "method_comparison.md";
-    write_comparison_report(&comparison, output_file)?;
+    write_comparison_report(&comparison, &args.output)?;
 
-    println!("Comparison report written to {}", output_file);
+    println!("Comparison report written to {}", args.output);
     Ok(())
 }

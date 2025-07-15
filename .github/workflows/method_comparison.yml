@@ -1,0 +1,35 @@
+name: Method Comparison
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  update-method-comparison:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run method_comparison tool
+        working-directory: rust/tools/method_comparison
+        run: |
+          cargo run --release -- --output ../../../docs/method_comparison.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: Update method comparison document
+          title: Update method comparison document
+          body: |
+            This PR updates the method comparison document.
+
+            Generated automatically by the Method Comparison GitHub Action.
+          branch: update-method-comparison
+          delete-branch: true
