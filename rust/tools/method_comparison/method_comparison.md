@@ -147,12 +147,6 @@
       - new_chartsheet
 
 ## ❌ Not Migrated Structs
-  ### App
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### Button
     Summary
       - Migrated methods: 0
@@ -280,18 +274,6 @@
       - set_type
     ❌ Functions Not Yet Migrated
       - new
-  ### Color
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### Comment
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### ConditionalFormat2ColorScale
     Summary
       - Migrated methods: 0
@@ -492,36 +474,6 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatValue
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### ContentTypes
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### Core
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### Custom
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### CustomProperty
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### DataValidation
     Summary
       - Migrated methods: 0
@@ -565,12 +517,6 @@
       - assemble_xml_file
     ❌ Functions Not Yet Migrated
       - new
-  ### FeaturePropertyBag
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### FilterCondition
     Summary
       - Migrated methods: 0
@@ -593,24 +539,6 @@
     ❌ Functions Not Yet Migrated
       - new_number_and_criteria
       - new_string_and_criteria
-  ### JsExcelData
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### JsExcelDataArray
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### JsExcelDataMatrix
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### Metadata
     Summary
       - Migrated methods: 0
@@ -621,12 +549,6 @@
       - assemble_xml_file
     ❌ Functions Not Yet Migrated
       - new
-  ### Packager
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### ProtectionOptions
     Summary
       - Migrated methods: 0
@@ -635,42 +557,6 @@
       - Not migrated functions: 1
     ❌ Functions Not Yet Migrated
       - new
-  ### Relationship
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### RichString
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### RichValue
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### RichValueRel
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### RichValueStructure
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### RichValueTypes
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### Shape
     Summary
       - Migrated methods: 0
@@ -794,18 +680,6 @@
       - set_vertical_alignment
     ❌ Functions Not Yet Migrated
       - new
-  ### SharedStrings
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### SharedStringsTable
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### Sparkline
     Summary
       - Migrated methods: 0
@@ -842,24 +716,6 @@
       - show_negative_points
     ❌ Functions Not Yet Migrated
       - new
-  ### Styles
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### TableFunction
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
-  ### Theme
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 0
   ### Vml
     Summary
       - Migrated methods: 0
@@ -870,3 +726,56 @@
       - assemble_xml_file
     ❌ Functions Not Yet Migrated
       - new
+
+## ❌ Not Migrated Enums
+  - AxisType
+  - ChartAxisCrossing
+  - ChartAxisDateUnitType
+  - ChartAxisDisplayUnitType
+  - ChartAxisLabelAlignment
+  - ChartAxisLabelPosition
+  - ChartAxisTickType
+  - ChartDataLabelPosition
+  - ChartEmptyCells
+  - ChartErrorBarsDirection
+  - ChartErrorBarsType
+  - ChartGradientFillType
+  - ChartLegendPosition
+  - ChartLineDashType
+  - ChartMarkerType
+  - ChartPatternFillType
+  - ChartTrendlineType
+  - ChartType
+  - Color
+  - ConditionalFormatAverageRule
+  - ConditionalFormatCellRule
+  - ConditionalFormatDataBarAxisPosition
+  - ConditionalFormatDataBarDirection
+  - ConditionalFormatDateRule
+  - ConditionalFormatIconType
+  - ConditionalFormatTextRule
+  - ConditionalFormatTopRule
+  - ConditionalFormatType
+  - DataValidationErrorStyle
+  - DataValidationRule
+  - ExcelData
+  - FilterCriteria
+  - FormatAlign
+  - FormatBorder
+  - FormatDiagonalBorder
+  - FormatPattern
+  - FormatScript
+  - FormatUnderline
+  - HeaderImagePosition
+  - IgnoreError
+  - ObjectMovement
+  - ShapeGradientFillType
+  - ShapeLineDashType
+  - ShapePatternFillType
+  - ShapeTextDirection
+  - ShapeTextHorizontalAlignment
+  - ShapeTextVerticalAlignment
+  - SparklineType
+  - TableFunction
+  - TableStyle
+  - XlsxError
