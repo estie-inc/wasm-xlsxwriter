@@ -139,10 +139,14 @@ pub fn compare_methods(
     // Get the union of all struct names
     let all_structs: HashSet<String> = wasm_structs.union(&rust_structs).cloned().collect();
 
+    // Convert to sorted Vec for consistent iteration order
+    let mut all_structs_vec: Vec<String> = all_structs.into_iter().collect();
+    all_structs_vec.sort();
+
     let mut struct_comparisons = Vec::new();
 
     // Process all structs in a single loop
-    for struct_name in all_structs {
+    for struct_name in all_structs_vec {
         let in_wasm = wasm_structs.contains(&struct_name);
         let _in_rust = rust_structs.contains(&struct_name);
 
@@ -169,35 +173,41 @@ pub fn compare_methods(
             .unwrap_or_default();
 
         // Calculate intersections and differences
-        let common_methods: Vec<String> = wasm_struct_methods
+        let mut common_methods: Vec<String> = wasm_struct_methods
             .intersection(&rust_struct_methods)
             .cloned()
             .collect();
+        common_methods.sort();
 
-        let wasm_only_methods: Vec<String> = wasm_struct_methods
+        let mut wasm_only_methods: Vec<String> = wasm_struct_methods
             .difference(&rust_struct_methods)
             .cloned()
             .collect();
+        wasm_only_methods.sort();
 
-        let rust_only_methods: Vec<String> = rust_struct_methods
+        let mut rust_only_methods: Vec<String> = rust_struct_methods
             .difference(&wasm_struct_methods)
             .cloned()
             .collect();
+        rust_only_methods.sort();
 
-        let common_functions: Vec<String> = wasm_struct_functions
+        let mut common_functions: Vec<String> = wasm_struct_functions
             .intersection(&rust_struct_functions)
             .cloned()
             .collect();
+        common_functions.sort();
 
-        let wasm_only_functions: Vec<String> = wasm_struct_functions
+        let mut wasm_only_functions: Vec<String> = wasm_struct_functions
             .difference(&rust_struct_functions)
             .cloned()
             .collect();
+        wasm_only_functions.sort();
 
-        let rust_only_functions: Vec<String> = rust_struct_functions
+        let mut rust_only_functions: Vec<String> = rust_struct_functions
             .difference(&wasm_struct_functions)
             .cloned()
             .collect();
+        rust_only_functions.sort();
 
         // Determine migration status based on presence in WASM/Rust and method/function comparison
         // We are migrating from Rust to WASM
@@ -226,5 +236,7 @@ pub fn compare_methods(
         });
     }
 
+    // Sort struct_comparisons by name for consistent results
+    struct_comparisons.sort_by(|a, b| a.name.cmp(&b.name));
     struct_comparisons
 }

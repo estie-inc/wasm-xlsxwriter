@@ -38,21 +38,21 @@
       - Migrated functions: 1
       - Not migrated functions: 0
     #### ❌ Methods Not Yet Migrated
-      - unset_checkbox
-      - set_shrink
-      - unset_hyperlink_style
-      - set_font_script
-      - unset_italic
-      - unset_text_wrap
-      - unset_shrink
-      - unset_font_strikethrough
-      - set_checkbox
       - merge
-      - unset_bold
-      - unset_quote_prefix
-      - set_reading_direction
+      - set_checkbox
+      - set_font_script
       - set_num_format_index
+      - set_reading_direction
+      - set_shrink
+      - unset_bold
+      - unset_checkbox
+      - unset_font_strikethrough
       - unset_hidden
+      - unset_hyperlink_style
+      - unset_italic
+      - unset_quote_prefix
+      - unset_shrink
+      - unset_text_wrap
   ### Workbook
     #### Summary
       - Migrated methods: 6
@@ -60,17 +60,17 @@
       - Migrated functions: 1
       - Not migrated functions: 0
     #### ❌ Methods Not Yet Migrated
-      - worksheets_mut
-      - set_vba_name
-      - worksheets
       - add_chartsheet
-      - save_to_buffer
       - add_vba_project
+      - add_vba_project_with_signature
       - push_worksheet
       - save
+      - save_to_buffer
       - save_to_writer
-      - add_vba_project_with_signature
+      - set_vba_name
       - use_zip_large_file
+      - worksheets
+      - worksheets_mut
   ### Worksheet
     #### Summary
       - Migrated methods: 77
@@ -78,73 +78,73 @@
       - Migrated functions: 0
       - Not migrated functions: 2
     #### ❌ Methods Not Yet Migrated
-      - filter_column
-      - unprotect_range_with_options
-      - set_nan_value
-      - set_header_footer_align_with_page
-      - show_all_notes
-      - set_column_range_format
-      - set_selection
-      - insert_checkbox_with_format
-      - set_infinity_value
-      - group_columns
-      - set_view_page_break_preview
-      - protect_with_password
-      - set_cell_format
-      - set_default_note_author
-      - set_header_footer_scale_with_doc
-      - set_default_row_height
-      - set_neg_infinity_value
-      - group_columns_collapsed
-      - set_top_left_cell
-      - set_vba_name
-      - add_sparkline
-      - set_view_page_layout
-      - set_column_range_width_pixels
-      - set_row_format
-      - set_first_tab
-      - set_column_hidden
-      - autofit_to_max_width
-      - write_dynamic_formula
-      - set_selected
-      - set_right_to_left
-      - add_data_validation
-      - set_very_hidden
-      - set_view_normal
-      - set_zoom
-      - set_page_breaks
-      - set_column_range_hidden
       - add_conditional_format
-      - hide_unused_rows
-      - set_vertical_page_breaks
-      - set_row_hidden
+      - add_data_validation
+      - add_sparkline
       - add_sparkline_group
-      - ignore_error_range
-      - insert_shape
+      - autofit_to_max_width
+      - filter_automatic_off
+      - filter_column
+      - group_columns
+      - group_columns_collapsed
       - group_rows_collapsed
       - group_symbols_above
-      - set_margins
-      - insert_shape_with_offset
-      - set_formula_result
-      - insert_checkbox
-      - unprotect_range
-      - insert_button_with_offset
-      - set_tab_color
-      - insert_button
-      - set_page_order
-      - set_default_row_height_pixels
-      - ignore_error
-      - set_formula_result_default
       - group_symbols_to_left
-      - set_column_autofit_width
-      - filter_automatic_off
-      - set_column_format
+      - hide_unused_rows
+      - ignore_error
+      - ignore_error_range
       - insert_background_image
-      - set_row_unhidden
+      - insert_button
+      - insert_button_with_offset
+      - insert_checkbox
+      - insert_checkbox_with_format
+      - insert_shape
+      - insert_shape_with_offset
       - protect_with_options
+      - protect_with_password
+      - set_cell_format
+      - set_column_autofit_width
+      - set_column_format
+      - set_column_hidden
+      - set_column_range_format
+      - set_column_range_hidden
+      - set_column_range_width_pixels
+      - set_default_note_author
+      - set_default_row_height
+      - set_default_row_height_pixels
+      - set_first_tab
+      - set_formula_result
+      - set_formula_result_default
+      - set_header_footer_align_with_page
+      - set_header_footer_scale_with_doc
+      - set_infinity_value
+      - set_margins
+      - set_nan_value
+      - set_neg_infinity_value
+      - set_page_breaks
+      - set_page_order
+      - set_right_to_left
+      - set_row_format
+      - set_row_hidden
+      - set_row_unhidden
+      - set_selected
+      - set_selection
+      - set_tab_color
+      - set_top_left_cell
+      - set_vba_name
+      - set_vertical_page_breaks
+      - set_very_hidden
+      - set_view_normal
+      - set_view_page_break_preview
+      - set_view_page_layout
+      - set_zoom
+      - show_all_notes
+      - unprotect_range
+      - unprotect_range_with_options
+      - write_dynamic_formula
     #### ❌ Functions Not Yet Migrated
-      - new_chartsheet
       - new
+      - new_chartsheet
 
 ## ❌ Not Migrated Structs
   ### App
@@ -160,12 +160,12 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_height
-      - set_width
+      - set_alt_text
       - set_caption
+      - set_height
       - set_macro
       - set_object_movement
-      - set_alt_text
+      - set_width
     #### ❌ Functions Not Yet Migrated
       - new
   ### ChartArea
@@ -185,12 +185,12 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_format
       - set_font
+      - set_format
       - show_horizontal_borders
-      - show_vertical_borders
-      - show_outline_borders
       - show_legend_keys
+      - show_outline_borders
+      - show_vertical_borders
     #### ❌ Functions Not Yet Migrated
       - new
   ### ChartErrorBars
@@ -200,10 +200,10 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_format
-      - set_type
       - set_direction
       - set_end_cap
+      - set_format
+      - set_type
     #### ❌ Functions Not Yet Migrated
       - new
   ### ChartGradientFill
@@ -213,9 +213,9 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_type
-      - set_gradient_stops
       - set_angle
+      - set_gradient_stops
+      - set_type
     #### ❌ Functions Not Yet Migrated
       - new
   ### ChartGradientStop
@@ -244,9 +244,9 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_pattern
-      - set_foreground_color
       - set_background_color
+      - set_foreground_color
+      - set_pattern
     #### ❌ Functions Not Yet Migrated
       - new
   ### ChartPlotArea
@@ -267,17 +267,17 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_forward_period
-      - set_label_font
-      - set_type
+      - delete_from_legend
       - display_equation
       - display_r_squared
-      - set_label_format
-      - delete_from_legend
-      - set_format
       - set_backward_period
-      - set_name
+      - set_format
+      - set_forward_period
       - set_intercept
+      - set_label_font
+      - set_label_format
+      - set_name
+      - set_type
     #### ❌ Functions Not Yet Migrated
       - new
   ### Color
@@ -299,12 +299,12 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_stop_if_true
       - set_maximum
       - set_maximum_color
       - set_minimum
       - set_minimum_color
       - set_multi_range
+      - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormat3ColorScale
@@ -314,14 +314,14 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_maximum_color
-      - set_minimum
       - set_maximum
+      - set_maximum_color
+      - set_midpoint
       - set_midpoint_color
+      - set_minimum
+      - set_minimum_color
       - set_multi_range
       - set_stop_if_true
-      - set_minimum_color
-      - set_midpoint
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatAverage
@@ -332,9 +332,9 @@
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
       - set_format
+      - set_multi_range
       - set_rule
       - set_stop_if_true
-      - set_multi_range
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatBlank
@@ -357,10 +357,10 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_rule
-      - set_multi_range
-      - set_stop_if_true
       - set_format
+      - set_multi_range
+      - set_rule
+      - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatCustomIcon
@@ -370,10 +370,10 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_rule
       - set_greater_than
       - set_icon_type
       - set_no_icon
+      - set_rule
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatDataBar
@@ -383,20 +383,20 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
+      - set_axis_color
+      - set_axis_position
+      - set_bar_only
+      - set_border_color
+      - set_border_off
+      - set_direction
+      - set_fill_color
       - set_maximum
+      - set_minimum
+      - set_multi_range
+      - set_negative_border_color
       - set_negative_fill_color
       - set_solid_fill
-      - set_negative_border_color
       - set_stop_if_true
-      - set_border_off
-      - set_axis_position
-      - set_border_color
-      - set_direction
-      - set_multi_range
-      - set_fill_color
-      - set_axis_color
-      - set_bar_only
-      - set_minimum
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatDate
@@ -406,10 +406,10 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_stop_if_true
+      - set_format
       - set_multi_range
       - set_rule
-      - set_format
+      - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatDuplicate
@@ -419,9 +419,9 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
+      - invert
       - set_format
       - set_multi_range
-      - invert
       - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
@@ -432,8 +432,8 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_format
       - invert
+      - set_format
       - set_multi_range
       - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
@@ -446,9 +446,9 @@
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
       - set_format
-      - set_stop_if_true
       - set_multi_range
       - set_rule
+      - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatIconSet
@@ -458,12 +458,12 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_stop_if_true
-      - set_multi_range
-      - show_icons_only
-      - set_icon_type
       - reverse_icons
+      - set_icon_type
       - set_icons
+      - set_multi_range
+      - set_stop_if_true
+      - show_icons_only
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatText
@@ -473,10 +473,10 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_multi_range
-      - set_stop_if_true
-      - set_rule
       - set_format
+      - set_multi_range
+      - set_rule
+      - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
   ### ConditionalFormatTop
@@ -486,9 +486,9 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
+      - set_format
       - set_multi_range
       - set_rule
-      - set_format
       - set_stop_if_true
     #### ❌ Functions Not Yet Migrated
       - new
@@ -529,30 +529,30 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_error_style
-      - set_input_title
-      - ignore_blank
-      - set_multi_range
-      - allow_decimal_number
-      - show_input_message
-      - show_dropdown
-      - allow_list_formula
-      - allow_decimal_number_formula
-      - allow_date_formula
-      - allow_list_strings
-      - allow_text_length_formula
-      - allow_text_length
-      - allow_time
-      - set_error_message
-      - set_input_message
-      - show_error_message
-      - allow_date
-      - set_error_title
       - allow_any_value
       - allow_custom
+      - allow_date
+      - allow_date_formula
+      - allow_decimal_number
+      - allow_decimal_number_formula
+      - allow_list_formula
+      - allow_list_strings
+      - allow_text_length
+      - allow_text_length_formula
+      - allow_time
       - allow_time_formula
       - allow_whole_number
       - allow_whole_number_formula
+      - ignore_blank
+      - set_error_message
+      - set_error_style
+      - set_error_title
+      - set_input_message
+      - set_input_title
+      - set_multi_range
+      - show_dropdown
+      - show_error_message
+      - show_input_message
     #### ❌ Functions Not Yet Migrated
       - new
   ### Drawing
@@ -578,10 +578,10 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - add_list_filter
       - add_custom_boolean_or
-      - add_list_blanks_filter
       - add_custom_filter
+      - add_list_blanks_filter
+      - add_list_filter
     #### ❌ Functions Not Yet Migrated
       - new
   ### FilterData
@@ -591,8 +591,8 @@
       - Migrated functions: 0
       - Not migrated functions: 2
     #### ❌ Functions Not Yet Migrated
-      - new_string_and_criteria
       - new_number_and_criteria
+      - new_string_and_criteria
   ### JsExcelData
     #### Summary
       - Migrated methods: 0
@@ -678,16 +678,16 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_width
       - set_alt_text
       - set_font
+      - set_format
       - set_height
+      - set_object_movement
+      - set_text
       - set_text_link
       - set_text_options
-      - set_object_movement
-      - set_format
       - set_url
-      - set_text
+      - set_width
     #### ❌ Functions Not Yet Migrated
       - textbox
   ### ShapeFont
@@ -697,17 +697,17 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - unset_bold
-      - set_color
-      - set_name
-      - set_strikethrough
-      - set_italic
       - set_bold
-      - set_size
-      - set_pitch_family
-      - set_underline
       - set_character_set
+      - set_color
+      - set_italic
+      - set_name
+      - set_pitch_family
       - set_right_to_left
+      - set_size
+      - set_strikethrough
+      - set_underline
+      - unset_bold
     #### ❌ Functions Not Yet Migrated
       - new
   ### ShapeFormat
@@ -717,12 +717,12 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_solid_fill
-      - set_no_fill
       - set_gradient_fill
+      - set_line
+      - set_no_fill
       - set_no_line
       - set_pattern_fill
-      - set_line
+      - set_solid_fill
     #### ❌ Functions Not Yet Migrated
       - new
   ### ShapeGradientFill
@@ -732,9 +732,9 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_type
       - set_angle
       - set_gradient_stops
+      - set_type
     #### ❌ Functions Not Yet Migrated
       - new
   ### ShapeGradientStop
@@ -752,11 +752,11 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
+      - set_color
+      - set_dash_type
+      - set_hidden
       - set_transparency
       - set_width
-      - set_dash_type
-      - set_color
-      - set_hidden
     #### ❌ Functions Not Yet Migrated
       - new
   ### ShapePatternFill
@@ -813,33 +813,33 @@
       - Migrated functions: 0
       - Not migrated functions: 1
     #### ❌ Methods Not Yet Migrated
-      - set_date_range
-      - set_last_point_color
-      - set_markers_color
-      - set_right_to_left
       - set_column_order
-      - set_high_point_color
-      - set_line_weight
-      - set_range
-      - set_sparkline_color
-      - set_type
-      - show_high_point
-      - show_negative_points
-      - show_first_point
       - set_custom_max
-      - set_group_min
-      - set_style
-      - set_first_point_color
-      - show_hidden_data
-      - show_low_point
-      - set_group_max
-      - set_low_point_color
-      - set_negative_points_color
-      - show_empty_cells_as
-      - show_axis
-      - show_markers
-      - show_last_point
       - set_custom_min
+      - set_date_range
+      - set_first_point_color
+      - set_group_max
+      - set_group_min
+      - set_high_point_color
+      - set_last_point_color
+      - set_line_weight
+      - set_low_point_color
+      - set_markers_color
+      - set_negative_points_color
+      - set_range
+      - set_right_to_left
+      - set_sparkline_color
+      - set_style
+      - set_type
+      - show_axis
+      - show_empty_cells_as
+      - show_first_point
+      - show_hidden_data
+      - show_high_point
+      - show_last_point
+      - show_low_point
+      - show_markers
+      - show_negative_points
     #### ❌ Functions Not Yet Migrated
       - new
   ### Styles

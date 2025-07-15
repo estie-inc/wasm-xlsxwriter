@@ -150,8 +150,14 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
         }
     }
 
+    let mut structs_vec: Vec<_> = structs.into_values().collect();
+    structs_vec.sort_by(|a, b| a.name.cmp(&b.name));
+
+    let mut enums_vec = enums;
+    enums_vec.sort_by(|a, b| a.name.cmp(&b.name));
+
     ExtractedItems {
-        structs: structs.into_values().collect(),
-        enums,
+        structs: structs_vec,
+        enums: enums_vec,
     }
 }
