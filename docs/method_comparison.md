@@ -6,8 +6,8 @@
   - ❌ Not Migrated Structs: 41
   - ✅ Migrated Enums: 17
   - ❌ Not Migrated Enums: 34
-  - ✅ Total Migrated Methods: 247
-  - ❌ Total Not Migrated Methods: 382
+  - ✅ Total Migrated Methods: 248
+  - ❌ Total Not Migrated Methods: 381
   - ✅ Total Migrated Functions: 34
   - ❌ Total Not Migrated Functions: 46
 ## Details of Structs
@@ -153,14 +153,13 @@
       - set_custom_property
   ### ⚠️ Format
     Summary
-      - Migrated methods: 36
-      - Not migrated methods: 15
+      - Migrated methods: 37
+      - Not migrated methods: 14
       - Migrated functions: 1
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
       - merge
       - set_checkbox
-      - set_font_script
       - set_num_format_index
       - set_reading_direction
       - set_shrink
