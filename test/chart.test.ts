@@ -14,6 +14,7 @@ import {
   ChartFormat,
   Color,
   ChartLine,
+  ChartLayout,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -82,7 +83,8 @@ describe("xlsx-wasm test", () => {
     chart
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
-    chart.title().setName("Score Transition").setFont(chartFont);
+    const chartLayout = new ChartLayout().setOffset(0.1, 0.1);
+    chart.title().setName("Score Transition").setFont(chartFont).setOverlay(true).setLayout(chartLayout);
     chart.setWidth(640).setHeight(480);
     chart.xAxis().setName("x-axis").setFont(chartFont).setNameFont(chartFont);
     chart.yAxis().setName("y-axis").setFont(chartFont).setNameFont(chartFont);
