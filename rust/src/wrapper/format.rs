@@ -553,8 +553,8 @@ impl Format {
     ///
     /// @param {boolean} strikethrough - The strikethrough property.
     /// @return {Format} - The Format instance.
-    #[wasm_bindgen(js_name = "setFormatScript", skip_jsdoc)]
-    pub fn set_format_script(&self, script: FormatScript) -> Format {
+    #[wasm_bindgen(js_name = "setFontScript", skip_jsdoc)]
+    pub fn set_font_script(&self, script: FormatScript) -> Format {
         impl_method!(self.set_font_script(script.into()));
     }
 

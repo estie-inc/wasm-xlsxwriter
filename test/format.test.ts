@@ -259,8 +259,8 @@ describe("xlsx-wasm test", () => {
 
     // Act
     const worksheet = workbook.addWorksheet();
-    const superscript = new Format().setFormatScript(FormatScript.Superscript);
-    const subscript = new Format().setFormatScript(FormatScript.Subscript);
+    const superscript = new Format().setFontScript(FormatScript.Superscript);
+    const subscript = new Format().setFontScript(FormatScript.Subscript);
 
     worksheet.writeStringWithFormat(0, 0, "superscript", superscript);
     worksheet.writeStringWithFormat(0, 1, "subscript", subscript);
