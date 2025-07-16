@@ -228,17 +228,12 @@ pub fn compare_methods(
             .collect();
         rust_only_functions.sort();
 
-        let in_wasm = !common_methods.is_empty() || !wasm_only_methods.is_empty() ||
-                      !common_functions.is_empty() || !wasm_only_functions.is_empty();
-        
-        let status = if !in_wasm {
+        let status = if common_methods.is_empty() && common_functions.is_empty() {
             MigrationStatus::NotMigrated
-        } else if wasm_only_methods.is_empty() && wasm_only_functions.is_empty() && !common_methods.is_empty() {
+        } else if rust_only_methods.is_empty() && rust_only_functions.is_empty() {
             MigrationStatus::FullyMigrated
-        } else if !common_methods.is_empty() || !common_functions.is_empty() {
-            MigrationStatus::PartiallyMigrated
         } else {
-            MigrationStatus::NotMigrated
+            MigrationStatus::PartiallyMigrated
         };
 
         struct_comparisons.push(StructComparison {

@@ -1,28 +1,102 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
 ## ✅ Migrated Structs
-  - Chart
-  - ChartAxis
   - ChartDataLabel
   - ChartFont
-  - ChartFormat
-  - ChartLegend
   - ChartLine
   - ChartMarker
   - ChartPoint
-  - ChartSeries
   - ChartSolidFill
-  - ChartTitle
-  - DocProperties
   - ExcelDateTime
   - Formula
-  - Image
   - Note
-  - Table
   - TableColumn
   - Url
 
 ## ⚠️ Partially Migrated Structs
+  ### Chart
+    Summary
+      - Migrated methods: 11
+      - Not migrated methods: 23
+      - Migrated functions: 10
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - add_series
+      - chart_area
+      - combine
+      - plot_area
+      - set_data_table
+      - set_decorative
+      - set_down_bar_format
+      - set_drop_lines
+      - set_drop_lines_format
+      - set_high_low_lines
+      - set_high_low_lines_format
+      - set_hole_size
+      - set_object_movement
+      - set_rotation
+      - set_scale_height
+      - set_scale_width
+      - set_style
+      - set_up_bar_format
+      - set_up_down_bars
+      - show_empty_cells_as
+      - show_hidden_data
+      - show_na_as_empty_cell
+      - validate
+  ### ChartAxis
+    Summary
+      - Migrated methods: 6
+      - Not migrated methods: 28
+      - Migrated functions: 0
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - set_automatic_axis
+      - set_crossing
+      - set_date_axis
+      - set_display_unit_type
+      - set_display_units_visible
+      - set_format
+      - set_hidden
+      - set_label_alignment
+      - set_label_interval
+      - set_label_layout
+      - set_label_position
+      - set_log_base
+      - set_major_gridlines
+      - set_major_gridlines_line
+      - set_major_tick_type
+      - set_major_unit
+      - set_major_unit_date_type
+      - set_max_date
+      - set_min_date
+      - set_minor_gridlines
+      - set_minor_gridlines_line
+      - set_minor_tick_type
+      - set_minor_unit
+      - set_minor_unit_date_type
+      - set_position_between_ticks
+      - set_reverse
+      - set_text_axis
+      - set_tick_interval
+  ### ChartFormat
+    Summary
+      - Migrated methods: 6
+      - Not migrated methods: 2
+      - Migrated functions: 1
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - set_gradient_fill
+      - set_pattern_fill
+  ### ChartLegend
+    Summary
+      - Migrated methods: 5
+      - Not migrated methods: 2
+      - Migrated functions: 0
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - delete_entries
+      - set_layout
   ### ChartRange
     Summary
       - Migrated methods: 0
@@ -31,6 +105,44 @@
       - Not migrated functions: 1
     ❌ Functions Not Yet Migrated
       - new_from_range
+  ### ChartSeries
+    Summary
+      - Migrated methods: 7
+      - Not migrated methods: 12
+      - Migrated functions: 1
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - delete_from_legend
+      - set_custom_data_labels
+      - set_gap
+      - set_invert_if_negative
+      - set_invert_if_negative_color
+      - set_overlap
+      - set_point_colors
+      - set_secondary_axis
+      - set_smooth
+      - set_trendline
+      - set_x_error_bars
+      - set_y_error_bars
+  ### ChartTitle
+    Summary
+      - Migrated methods: 3
+      - Not migrated methods: 3
+      - Migrated functions: 0
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - set_hidden
+      - set_layout
+      - set_overlay
+  ### DocProperties
+    Summary
+      - Migrated methods: 10
+      - Not migrated methods: 2
+      - Migrated functions: 1
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - set_creation_datetime
+      - set_custom_property
   ### Format
     Summary
       - Migrated methods: 36
@@ -53,6 +165,29 @@
       - unset_quote_prefix
       - unset_shrink
       - unset_text_wrap
+  ### Image
+    Summary
+      - Migrated methods: 8
+      - Not migrated methods: 5
+      - Migrated functions: 1
+      - Not migrated functions: 1
+    ❌ Methods Not Yet Migrated
+      - height
+      - height_dpi
+      - set_url
+      - width
+      - width_dpi
+    ❌ Functions Not Yet Migrated
+      - new_from_buffer
+  ### Table
+    Summary
+      - Migrated methods: 8
+      - Not migrated methods: 2
+      - Migrated functions: 1
+      - Not migrated functions: 0
+    ❌ Methods Not Yet Migrated
+      - set_autofilter
+      - set_last_column
   ### Workbook
     Summary
       - Migrated methods: 6
