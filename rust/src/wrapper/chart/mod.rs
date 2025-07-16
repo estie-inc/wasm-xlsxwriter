@@ -14,6 +14,7 @@ mod chart_solid_fill;
 mod chart_title;
 mod chart_type;
 mod chart_line;
+mod chart_layout;
 
 use std::sync::{Arc, Mutex};
 
