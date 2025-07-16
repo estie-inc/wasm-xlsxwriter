@@ -727,6 +727,23 @@
     ❌ Functions Not Yet Migrated
       - new
 
+## ✅ Migrated Enums
+  - ChartDataLabelPosition
+  - ChartLegendPosition
+  - ChartLineDashType
+  - ChartMarkerType
+  - ChartType
+  - FormatAlign
+  - FormatBorder
+  - FormatDiagonalBorder
+  - FormatPattern
+  - FormatScript
+  - FormatUnderline
+  - HeaderImagePosition
+  - ObjectMovement
+  - TableStyle
+  - XlsxError
+
 ## ❌ Not Migrated Enums
   - AxisType
   - ChartAxisCrossing
@@ -735,17 +752,12 @@
   - ChartAxisLabelAlignment
   - ChartAxisLabelPosition
   - ChartAxisTickType
-  - ChartDataLabelPosition
   - ChartEmptyCells
   - ChartErrorBarsDirection
   - ChartErrorBarsType
   - ChartGradientFillType
-  - ChartLegendPosition
-  - ChartLineDashType
-  - ChartMarkerType
   - ChartPatternFillType
   - ChartTrendlineType
-  - ChartType
   - Color
   - ConditionalFormatAverageRule
   - ConditionalFormatCellRule
@@ -760,15 +772,7 @@
   - DataValidationRule
   - ExcelData
   - FilterCriteria
-  - FormatAlign
-  - FormatBorder
-  - FormatDiagonalBorder
-  - FormatPattern
-  - FormatScript
-  - FormatUnderline
-  - HeaderImagePosition
   - IgnoreError
-  - ObjectMovement
   - ShapeGradientFillType
   - ShapeLineDashType
   - ShapePatternFillType
@@ -777,5 +781,3 @@
   - ShapeTextVerticalAlignment
   - SparklineType
   - TableFunction
-  - TableStyle
-  - XlsxError

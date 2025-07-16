@@ -37,19 +37,21 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
     let mut fully_migrated = Vec::new();
     let mut partially_migrated = Vec::new();
     let mut not_migrated_structs = Vec::new();
+    let mut migrated_enums = Vec::new();
     let mut not_migrated_enums = Vec::new();
 
     for struct_comp in &sorted_structs {
-        match struct_comp.status {
-            MigrationStatus::FullyMigrated => fully_migrated.push(struct_comp.clone()),
-            MigrationStatus::PartiallyMigrated => partially_migrated.push(struct_comp.clone()),
-            MigrationStatus::NotMigrated => {
-                if struct_comp.is_enum {
-                    not_migrated_enums.push(struct_comp.clone());
-                } else {
-                    not_migrated_structs.push(struct_comp.clone());
-                }
-            },
+        if struct_comp.is_enum {
+            match struct_comp.status {
+                MigrationStatus::FullyMigrated => migrated_enums.push(struct_comp.clone()),
+                _ => not_migrated_enums.push(struct_comp.clone()),
+            }
+        } else {
+            match struct_comp.status {
+                MigrationStatus::FullyMigrated => fully_migrated.push(struct_comp.clone()),
+                MigrationStatus::PartiallyMigrated => partially_migrated.push(struct_comp.clone()),
+                MigrationStatus::NotMigrated => not_migrated_structs.push(struct_comp.clone()),
+            }
         }
     }
 
@@ -128,6 +130,16 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
                     report.push_str(&format!("      - {}\n", function));
                 }
             }
+        }
+    }
+
+    // Migrated Enums
+    report.push_str("\n## ✅ Migrated Enums\n");
+    if migrated_enums.is_empty() {
+        report.push_str("  - None\n");
+    } else {
+        for enum_comp in &migrated_enums {
+            report.push_str(&format!("  - {}\n", enum_comp.name));
         }
     }
 
@@ -259,7 +271,14 @@ pub fn compare_methods(
 
         // Determine migration status based on presence in WASM/Rust and method/function comparison
         // We are migrating from Rust to WASM
-        let status = if !in_wasm {
+        let status = if is_enum {
+            // For enums, consider them migrated if they exist in both WASM and Rust
+            if in_wasm_enum && in_rust_enum {
+                MigrationStatus::FullyMigrated
+            } else {
+                MigrationStatus::NotMigrated
+            }
+        } else if !in_wasm {
             // Rust-only struct - not migrated at all
             MigrationStatus::NotMigrated
         } else if wasm_only_methods.is_empty() && wasm_only_functions.is_empty() && !common_methods.is_empty() {
