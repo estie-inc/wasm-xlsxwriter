@@ -1,21 +1,22 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
 ## Summary
-  - ✅ Fully Migrated Structs: 11
-  - ⚠️ Partially Migrated Structs: 13
+  - ✅ Fully Migrated Structs: 12
+  - ⚠️ Partially Migrated Structs: 12
   - ❌ Not Migrated Structs: 41
   - ✅ Migrated Enums: 17
   - ❌ Not Migrated Enums: 34
   - ✅ Total Migrated Methods: 248
   - ❌ Total Not Migrated Methods: 381
-  - ✅ Total Migrated Functions: 34
-  - ❌ Total Not Migrated Functions: 46
+  - ✅ Total Migrated Functions: 35
+  - ❌ Total Not Migrated Functions: 45
 ## Details of Structs
   ### ✅ ChartDataLabel
   ### ✅ ChartFont
   ### ✅ ChartLine
   ### ✅ ChartMarker
   ### ✅ ChartPoint
+  ### ✅ ChartRange
   ### ✅ ChartSolidFill
   ### ✅ ExcelDateTime
   ### ✅ Formula
@@ -105,14 +106,6 @@
     ❌ Methods Not Yet Migrated
       - delete_entries
       - set_layout
-  ### ⚠️ ChartRange
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 1
-      - Not migrated functions: 1
-    ❌ Functions Not Yet Migrated
-      - new_from_range
   ### ⚠️ ChartSeries
     Summary
       - Migrated methods: 7
