@@ -1,4 +1,4 @@
-rust/target
+**/target
 /nodejs/
 /web/
 
@@ -7,6 +7,3 @@ rust/target
 !test/expected/*.xlsx
 
 **/dist
-
-docs/
-

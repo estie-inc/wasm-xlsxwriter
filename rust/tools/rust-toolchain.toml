@@ -1,0 +1,4 @@
+[toolchain]
+channel = "nightly"
+components = ["rustc", "cargo"]
+profile = "minimal"
