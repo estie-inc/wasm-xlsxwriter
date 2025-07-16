@@ -41,7 +41,6 @@ pub struct ExtractedItems {
     pub enums: Vec<EnumInfo>,
 }
 
-/// Use rustdoc-json crate and rustdoc-types to generate crate information
 pub fn get_crate_info(manifest_path: &str) -> Result<Crate> {
     let json_path = rustdoc_json::Builder::default()
         .toolchain("nightly")
@@ -58,19 +57,16 @@ pub fn get_crate_info(manifest_path: &str) -> Result<Crate> {
     Ok(crate_info)
 }
 
-/// Extracts public structs, methods, functions, and enums from a Rust crate.
 pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
     let mut structs: HashMap<Id, StructInfo> = HashMap::new();
     let mut enums: Vec<EnumInfo> = Vec::new();
 
-    // Standard Rust methods to filter out
     let standard_methods = [
         "clone", "clone_to_uninit", "clone_into", "borrow", "borrow_mut",
         "type_id", "to_owned", "into", "try_into", "eq", "fmt", "hash",
         "write", "equivalent"
     ];
 
-    // First pass: identify all structs and enums
     for (id, item) in &crate_info.index {
         if !matches!(item.visibility, Visibility::Public) {
             continue;
@@ -101,7 +97,6 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
         }
     }
 
-    // Second pass: find implementations and extract methods
     for (_id, item) in &crate_info.index {
         match &item.inner {
             ItemEnum::Impl(impl_data) => {

@@ -3,11 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
 
-/// Downloads or uses an existing repository
 pub fn download_repository(repo_url: &str) -> Result<PathBuf> {
     let repos_dir = ensure_repos_directory()?;
 
-    // Extract repo name from URL if not provided
     let name = repo_url
         .split('/')
         .last()
@@ -24,7 +22,6 @@ pub fn download_repository(repo_url: &str) -> Result<PathBuf> {
     Ok(repo_path)
 }
 
-/// Ensures the repositories directory exists
 fn ensure_repos_directory() -> Result<PathBuf> {
     let repos_dir = Path::new("./target/repos");
     fs::create_dir_all(repos_dir)
@@ -32,7 +29,6 @@ fn ensure_repos_directory() -> Result<PathBuf> {
     Ok(repos_dir.to_path_buf())
 }
 
-/// Clones the repository
 fn clone_repository(repo_url: &str, repos_dir: &Path) -> Result<()> {
     println!("Downloading repository: {}", repo_url);
 

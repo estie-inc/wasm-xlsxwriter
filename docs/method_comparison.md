@@ -733,6 +733,7 @@
   - ChartLineDashType
   - ChartMarkerType
   - ChartType
+  - Color
   - FormatAlign
   - FormatBorder
   - FormatDiagonalBorder
@@ -741,6 +742,7 @@
   - FormatUnderline
   - HeaderImagePosition
   - ObjectMovement
+  - TableFunction
   - TableStyle
   - XlsxError
 
@@ -758,7 +760,6 @@
   - ChartGradientFillType
   - ChartPatternFillType
   - ChartTrendlineType
-  - Color
   - ConditionalFormatAverageRule
   - ConditionalFormatCellRule
   - ConditionalFormatDataBarAxisPosition
@@ -780,4 +781,3 @@
   - ShapeTextHorizontalAlignment
   - ShapeTextVerticalAlignment
   - SparklineType
-  - TableFunction

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
-use crate::crate_info_extractor::ExtractedItems;
+use crate::crate_info_extractor::{ExtractedItems, StructInfo};
 
 #[derive(Debug, Clone)]
 pub struct StructComparison {
@@ -13,7 +13,12 @@ pub struct StructComparison {
     pub common_functions: Vec<String>,
     pub wasm_only_functions: Vec<String>,
     pub rust_only_functions: Vec<String>,
-    pub is_enum: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct EnumComparison {
+    pub name: String,
+    pub status: MigrationStatus,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -23,134 +28,94 @@ pub enum MigrationStatus {
     NotMigrated,
 }
 
-pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: &str) -> Result<()> {
+pub fn write_comparison_report(comparison: &ComparisonResults, output_file: &str) -> Result<()> {
     let mut report = String::new();
 
-    // Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
     report.push_str("# Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration\n\n");
 
-    // Sort structs by name for consistent output
-    let mut sorted_structs = comparison.clone();
-    sorted_structs.sort_by(|a, b| a.name.cmp(&b.name));
-
-    // Group structs by migration status
-    let mut fully_migrated = Vec::new();
-    let mut partially_migrated = Vec::new();
-    let mut not_migrated_structs = Vec::new();
-    let mut migrated_enums = Vec::new();
-    let mut not_migrated_enums = Vec::new();
-
-    for struct_comp in &sorted_structs {
-        if struct_comp.is_enum {
-            match struct_comp.status {
-                MigrationStatus::FullyMigrated => migrated_enums.push(struct_comp.clone()),
-                _ => not_migrated_enums.push(struct_comp.clone()),
-            }
-        } else {
-            match struct_comp.status {
-                MigrationStatus::FullyMigrated => fully_migrated.push(struct_comp.clone()),
-                MigrationStatus::PartiallyMigrated => partially_migrated.push(struct_comp.clone()),
-                MigrationStatus::NotMigrated => not_migrated_structs.push(struct_comp.clone()),
-            }
+    let mut fully_migrated: Vec<StructComparison> = Vec::new();
+    let mut partially_migrated: Vec<StructComparison> = Vec::new();
+    let mut not_migrated_structs: Vec<StructComparison> = Vec::new();
+    let mut migrated_enums: Vec<EnumComparison> = Vec::new();
+    let mut not_migrated_enums: Vec<EnumComparison> = Vec::new();
+    for struct_comp in &comparison.structs {
+        match struct_comp.status {
+            MigrationStatus::FullyMigrated => fully_migrated.push(struct_comp.clone()),
+            MigrationStatus::PartiallyMigrated => partially_migrated.push(struct_comp.clone()),
+            MigrationStatus::NotMigrated => not_migrated_structs.push(struct_comp.clone()),
         }
     }
 
-    // Migrated Structs
+    for enum_comp in &comparison.enums {
+        match enum_comp.status {
+            MigrationStatus::FullyMigrated => migrated_enums.push(enum_comp.clone()),
+            _ => not_migrated_enums.push(enum_comp.clone()),
+        }
+    }
     report.push_str("## ✅ Migrated Structs\n");
-    if !fully_migrated.is_empty() {
-        for struct_comp in &fully_migrated {
-            report.push_str(&format!("  - {}\n", struct_comp.name));
-        }
-    } else {
-        report.push_str("  - None\n");
+    for struct_comp in &fully_migrated {
+        report.push_str(&format!("  - {}\n", struct_comp.name));
     }
     report.push_str("\n");
 
-    // Partially Migrated Structs
     report.push_str("## ⚠️ Partially Migrated Structs\n");
-    if !partially_migrated.is_empty() {
-        for struct_comp in &partially_migrated {
-            report.push_str(&format!("  ### {}\n", struct_comp.name));
+    for struct_comp in &partially_migrated {
+        report.push_str(&format!("  ### {}\n", struct_comp.name));
 
-            // Summary
-            report.push_str("    Summary\n");
-            report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
-            report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
-            report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
-            report.push_str(&format!("      - Not migrated functions: {}\n", struct_comp.rust_only_functions.len()));
+        report.push_str("    Summary\n");
+        report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
+        report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
+        report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
+        report.push_str(&format!("      - Not migrated functions: {}\n", struct_comp.rust_only_functions.len()));
 
-            // Methods Not Yet Migrated
-            if !struct_comp.rust_only_methods.is_empty() {
-                report.push_str("    ❌ Methods Not Yet Migrated\n");
-                for method in &struct_comp.rust_only_methods {
-                    report.push_str(&format!("      - {}\n", method));
-                }
-            }
-
-            // Functions Not Yet Migrated
-            if !struct_comp.rust_only_functions.is_empty() {
-                report.push_str("    ❌ Functions Not Yet Migrated\n");
-                for function in &struct_comp.rust_only_functions {
-                    report.push_str(&format!("      - {}\n", function));
-                }
+        if !struct_comp.rust_only_methods.is_empty() {
+            report.push_str("    ❌ Methods Not Yet Migrated\n");
+            for method in &struct_comp.rust_only_methods {
+                report.push_str(&format!("      - {}\n", method));
             }
         }
-    } else {
-        report.push_str("  - None\n");
+
+        if !struct_comp.rust_only_functions.is_empty() {
+            report.push_str("    ❌ Functions Not Yet Migrated\n");
+            for function in &struct_comp.rust_only_functions {
+                report.push_str(&format!("      - {}\n", function));
+            }
+        }
     }
     report.push_str("\n");
-
-    // Not Migrated Structs
     report.push_str("## ❌ Not Migrated Structs\n");
-    if not_migrated_structs.is_empty() {
-        report.push_str("  - None\n");
-    } else {
-        for struct_comp in &not_migrated_structs {
-            report.push_str(&format!("  ### {}\n", struct_comp.name));
+    for struct_comp in &not_migrated_structs {
+        report.push_str(&format!("  ### {}\n", struct_comp.name));
 
-            // Summary
-            report.push_str("    Summary\n");
-            report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
-            report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
-            report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
-            report.push_str(&format!("      - Not migrated functions: {}\n", struct_comp.rust_only_functions.len()));
+        report.push_str("    Summary\n");
+        report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
+        report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
+        report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
+        report.push_str(&format!("      - Not migrated functions: {}\n", struct_comp.rust_only_functions.len()));
 
-            // Methods Not Yet Migrated
-            if !struct_comp.rust_only_methods.is_empty() {
-                report.push_str("    ❌ Methods Not Yet Migrated\n");
-                for method in &struct_comp.rust_only_methods {
-                    report.push_str(&format!("      - {}\n", method));
-                }
+        if !struct_comp.rust_only_methods.is_empty() {
+            report.push_str("    ❌ Methods Not Yet Migrated\n");
+            for method in &struct_comp.rust_only_methods {
+                report.push_str(&format!("      - {}\n", method));
             }
+        }
 
-            // Functions Not Yet Migrated
-            if !struct_comp.rust_only_functions.is_empty() {
-                report.push_str("    ❌ Functions Not Yet Migrated\n");
-                for function in &struct_comp.rust_only_functions {
-                    report.push_str(&format!("      - {}\n", function));
-                }
+        if !struct_comp.rust_only_functions.is_empty() {
+            report.push_str("    ❌ Functions Not Yet Migrated\n");
+            for function in &struct_comp.rust_only_functions {
+                report.push_str(&format!("      - {}\n", function));
             }
         }
     }
 
-    // Migrated Enums
     report.push_str("\n## ✅ Migrated Enums\n");
-    if migrated_enums.is_empty() {
-        report.push_str("  - None\n");
-    } else {
-        for enum_comp in &migrated_enums {
-            report.push_str(&format!("  - {}\n", enum_comp.name));
-        }
+    for enum_comp in &migrated_enums {
+        report.push_str(&format!("  - {}\n", enum_comp.name));
     }
 
-    // Not Migrated Enums
     report.push_str("\n## ❌ Not Migrated Enums\n");
-    if not_migrated_enums.is_empty() {
-        report.push_str("  - None\n");
-    } else {
-        for enum_comp in &not_migrated_enums {
-            report.push_str(&format!("  - {}\n", enum_comp.name));
-        }
+    for enum_comp in &not_migrated_enums {
+        report.push_str(&format!("  - {}\n", enum_comp.name));
     }
 
     fs::write(output_file, report)
@@ -159,80 +124,74 @@ pub fn write_comparison_report(comparison: &Vec<StructComparison>, output_file: 
     Ok(())
 }
 
+pub struct ComparisonResults {
+    pub structs: Vec<StructComparison>,
+    pub enums: Vec<EnumComparison>,
+}
+
 pub fn compare_methods(
     wasm_items: &ExtractedItems,
     rust_items: &ExtractedItems,
-) -> Vec<StructComparison> {
-    let wasm_structs: HashSet<String> = wasm_items.structs.iter().map(|s| s.name.clone()).collect();
-    let rust_structs: HashSet<String> = rust_items.structs.iter().map(|s| s.name.clone()).collect();
+) -> ComparisonResults {
+    let mut struct_comparisons = Vec::new();
+    let mut enum_comparisons = Vec::new();
+
+    let wasm_structs_map: HashMap<String, &StructInfo> = wasm_items.structs.iter()
+        .map(|s| (s.name.clone(), s))
+        .collect();
+    let rust_structs_map: HashMap<String, &StructInfo> = rust_items.structs.iter()
+        .map(|s| (s.name.clone(), s))
+        .collect();
 
     let wasm_enums: HashSet<String> = wasm_items.enums.iter().map(|e| e.name.clone()).collect();
     let rust_enums: HashSet<String> = rust_items.enums.iter().map(|e| e.name.clone()).collect();
 
-    // Get the union of all struct names
-    let all_structs: HashSet<String> = wasm_structs.union(&rust_structs).cloned().collect();
-
-    // Get the union of all enum names
     let all_enums: HashSet<String> = wasm_enums.union(&rust_enums).cloned().collect();
+    for enum_name in all_enums {
+        let in_wasm_enum = wasm_enums.contains(&enum_name) || wasm_structs_map.contains_key(&enum_name);
+        let in_rust_enum = rust_enums.contains(&enum_name);
 
-    // Get the union of all item names (structs and enums)
-    let all_items: HashSet<String> = all_structs.union(&all_enums).cloned().collect();
-
-    // Convert to sorted Vec for consistent iteration order
-    let mut all_items_vec: Vec<String> = all_items.into_iter().collect();
-    all_items_vec.sort();
-
-    let mut struct_comparisons = Vec::new();
-
-    // Process all items (structs and enums) in a single loop
-    for item_name in all_items_vec {
-        let in_wasm_struct = wasm_structs.contains(&item_name);
-        let in_rust_struct = rust_structs.contains(&item_name);
-        let in_wasm_enum = wasm_enums.contains(&item_name);
-        let in_rust_enum = rust_enums.contains(&item_name);
-
-        let is_enum = in_wasm_enum || in_rust_enum;
-        let in_wasm = in_wasm_struct || in_wasm_enum;
-
-        // Get methods for this item from both WASM and Rust
-        let wasm_struct_methods: HashSet<String> = if !is_enum {
-            wasm_items.structs.iter()
-                .find(|s| s.name == item_name)
-                .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
-                .unwrap_or_default()
+        let status = if in_wasm_enum && in_rust_enum {
+            MigrationStatus::FullyMigrated
         } else {
-            HashSet::new()
+            MigrationStatus::NotMigrated
         };
 
-        let rust_struct_methods: HashSet<String> = if !is_enum {
-            rust_items.structs.iter()
-                .find(|s| s.name == item_name)
-                .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
-                .unwrap_or_default()
-        } else {
-            HashSet::new()
-        };
+        enum_comparisons.push(EnumComparison {
+            name: enum_name,
+            status,
+        });
+    }
 
-        // Get functions for this item from both WASM and Rust
-        let wasm_struct_functions: HashSet<String> = if !is_enum {
-            wasm_items.structs.iter()
-                .find(|s| s.name == item_name)
-                .map(|s| s.functions.iter().map(|f| f.name.clone()).collect())
-                .unwrap_or_default()
-        } else {
-            HashSet::new()
-        };
+    let all_structs: HashSet<String> = wasm_structs_map.keys().chain(rust_structs_map.keys())
+        .cloned()
+        .collect();
+    for struct_name in all_structs {
+        let in_wasm = wasm_structs_map.contains_key(&struct_name);
 
-        let rust_struct_functions: HashSet<String> = if !is_enum {
-            rust_items.structs.iter()
-                .find(|s| s.name == item_name)
-                .map(|s| s.functions.iter().map(|f| f.name.clone()).collect())
-                .unwrap_or_default()
-        } else {
-            HashSet::new()
-        };
+        let wasm_struct = wasm_structs_map.get(&struct_name);
+        let rust_struct = rust_structs_map.get(&struct_name);
+        
+        let wasm_struct_methods: HashSet<String> = wasm_struct
+            .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
+            .unwrap_or_default();
 
-        // Calculate intersections and differences
+        let rust_struct_methods: HashSet<String> = rust_struct
+            .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
+            .unwrap_or_default();
+
+        let wasm_struct_functions: HashSet<String> = wasm_struct
+            .map(|s| s.functions.iter().map(|f| f.name.clone()).collect())
+            .unwrap_or_default();
+
+        let rust_struct_functions: HashSet<String> = rust_struct
+            .map(|s| s.functions.iter().map(|f| f.name.clone()).collect())
+            .unwrap_or_default();
+
+        if rust_struct_methods.is_empty() && rust_struct_functions.is_empty() {
+            continue;
+        }
+
         let mut common_methods: Vec<String> = wasm_struct_methods
             .intersection(&rust_struct_methods)
             .cloned()
@@ -269,35 +228,21 @@ pub fn compare_methods(
             .collect();
         rust_only_functions.sort();
 
-        // Determine migration status based on presence in WASM/Rust and method/function comparison
-        // We are migrating from Rust to WASM
-        let status = if is_enum {
-            // For enums, consider them migrated if they exist in both WASM and Rust
-            if in_wasm_enum && in_rust_enum {
-                MigrationStatus::FullyMigrated
-            } else {
-                MigrationStatus::NotMigrated
-            }
-        } else if !in_wasm {
-            // Rust-only struct - not migrated at all
+        let in_wasm = !common_methods.is_empty() || !wasm_only_methods.is_empty() ||
+                      !common_functions.is_empty() || !wasm_only_functions.is_empty();
+        
+        let status = if !in_wasm {
             MigrationStatus::NotMigrated
         } else if wasm_only_methods.is_empty() && wasm_only_functions.is_empty() && !common_methods.is_empty() {
-            // All methods/functions in WASM are also in Rust - fully migrated
             MigrationStatus::FullyMigrated
         } else if !common_methods.is_empty() || !common_functions.is_empty() {
-            // Some methods/functions are common - partially migrated
             MigrationStatus::PartiallyMigrated
         } else {
             MigrationStatus::NotMigrated
         };
 
-        // Skip structs without public methods (they won't be migrated)
-        if !is_enum && rust_struct_methods.is_empty() && rust_struct_functions.is_empty() {
-            continue;
-        }
-
         struct_comparisons.push(StructComparison {
-            name: item_name,
+            name: struct_name,
             status,
             common_methods,
             wasm_only_methods,
@@ -305,11 +250,14 @@ pub fn compare_methods(
             common_functions,
             wasm_only_functions,
             rust_only_functions,
-            is_enum,
         });
     }
 
-    // Sort struct_comparisons by name for consistent results
     struct_comparisons.sort_by(|a, b| a.name.cmp(&b.name));
-    struct_comparisons
+    enum_comparisons.sort_by(|a, b| a.name.cmp(&b.name));
+    
+    ComparisonResults {
+        structs: struct_comparisons,
+        enums: enum_comparisons,
+    }
 }

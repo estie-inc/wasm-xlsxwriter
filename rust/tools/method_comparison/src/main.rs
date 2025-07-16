@@ -19,10 +19,8 @@ struct Args {
 /// A tool to compare methods implemented in wasm-xlsxwriter and rustxlsxwriter
 
 fn main() -> Result<()> {
-    // Parse command line arguments
     let args = Args::parse();
 
-    // Hardcoded values
     let wasm_manifest_path = "../../Cargo.toml";
     let wasm_crate = get_crate_info(wasm_manifest_path)?;
 
@@ -32,11 +30,7 @@ fn main() -> Result<()> {
     let wasm_items = extract_crate_items(&wasm_crate);
     let rust_items = extract_crate_items(&rust_crate);
 
-    // println!("wasm_items: {:#?}", wasm_items);
-    // println!("rust_items: {:#?}", rust_items);
-
     let comparison = report_writer::compare_methods(&wasm_items, &rust_items);
-
     write_comparison_report(&comparison, &args.output)?;
 
     println!("Comparison report written to {}", args.output);
