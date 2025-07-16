@@ -38,12 +38,21 @@ pub fn write_comparison_report(comparison: &ComparisonResults, output_file: &str
     let mut not_migrated_structs: Vec<StructComparison> = Vec::new();
     let mut migrated_enums: Vec<EnumComparison> = Vec::new();
     let mut not_migrated_enums: Vec<EnumComparison> = Vec::new();
+
+    let mut migrated_method_count = 0;
+    let mut not_migrated_method_count = 0;
+    let mut migrated_function_count = 0;
+    let mut not_migrated_function_count = 0;
     for struct_comp in &comparison.structs {
         match struct_comp.status {
             MigrationStatus::FullyMigrated => fully_migrated.push(struct_comp.clone()),
             MigrationStatus::PartiallyMigrated => partially_migrated.push(struct_comp.clone()),
             MigrationStatus::NotMigrated => not_migrated_structs.push(struct_comp.clone()),
         }
+        migrated_method_count += struct_comp.common_methods.len();
+        not_migrated_method_count += struct_comp.rust_only_methods.len();
+        migrated_function_count += struct_comp.common_functions.len();
+        not_migrated_function_count += struct_comp.rust_only_functions.len();
     }
 
     for enum_comp in &comparison.enums {
@@ -52,40 +61,32 @@ pub fn write_comparison_report(comparison: &ComparisonResults, output_file: &str
             _ => not_migrated_enums.push(enum_comp.clone()),
         }
     }
-    report.push_str("## ✅ Migrated Structs\n");
+
+    report.push_str("## Summary\n");
+    report.push_str(&format!("  - ✅ Fully Migrated Structs: {}\n", fully_migrated.len()));
+    report.push_str(&format!("  - ⚠️ Partially Migrated Structs: {}\n", partially_migrated.len()));
+    report.push_str(&format!("  - ❌ Not Migrated Structs: {}\n", not_migrated_structs.len()));
+    report.push_str(&format!("  - ✅ Migrated Enums: {}\n", migrated_enums.len()));
+    report.push_str(&format!("  - ❌ Not Migrated Enums: {}\n", not_migrated_enums.len()));
+    report.push_str(&format!("  - ✅ Total Migrated Methods: {}\n", migrated_method_count));
+    report.push_str(&format!("  - ❌ Total Not Migrated Methods: {}\n", not_migrated_method_count));
+    report.push_str(&format!("  - ✅ Total Migrated Functions: {}\n", migrated_function_count));
+    report.push_str(&format!("  - ❌ Total Not Migrated Functions: {}\n", not_migrated_function_count));
+
+    report.push_str("## Details of Structs\n");
+
     for struct_comp in &fully_migrated {
-        report.push_str(&format!("  - {}\n", struct_comp.name));
+        report.push_str(&format!("  ### ✅ {}\n", struct_comp.name));
     }
-    report.push_str("\n");
 
-    report.push_str("## ⚠️ Partially Migrated Structs\n");
-    for struct_comp in &partially_migrated {
-        report.push_str(&format!("  ### {}\n", struct_comp.name));
+    for struct_comp in partially_migrated.iter().chain(not_migrated_structs.iter()) {
+        let status_icon = if struct_comp.status  == MigrationStatus::PartiallyMigrated {
+            "⚠️"
+        } else {
+            "❌"
+        };
 
-        report.push_str("    Summary\n");
-        report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
-        report.push_str(&format!("      - Not migrated methods: {}\n", struct_comp.rust_only_methods.len()));
-        report.push_str(&format!("      - Migrated functions: {}\n", struct_comp.common_functions.len()));
-        report.push_str(&format!("      - Not migrated functions: {}\n", struct_comp.rust_only_functions.len()));
-
-        if !struct_comp.rust_only_methods.is_empty() {
-            report.push_str("    ❌ Methods Not Yet Migrated\n");
-            for method in &struct_comp.rust_only_methods {
-                report.push_str(&format!("      - {}\n", method));
-            }
-        }
-
-        if !struct_comp.rust_only_functions.is_empty() {
-            report.push_str("    ❌ Functions Not Yet Migrated\n");
-            for function in &struct_comp.rust_only_functions {
-                report.push_str(&format!("      - {}\n", function));
-            }
-        }
-    }
-    report.push_str("\n");
-    report.push_str("## ❌ Not Migrated Structs\n");
-    for struct_comp in &not_migrated_structs {
-        report.push_str(&format!("  ### {}\n", struct_comp.name));
+        report.push_str(&format!("  ### {} {}\n", status_icon, struct_comp.name));
 
         report.push_str("    Summary\n");
         report.push_str(&format!("      - Migrated methods: {}\n", struct_comp.common_methods.len()));
@@ -167,11 +168,9 @@ pub fn compare_methods(
         .cloned()
         .collect();
     for struct_name in all_structs {
-        let in_wasm = wasm_structs_map.contains_key(&struct_name);
-
         let wasm_struct = wasm_structs_map.get(&struct_name);
         let rust_struct = rust_structs_map.get(&struct_name);
-        
+
         let wasm_struct_methods: HashSet<String> = wasm_struct
             .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
             .unwrap_or_default();
@@ -250,7 +249,7 @@ pub fn compare_methods(
 
     struct_comparisons.sort_by(|a, b| a.name.cmp(&b.name));
     enum_comparisons.sort_by(|a, b| a.name.cmp(&b.name));
-    
+
     ComparisonResults {
         structs: struct_comparisons,
         enums: enum_comparisons,

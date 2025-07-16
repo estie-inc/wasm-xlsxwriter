@@ -1,20 +1,28 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
-## ✅ Migrated Structs
-  - ChartDataLabel
-  - ChartFont
-  - ChartLine
-  - ChartMarker
-  - ChartPoint
-  - ChartSolidFill
-  - ExcelDateTime
-  - Formula
-  - Note
-  - TableColumn
-  - Url
-
-## ⚠️ Partially Migrated Structs
-  ### Chart
+## Summary
+  - ✅ Fully Migrated Structs: 11
+  - ⚠️ Partially Migrated Structs: 13
+  - ❌ Not Migrated Structs: 41
+  - ✅ Migrated Enums: 17
+  - ❌ Not Migrated Enums: 34
+  - ✅ Total Migrated Methods: 247
+  - ❌ Total Not Migrated Methods: 382
+  - ✅ Total Migrated Functions: 34
+  - ❌ Total Not Migrated Functions: 46
+## Details of Structs
+  ### ✅ ChartDataLabel
+  ### ✅ ChartFont
+  ### ✅ ChartLine
+  ### ✅ ChartMarker
+  ### ✅ ChartPoint
+  ### ✅ ChartSolidFill
+  ### ✅ ExcelDateTime
+  ### ✅ Formula
+  ### ✅ Note
+  ### ✅ TableColumn
+  ### ✅ Url
+  ### ⚠️ Chart
     Summary
       - Migrated methods: 11
       - Not migrated methods: 23
@@ -44,7 +52,7 @@
       - show_hidden_data
       - show_na_as_empty_cell
       - validate
-  ### ChartAxis
+  ### ⚠️ ChartAxis
     Summary
       - Migrated methods: 6
       - Not migrated methods: 28
@@ -79,7 +87,7 @@
       - set_reverse
       - set_text_axis
       - set_tick_interval
-  ### ChartFormat
+  ### ⚠️ ChartFormat
     Summary
       - Migrated methods: 6
       - Not migrated methods: 2
@@ -88,7 +96,7 @@
     ❌ Methods Not Yet Migrated
       - set_gradient_fill
       - set_pattern_fill
-  ### ChartLegend
+  ### ⚠️ ChartLegend
     Summary
       - Migrated methods: 5
       - Not migrated methods: 2
@@ -97,7 +105,7 @@
     ❌ Methods Not Yet Migrated
       - delete_entries
       - set_layout
-  ### ChartRange
+  ### ⚠️ ChartRange
     Summary
       - Migrated methods: 0
       - Not migrated methods: 0
@@ -105,7 +113,7 @@
       - Not migrated functions: 1
     ❌ Functions Not Yet Migrated
       - new_from_range
-  ### ChartSeries
+  ### ⚠️ ChartSeries
     Summary
       - Migrated methods: 7
       - Not migrated methods: 12
@@ -124,7 +132,7 @@
       - set_trendline
       - set_x_error_bars
       - set_y_error_bars
-  ### ChartTitle
+  ### ⚠️ ChartTitle
     Summary
       - Migrated methods: 3
       - Not migrated methods: 3
@@ -134,7 +142,7 @@
       - set_hidden
       - set_layout
       - set_overlay
-  ### DocProperties
+  ### ⚠️ DocProperties
     Summary
       - Migrated methods: 10
       - Not migrated methods: 2
@@ -143,7 +151,7 @@
     ❌ Methods Not Yet Migrated
       - set_creation_datetime
       - set_custom_property
-  ### Format
+  ### ⚠️ Format
     Summary
       - Migrated methods: 36
       - Not migrated methods: 15
@@ -165,7 +173,7 @@
       - unset_quote_prefix
       - unset_shrink
       - unset_text_wrap
-  ### Image
+  ### ⚠️ Image
     Summary
       - Migrated methods: 8
       - Not migrated methods: 5
@@ -179,7 +187,7 @@
       - width_dpi
     ❌ Functions Not Yet Migrated
       - new_from_buffer
-  ### Table
+  ### ⚠️ Table
     Summary
       - Migrated methods: 8
       - Not migrated methods: 2
@@ -188,7 +196,7 @@
     ❌ Methods Not Yet Migrated
       - set_autofilter
       - set_last_column
-  ### Workbook
+  ### ⚠️ Workbook
     Summary
       - Migrated methods: 6
       - Not migrated methods: 11
@@ -206,7 +214,7 @@
       - use_zip_large_file
       - worksheets
       - worksheets_mut
-  ### Worksheet
+  ### ⚠️ Worksheet
     Summary
       - Migrated methods: 77
       - Not migrated methods: 64
@@ -280,9 +288,7 @@
     ❌ Functions Not Yet Migrated
       - new
       - new_chartsheet
-
-## ❌ Not Migrated Structs
-  ### Button
+  ### ❌ Button
     Summary
       - Migrated methods: 0
       - Not migrated methods: 6
@@ -297,7 +303,7 @@
       - set_width
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartArea
+  ### ❌ ChartArea
     Summary
       - Migrated methods: 0
       - Not migrated methods: 1
@@ -307,7 +313,7 @@
       - set_format
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartDataTable
+  ### ❌ ChartDataTable
     Summary
       - Migrated methods: 0
       - Not migrated methods: 6
@@ -322,7 +328,7 @@
       - show_vertical_borders
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartErrorBars
+  ### ❌ ChartErrorBars
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -335,7 +341,7 @@
       - set_type
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartGradientFill
+  ### ❌ ChartGradientFill
     Summary
       - Migrated methods: 0
       - Not migrated methods: 3
@@ -347,7 +353,7 @@
       - set_type
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartGradientStop
+  ### ❌ ChartGradientStop
     Summary
       - Migrated methods: 0
       - Not migrated methods: 0
@@ -355,7 +361,7 @@
       - Not migrated functions: 1
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartLayout
+  ### ❌ ChartLayout
     Summary
       - Migrated methods: 0
       - Not migrated methods: 2
@@ -366,7 +372,7 @@
       - set_offset
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartPatternFill
+  ### ❌ ChartPatternFill
     Summary
       - Migrated methods: 0
       - Not migrated methods: 3
@@ -378,7 +384,7 @@
       - set_pattern
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartPlotArea
+  ### ❌ ChartPlotArea
     Summary
       - Migrated methods: 0
       - Not migrated methods: 2
@@ -389,7 +395,7 @@
       - set_layout
     ❌ Functions Not Yet Migrated
       - new
-  ### ChartTrendline
+  ### ❌ ChartTrendline
     Summary
       - Migrated methods: 0
       - Not migrated methods: 11
@@ -409,7 +415,7 @@
       - set_type
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormat2ColorScale
+  ### ❌ ConditionalFormat2ColorScale
     Summary
       - Migrated methods: 0
       - Not migrated methods: 6
@@ -424,7 +430,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormat3ColorScale
+  ### ❌ ConditionalFormat3ColorScale
     Summary
       - Migrated methods: 0
       - Not migrated methods: 8
@@ -441,7 +447,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatAverage
+  ### ❌ ConditionalFormatAverage
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -454,7 +460,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatBlank
+  ### ❌ ConditionalFormatBlank
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -467,7 +473,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatCell
+  ### ❌ ConditionalFormatCell
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -480,7 +486,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatCustomIcon
+  ### ❌ ConditionalFormatCustomIcon
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -493,7 +499,7 @@
       - set_rule
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatDataBar
+  ### ❌ ConditionalFormatDataBar
     Summary
       - Migrated methods: 0
       - Not migrated methods: 14
@@ -516,7 +522,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatDate
+  ### ❌ ConditionalFormatDate
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -529,7 +535,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatDuplicate
+  ### ❌ ConditionalFormatDuplicate
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -542,7 +548,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatError
+  ### ❌ ConditionalFormatError
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -555,7 +561,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatFormula
+  ### ❌ ConditionalFormatFormula
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -568,7 +574,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatIconSet
+  ### ❌ ConditionalFormatIconSet
     Summary
       - Migrated methods: 0
       - Not migrated methods: 6
@@ -583,7 +589,7 @@
       - show_icons_only
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatText
+  ### ❌ ConditionalFormatText
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -596,7 +602,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### ConditionalFormatTop
+  ### ❌ ConditionalFormatTop
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -609,7 +615,7 @@
       - set_stop_if_true
     ❌ Functions Not Yet Migrated
       - new
-  ### DataValidation
+  ### ❌ DataValidation
     Summary
       - Migrated methods: 0
       - Not migrated methods: 24
@@ -642,7 +648,7 @@
       - show_input_message
     ❌ Functions Not Yet Migrated
       - new
-  ### Drawing
+  ### ❌ Drawing
     Summary
       - Migrated methods: 0
       - Not migrated methods: 1
@@ -652,7 +658,7 @@
       - assemble_xml_file
     ❌ Functions Not Yet Migrated
       - new
-  ### FilterCondition
+  ### ❌ FilterCondition
     Summary
       - Migrated methods: 0
       - Not migrated methods: 4
@@ -665,7 +671,7 @@
       - add_list_filter
     ❌ Functions Not Yet Migrated
       - new
-  ### FilterData
+  ### ❌ FilterData
     Summary
       - Migrated methods: 0
       - Not migrated methods: 0
@@ -674,7 +680,7 @@
     ❌ Functions Not Yet Migrated
       - new_number_and_criteria
       - new_string_and_criteria
-  ### Metadata
+  ### ❌ Metadata
     Summary
       - Migrated methods: 0
       - Not migrated methods: 1
@@ -684,7 +690,7 @@
       - assemble_xml_file
     ❌ Functions Not Yet Migrated
       - new
-  ### ProtectionOptions
+  ### ❌ ProtectionOptions
     Summary
       - Migrated methods: 0
       - Not migrated methods: 0
@@ -692,7 +698,7 @@
       - Not migrated functions: 1
     ❌ Functions Not Yet Migrated
       - new
-  ### Shape
+  ### ❌ Shape
     Summary
       - Migrated methods: 0
       - Not migrated methods: 10
@@ -711,7 +717,7 @@
       - set_width
     ❌ Functions Not Yet Migrated
       - textbox
-  ### ShapeFont
+  ### ❌ ShapeFont
     Summary
       - Migrated methods: 0
       - Not migrated methods: 11
@@ -731,7 +737,7 @@
       - unset_bold
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapeFormat
+  ### ❌ ShapeFormat
     Summary
       - Migrated methods: 0
       - Not migrated methods: 6
@@ -746,7 +752,7 @@
       - set_solid_fill
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapeGradientFill
+  ### ❌ ShapeGradientFill
     Summary
       - Migrated methods: 0
       - Not migrated methods: 3
@@ -758,7 +764,7 @@
       - set_type
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapeGradientStop
+  ### ❌ ShapeGradientStop
     Summary
       - Migrated methods: 0
       - Not migrated methods: 0
@@ -766,7 +772,7 @@
       - Not migrated functions: 1
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapeLine
+  ### ❌ ShapeLine
     Summary
       - Migrated methods: 0
       - Not migrated methods: 5
@@ -780,7 +786,7 @@
       - set_width
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapePatternFill
+  ### ❌ ShapePatternFill
     Summary
       - Migrated methods: 0
       - Not migrated methods: 3
@@ -792,7 +798,7 @@
       - set_pattern
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapeSolidFill
+  ### ❌ ShapeSolidFill
     Summary
       - Migrated methods: 0
       - Not migrated methods: 2
@@ -803,7 +809,7 @@
       - set_transparency
     ❌ Functions Not Yet Migrated
       - new
-  ### ShapeText
+  ### ❌ ShapeText
     Summary
       - Migrated methods: 0
       - Not migrated methods: 3
@@ -815,7 +821,7 @@
       - set_vertical_alignment
     ❌ Functions Not Yet Migrated
       - new
-  ### Sparkline
+  ### ❌ Sparkline
     Summary
       - Migrated methods: 0
       - Not migrated methods: 27
@@ -851,7 +857,7 @@
       - show_negative_points
     ❌ Functions Not Yet Migrated
       - new
-  ### Vml
+  ### ❌ Vml
     Summary
       - Migrated methods: 0
       - Not migrated methods: 1
