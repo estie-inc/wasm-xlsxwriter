@@ -1,23 +1,25 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
 ## Summary
-  - ✅ Fully Migrated Structs: 12
-  - ⚠️ Partially Migrated Structs: 12
-  - ❌ Not Migrated Structs: 41
+  - ✅ Fully Migrated Structs: 14
+  - ⚠️ Partially Migrated Structs: 11
+  - ❌ Not Migrated Structs: 40
   - ✅ Migrated Enums: 17
   - ❌ Not Migrated Enums: 34
-  - ✅ Total Migrated Methods: 248
-  - ❌ Total Not Migrated Methods: 381
-  - ✅ Total Migrated Functions: 35
-  - ❌ Total Not Migrated Functions: 45
+  - ✅ Total Migrated Methods: 253
+  - ❌ Total Not Migrated Methods: 376
+  - ✅ Total Migrated Functions: 36
+  - ❌ Total Not Migrated Functions: 44
 ## Details of Structs
   ### ✅ ChartDataLabel
   ### ✅ ChartFont
+  ### ✅ ChartLayout
   ### ✅ ChartLine
   ### ✅ ChartMarker
   ### ✅ ChartPoint
   ### ✅ ChartRange
   ### ✅ ChartSolidFill
+  ### ✅ ChartTitle
   ### ✅ ExcelDateTime
   ### ✅ Formula
   ### ✅ Note
@@ -125,16 +127,6 @@
       - set_trendline
       - set_x_error_bars
       - set_y_error_bars
-  ### ⚠️ ChartTitle
-    Summary
-      - Migrated methods: 3
-      - Not migrated methods: 3
-      - Migrated functions: 0
-      - Not migrated functions: 0
-    ❌ Methods Not Yet Migrated
-      - set_hidden
-      - set_layout
-      - set_overlay
   ### ⚠️ DocProperties
     Summary
       - Migrated methods: 10
@@ -351,17 +343,6 @@
       - Not migrated methods: 0
       - Migrated functions: 0
       - Not migrated functions: 1
-    ❌ Functions Not Yet Migrated
-      - new
-  ### ❌ ChartLayout
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 2
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - set_dimensions
-      - set_offset
     ❌ Functions Not Yet Migrated
       - new
   ### ❌ ChartPatternFill
