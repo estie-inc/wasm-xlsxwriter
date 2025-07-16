@@ -28,24 +28,6 @@ pub struct ChartRange {
 
 #[wasm_bindgen]
 impl ChartRange {
-    /// Create a new `ChartRange` from a worksheet 5 tuple.
-    ///
-    /// A 5 value tuple that can be used to create the range programmatically
-    ///   using a sheet name and zero indexed row and column values like:
-    ///   `("Sheet1", 0, 0, 2, 0)` (this gives the same range as the previous string
-    ///   value).
-    #[wasm_bindgen(constructor)]
-    pub fn new(
-        sheet: &str,
-        first_row: xlsx::RowNum,
-        first_col: xlsx::ColNum,
-        last_row: xlsx::RowNum,
-        last_col: xlsx::ColNum,
-    ) -> ChartRange {
-        let range = (sheet, first_row, first_col, last_row, last_col).new_chart_range();
-        ChartRange { inner: range }
-    }
-
     /// Create a new `ChartRange` from an Excel range formula such as `"Sheet1!$A$1:$A$3"`.
     ///
     /// TODO: example omitted
@@ -55,19 +37,12 @@ impl ChartRange {
         ChartRange { inner: range }
     }
 
-    /// Create a new `ChartRange` from a worksheet 3 tuple.
-    ///
-    /// A 3 value tuple that can be used to create the cell range programmatically
-    ///   using a sheet name and zero indexed row and column values like:
-    ///   `("Sheet1", 0, 0)` (this gives the same range as the previous string
-    ///   value).
+    /// Create a new `ChartRange` from a worksheet 5 tuple.
     ///
     /// TODO: example omitted
-    #[wasm_bindgen(js_name = "fromCell")]
-    pub fn from_cell(sheet: &str, row: xlsx::RowNum, col: xlsx::ColNum) -> ChartRange {
-        let range = (sheet, row, col).new_chart_range();
+    #[wasm_bindgen(js_name = "newFromRange")]
+    pub fn new_from_range(sheet: &str, first_row: xlsx::RowNum, first_col: xlsx::ColNum, last_row: xlsx::RowNum, last_col: xlsx::ColNum) -> ChartRange {
+        let range = (sheet, first_row, first_col, last_row, last_col).new_chart_range();
         ChartRange { inner: range }
     }
-
-    // TODO: support (str, RowNum, ColNum) and (str, str) constructors
 }

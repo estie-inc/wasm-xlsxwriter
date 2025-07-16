@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::chart::{chart_font::ChartFont, chart_format::ChartFormat};
+use crate::wrapper::chart::{chart_font::ChartFont, chart_format::ChartFormat, chart_layout::ChartLayout};
 
 /// The `ChartTitle` struct represents a chart title.
 ///
@@ -80,6 +80,33 @@ impl ChartTitle {
     pub fn set_font(&self, font: &ChartFont) -> ChartTitle {
         let mut chart = self.chart.lock().unwrap();
         chart.title().set_font(&font.inner);
+        ChartTitle {
+            chart: Arc::clone(&self.chart),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setHidden", skip_jsdoc)]
+    pub fn set_hidden(&self) -> ChartTitle {
+        let mut chart = self.chart.lock().unwrap();
+        chart.title().set_hidden();
+        ChartTitle {
+            chart: Arc::clone(&self.chart),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setOverlay", skip_jsdoc)]
+    pub fn set_overlay(&self, enable: bool) -> ChartTitle {
+        let mut chart = self.chart.lock().unwrap();
+        chart.title().set_overlay(enable);
+        ChartTitle {
+            chart: Arc::clone(&self.chart),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "setLayout", skip_jsdoc)]
+    pub fn set_layout(&self, layout: &ChartLayout) -> ChartTitle {
+        let mut chart = self.chart.lock().unwrap();
+        chart.title().set_layout(&layout.inner);
         ChartTitle {
             chart: Arc::clone(&self.chart),
         }
