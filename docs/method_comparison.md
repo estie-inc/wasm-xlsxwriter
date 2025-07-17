@@ -1,21 +1,22 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
 ## Summary
-  - ✅ Fully Migrated Structs: 14
+  - ✅ Fully Migrated Structs: 15
   - ⚠️ Partially Migrated Structs: 11
-  - ❌ Not Migrated Structs: 40
-  - ✅ Migrated Enums: 17
-  - ❌ Not Migrated Enums: 34
-  - ✅ Total Migrated Methods: 253
-  - ❌ Total Not Migrated Methods: 376
-  - ✅ Total Migrated Functions: 36
-  - ❌ Total Not Migrated Functions: 44
+  - ❌ Not Migrated Structs: 39
+  - ✅ Migrated Enums: 18
+  - ❌ Not Migrated Enums: 33
+  - ✅ Total Migrated Methods: 257
+  - ❌ Total Not Migrated Methods: 372
+  - ✅ Total Migrated Functions: 37
+  - ❌ Total Not Migrated Functions: 43
 ## Details of Structs
   ### ✅ ChartDataLabel
   ### ✅ ChartFont
   ### ✅ ChartLayout
   ### ✅ ChartLine
   ### ✅ ChartMarker
+  ### ✅ ChartPatternFill
   ### ✅ ChartPoint
   ### ✅ ChartRange
   ### ✅ ChartSolidFill
@@ -92,13 +93,12 @@
       - set_tick_interval
   ### ⚠️ ChartFormat
     Summary
-      - Migrated methods: 6
-      - Not migrated methods: 2
+      - Migrated methods: 7
+      - Not migrated methods: 1
       - Migrated functions: 1
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
       - set_gradient_fill
-      - set_pattern_fill
   ### ⚠️ ChartLegend
     Summary
       - Migrated methods: 5
@@ -343,18 +343,6 @@
       - Not migrated methods: 0
       - Migrated functions: 0
       - Not migrated functions: 1
-    ❌ Functions Not Yet Migrated
-      - new
-  ### ❌ ChartPatternFill
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 3
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - set_background_color
-      - set_foreground_color
-      - set_pattern
     ❌ Functions Not Yet Migrated
       - new
   ### ❌ ChartPlotArea
@@ -846,6 +834,7 @@
   - ChartLegendPosition
   - ChartLineDashType
   - ChartMarkerType
+  - ChartPatternFillType
   - ChartType
   - Color
   - FormatAlign
@@ -872,7 +861,6 @@
   - ChartErrorBarsDirection
   - ChartErrorBarsType
   - ChartGradientFillType
-  - ChartPatternFillType
   - ChartTrendlineType
   - ConditionalFormatAverageRule
   - ConditionalFormatCellRule
