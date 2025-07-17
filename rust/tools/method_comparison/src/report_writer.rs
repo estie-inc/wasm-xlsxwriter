@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use crate::crate_info_extractor::{ExtractedItems, StructInfo};
+use crate_info_extractor::{ExtractedItems, StructInfo};
 
 #[derive(Debug, Clone)]
 pub struct StructComparison {

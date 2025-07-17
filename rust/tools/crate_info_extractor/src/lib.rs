@@ -67,7 +67,7 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
         "write", "equivalent"
     ];
 
-    for (id, item) in &crate_info.index {
+    for (_id, item) in &crate_info.index {
         if !matches!(item.visibility, Visibility::Public) {
             continue;
         }
