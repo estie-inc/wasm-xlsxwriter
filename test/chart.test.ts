@@ -15,6 +15,11 @@ import {
   Color,
   ChartLine,
   ChartLayout,
+  ChartGradientFill,
+  ChartGradientStop,
+  ChartGradientFillType,
+  ChartPatternFill,
+  ChartPatternFillType,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -65,21 +70,21 @@ describe("xlsx-wasm test", () => {
       .setDataLabel(chartDataLabel1)
       .setMarker(chartMarker1);
 
-    const chartDataLabel2 = new ChartDataLabel();
+    const chartDataLabel2 = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
     const chartSeries2 = new ChartSeries();
-    const chartLine2 = new ChartLine();
-    const chartSolidFill2 = new ChartSolidFill();
-    const chartFormat2 = new ChartFormat();
-    const chartMarker2 = new ChartMarker();
+    const chartLine2 = new ChartLine().setColor(Color.purple());
+    const chartSolidFill2 = new ChartSolidFill().setColor(Color.purple());
+    const chartFormat2 = new ChartFormat().setLine(chartLine2).setSolidFill(chartSolidFill2);
+    const chartMarker2 = new ChartMarker().setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2);
     const categoriesRange2 = ChartRange.newFromRange("Sheet1", 1, 0, 6, 0);
     const valuesRange2 = ChartRange.newFromRange("Sheet1", 1, 2, 6, 2);
     chartSeries2
       .setName("Score 2")
       .setCategories(categoriesRange2)
       .setValues(valuesRange2)
-      .setFormat(chartFormat2.setLine(chartLine2.setColor(Color.purple())).setSolidFill(chartSolidFill2.setColor(Color.purple())))
-      .setDataLabel(chartDataLabel2.setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left))
-      .setMarker(chartMarker2.setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2.setLine(chartLine2.setColor(Color.purple())).setSolidFill(chartSolidFill2.setColor(Color.purple()))));
+      .setFormat(chartFormat2)
+      .setDataLabel(chartDataLabel2)
+      .setMarker(chartMarker2);
     chart
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
@@ -95,6 +100,56 @@ describe("xlsx-wasm test", () => {
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
     const expected = await readXlsxFile("./expected/insert_chart.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+
+  test("insert chart with gradient fill, pattern fill", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, "Number");
+    worksheet.write(0, 1, "Score 1");
+    worksheet.write(0, 2, "Score 2");
+
+    DATA.forEach((col_data, col_num) => {
+      col_data.forEach((row_data, row_num) => {
+        worksheet.write(row_num + 1, col_num, row_data);
+      });
+    });
+
+    const chart = new Chart(ChartType.Column);
+    const categoriesRange = ChartRange.newFromRange("Sheet1", 1, 0, 6, 0);
+
+    const chartSeries1 = new ChartSeries();
+    const chartGradientFill1 = new ChartGradientFill().setType(ChartGradientFillType.Linear).setAngle(45).setGradientStops([new ChartGradientStop(Color.green(), 0), new ChartGradientStop(Color.yellow(), 100)]);
+    const chartFormat1 = new ChartFormat().setGradientFill(chartGradientFill1);
+    const valuesRange1 = ChartRange.newFromRange("Sheet1", 1, 1, 6, 1);
+    chartSeries1
+      .setName("Score 1")
+      .setCategories(categoriesRange)
+      .setValues(valuesRange1)
+      .setFormat(chartFormat1);
+
+    const chartSeries2 = new ChartSeries();
+    const chartPatternFill = new ChartPatternFill().setPattern(ChartPatternFillType.DiagonalBrick).setBackgroundColor(Color.purple());
+    const chartFormat2 = new ChartFormat().setPatternFill(chartPatternFill);
+    const valuesRange2 = ChartRange.newFromRange("Sheet1", 1, 2, 6, 2);
+    chartSeries2
+      .setName("Score 2")
+      .setCategories(categoriesRange)
+      .setValues(valuesRange2)
+      .setFormat(chartFormat2);
+    chart
+      .pushSeries(chartSeries1)
+      .pushSeries(chartSeries2);
+
+    worksheet.insertChart(0, 3, chart);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/insert_chart_column.xlsx");
     expect(actual).matchXlsx(expected);
   });
 });

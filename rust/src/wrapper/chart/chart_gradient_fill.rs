@@ -17,6 +17,7 @@ impl ChartGradientFill {
         }
     }
 
+    #[wasm_bindgen(js_name = "setType")]
     pub fn set_type(&mut self, fill_type: ChartGradientFillType) -> ChartGradientFill {
         self.inner.set_type(fill_type.into());
         ChartGradientFill {
@@ -24,6 +25,7 @@ impl ChartGradientFill {
         }
     }
 
+    #[wasm_bindgen(js_name = "setGradientStops")]
     pub fn set_gradient_stops(&mut self, gradient_stops: Vec<ChartGradientStop>) -> ChartGradientFill {
         let gradient_stops_vec: Vec<xlsx::ChartGradientStop> = gradient_stops.iter().map(|s| s.inner.clone()).collect();
         self.inner.set_gradient_stops(&gradient_stops_vec);
@@ -32,6 +34,7 @@ impl ChartGradientFill {
         }
     }
 
+    #[wasm_bindgen(js_name = "setAngle")]
     pub fn set_angle(&mut self, angle: u16) -> ChartGradientFill {
         self.inner.set_angle(angle);
         ChartGradientFill {
