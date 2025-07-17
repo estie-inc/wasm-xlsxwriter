@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 use crate::wrapper::chart::chart_line::ChartLine;
 use crate::wrapper::chart::chart_pattern_fill::ChartPatternFill;
 use crate::wrapper::chart::chart_solid_fill::ChartSolidFill;
+use crate::wrapper::chart::chart_gradient_fill::ChartGradientFill;
 
 /// The `ChartFormat` struct represents formatting for various chart objects.
 ///
@@ -93,5 +94,9 @@ impl ChartFormat {
         self.clone()
     }
 
-    // TODO: set_gradient_fill
+    #[wasm_bindgen(js_name = "setGradientFill")]
+    pub fn set_gradient_fill(&mut self, fill: &ChartGradientFill) -> ChartFormat {
+        self.inner.set_gradient_fill(&fill.inner);
+        self.clone()
+    }
 }
