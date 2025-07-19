@@ -15,6 +15,11 @@ mod chart_title;
 mod chart_type;
 mod chart_line;
 mod chart_layout;
+mod chart_pattern_fill;
+mod chart_pattern_fill_type;
+mod chart_gradient_fill;
+mod chart_gradient_fill_type;
+mod chart_gradient_stop;
 
 use std::sync::{Arc, Mutex};
 

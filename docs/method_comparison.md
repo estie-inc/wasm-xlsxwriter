@@ -1,21 +1,25 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
 ## Summary
-  - ✅ Fully Migrated Structs: 14
-  - ⚠️ Partially Migrated Structs: 11
-  - ❌ Not Migrated Structs: 40
-  - ✅ Migrated Enums: 17
-  - ❌ Not Migrated Enums: 34
-  - ✅ Total Migrated Methods: 253
-  - ❌ Total Not Migrated Methods: 376
-  - ✅ Total Migrated Functions: 36
-  - ❌ Total Not Migrated Functions: 44
+  - ✅ Fully Migrated Structs: 18
+  - ⚠️ Partially Migrated Structs: 10
+  - ❌ Not Migrated Structs: 37
+  - ✅ Migrated Enums: 19
+  - ❌ Not Migrated Enums: 32
+  - ✅ Total Migrated Methods: 261
+  - ❌ Total Not Migrated Methods: 368
+  - ✅ Total Migrated Functions: 39
+  - ❌ Total Not Migrated Functions: 41
 ## Details of Structs
   ### ✅ ChartDataLabel
   ### ✅ ChartFont
+  ### ✅ ChartFormat
+  ### ✅ ChartGradientFill
+  ### ✅ ChartGradientStop
   ### ✅ ChartLayout
   ### ✅ ChartLine
   ### ✅ ChartMarker
+  ### ✅ ChartPatternFill
   ### ✅ ChartPoint
   ### ✅ ChartRange
   ### ✅ ChartSolidFill
@@ -90,15 +94,6 @@
       - set_reverse
       - set_text_axis
       - set_tick_interval
-  ### ⚠️ ChartFormat
-    Summary
-      - Migrated methods: 6
-      - Not migrated methods: 2
-      - Migrated functions: 1
-      - Not migrated functions: 0
-    ❌ Methods Not Yet Migrated
-      - set_gradient_fill
-      - set_pattern_fill
   ### ⚠️ ChartLegend
     Summary
       - Migrated methods: 5
@@ -323,38 +318,6 @@
       - set_end_cap
       - set_format
       - set_type
-    ❌ Functions Not Yet Migrated
-      - new
-  ### ❌ ChartGradientFill
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 3
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - set_angle
-      - set_gradient_stops
-      - set_type
-    ❌ Functions Not Yet Migrated
-      - new
-  ### ❌ ChartGradientStop
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 0
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Functions Not Yet Migrated
-      - new
-  ### ❌ ChartPatternFill
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 3
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - set_background_color
-      - set_foreground_color
-      - set_pattern
     ❌ Functions Not Yet Migrated
       - new
   ### ❌ ChartPlotArea
@@ -843,9 +806,11 @@
 
 ## ✅ Migrated Enums
   - ChartDataLabelPosition
+  - ChartGradientFillType
   - ChartLegendPosition
   - ChartLineDashType
   - ChartMarkerType
+  - ChartPatternFillType
   - ChartType
   - Color
   - FormatAlign
@@ -871,8 +836,6 @@
   - ChartEmptyCells
   - ChartErrorBarsDirection
   - ChartErrorBarsType
-  - ChartGradientFillType
-  - ChartPatternFillType
   - ChartTrendlineType
   - ConditionalFormatAverageRule
   - ConditionalFormatCellRule
