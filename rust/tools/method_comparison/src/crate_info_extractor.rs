@@ -43,7 +43,7 @@ pub struct ExtractedItems {
 
 pub fn get_crate_info(manifest_path: &str) -> Result<Crate> {
     let json_path = rustdoc_json::Builder::default()
-        .toolchain("nightly")
+        .toolchain("nightly-2025-07-16")
         .manifest_path(manifest_path)
         .document_private_items(true)
         .build()
