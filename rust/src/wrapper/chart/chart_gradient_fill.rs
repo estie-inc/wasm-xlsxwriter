@@ -27,8 +27,10 @@ impl ChartGradientFill {
 
     #[wasm_bindgen(js_name = "setGradientStops")]
     pub fn set_gradient_stops(&mut self, gradient_stops: Vec<ChartGradientStop>) -> ChartGradientFill {
-        let gradient_stops_vec: Vec<xlsx::ChartGradientStop> = gradient_stops.iter().map(|s| s.inner.clone()).collect();
-        self.inner.set_gradient_stops(&gradient_stops_vec);
+        let gradient_stops: Vec<xlsx::ChartGradientStop> = gradient_stops.into_iter()
+            .map(|stop| stop.inner)
+            .collect();
+        self.inner.set_gradient_stops(&gradient_stops);
         ChartGradientFill {
             inner: self.inner.clone(),
         }
