@@ -110,7 +110,7 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
 
                                     if is_method {
                                         if let Some(method_name) = &method_item.name {
-                                            if !standard_methods.contains(&method_name.as_str()) && 
+                                            if !standard_methods.contains(&method_name.as_str()) &&
                                                matches!(method_item.visibility, Visibility::Public) {
 
                                                 struct_info.methods.push(MethodInfo {
