@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use crate_info_extractor::{extract_crate_items, get_crate_info};
+use crate_info_extractor::{extract_crate_items, get_crate_info, StructInfo};
 use ruast::*;
 use std::path::PathBuf;
 
@@ -37,15 +37,54 @@ fn main() -> Result<()> {
         .find(|s| s.name == args.struct_name)
         .context(format!("Struct '{}' not found", args.struct_name))?;
 
-    // Generate wrapper methods
     let mut krate = Crate::new();
-    let struct_ = generate_struct_wrapper(&args.struct_name);
 
+    let uses = generate_use_statements();
+    let struct_ = generate_struct_wrapper(&struct_info.name);
+    let impl_block = impl_common_methods(&struct_info);
+
+    // Build crate
+    uses.into_iter().for_each(|use_item| {
+        krate.add_item(use_item);
+    });
     krate.add_item(struct_);
+    krate.add_item(impl_block);
 
     println!("{}", krate);
 
     Ok(())
+}
+
+fn generate_use_statements() -> Vec<Use> {
+    vec![
+        // use std::sync::{Arc, Mutex, MutexGuard}
+        Use::path(Path::new(vec![
+            PathSegment::new("std", None),
+            PathSegment::new("sync", None),
+            PathSegment::new("Arc", None),
+        ])),
+        Use::path(Path::new(vec![
+            PathSegment::new("std", None),
+            PathSegment::new("sync", None),
+            PathSegment::new("Mutex", None),
+        ])),
+        Use::path(Path::new(vec![
+            PathSegment::new("std", None),
+            PathSegment::new("sync", None),
+            PathSegment::new("MutexGuard", None),
+        ])),
+        // use wasm_bindgen::prelude::*;
+        Use::path(Path::new(vec![
+            PathSegment::new("wasm_bindgen", None),
+            PathSegment::new("prelude", None),
+            PathSegment::new("*", None),
+        ])),
+        // use rust_xlsxwriter as xlsx;
+        Use::rename(UseRename{
+            path: Path::new(vec![PathSegment::new("rust_xlsxwriter", None)]),
+            alias: "xlsx".to_string(),
+        })
+    ]
 }
 
 fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
@@ -85,34 +124,39 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
     item
 }
 
-// fn impl_common_methods(struct_name: &str) -> Item<ItemKind> {
-//     let methods = vec![
-//         MethodInfo {
-//             name: "new".to_string(),
-//             args: vec![],
-//             return_type: Some(format!("{}::new", struct_name)),
-//             body: "Self { inner: xlsx::{}::new() }".to_string(),
-//         },
-//         MethodInfo {
-//             name: "default".to_string(),
-//             args: vec![],
-//             return_type: Some(format!("{}::default", struct_name)),
-//             body: "Self { inner: xlsx::{}::default() }".to_string(),
-//         },
-//     ];
-//
-//     let mut impl_block = ImplBlock::new(struct_name.to_string());
-//     for method in methods {
-//         impl_block.add_method(Method::new(
-//             method.name,
-//             method.args,
-//             method.return_type,
-//             method.body,
-//         ));
-//     }
-//
-//     Item::from(impl_block)
-// }
+
+/// Generate common methods for the struct
+/// lock, deep_clone
+fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
+    let mut lock_fn = Item::from(Fn::simple(
+        "lock".to_string(),
+        FnDecl::regular(
+            vec![Param::ref_self()],
+            Some(Type::Path(Path::new(vec![PathSegment::new("MutexGuard", None)])))
+        ),
+        Block::empty(),
+        // new(vec![Stmt::Expr(Expr::MethodCall(MethodCall {
+        //             receiver: Expr::Field(FieldAccess {
+        //                 expr: Expr::SelfValue,
+        //                 field: "inner".to_string(),
+        //             }),
+        //             method: "lock".to_string(),
+        //             args: vec![],
+        //         }))])
+    ));
+    lock_fn.vis = Visibility::Scoped(Path::single(PathSegment::new("crate", None)));
+
+    let impl_block = Impl::simple(
+        Type::Path(Path::single(PathSegment::new(&struct_info.name, None))), // The struct name
+        vec![AssocItem::from(lock_fn)]
+    );
+    let mut item = Item::from(impl_block);
+    item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
+        "wasm_bindgen",
+        AttrArgs::Empty,
+    ))));
+    item
+}
 
 /// Convert a snake_case string to camelCase
 fn to_camel_case(s: &str) -> String {
