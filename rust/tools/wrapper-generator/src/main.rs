@@ -59,19 +59,27 @@ fn generate_use_statements() -> Vec<Use> {
     vec![
         // use std::sync::{Arc, Mutex, MutexGuard}
         Use::from(Path::single("std").chain("sync").chain_use_group(vec![
-                UseTree::from(Path::single(PathSegment::new("Arc", None))),
-                UseTree::from(Path::single(PathSegment::new("Mutex", None))),
-                UseTree::from(Path::single(PathSegment::new("MutexGuard", None))),
+            UseTree::from(Path::single(PathSegment::new("Arc", None))),
+            UseTree::from(Path::single(PathSegment::new("Mutex", None))),
+            UseTree::from(Path::single(PathSegment::new("MutexGuard", None))),
         ])),
         // use wasm_bindgen::prelude::*;
-        Use::from(Path::single("wasm_bindgen").chain("prelude").chain_use_glob()),
+        Use::from(
+            Path::single("wasm_bindgen")
+                .chain("prelude")
+                .chain_use_glob(),
+        ),
         // use rust_xlsxwriter as xlsx;
-        Use::from(Path::single("rust_xlsxwriter").chain("xlsx").chain_use_rename("xlsx")),
+        Use::from(
+            Path::single("rust_xlsxwriter")
+                .chain("xlsx")
+                .chain_use_rename("xlsx"),
+        ),
     ]
 }
 
 fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
-    let mut struct_def = StructDef::empty(struct_name.to_string());
+    let mut struct_def = StructDef::empty(struct_name);
     struct_def.add_field(FieldDef::new(
         Visibility::crate_(),
         Some("inner"),
@@ -79,7 +87,9 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
             "Arc",
             vec![GenericArg::Type(Type::poly_path(
                 "Mutex",
-                vec![GenericArg::Type(Type::Path(Path::single("xlsx").chain(struct_name)))],
+                vec![GenericArg::Type(Type::Path(
+                    Path::single("xlsx").chain(struct_name),
+                ))],
             ))],
         ),
     ));
@@ -108,51 +118,94 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
 /// lock, deep_clone
 fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
     let mut lock_fn = Item::from(Fn::simple(
-        "lock".to_string(),
+        "lock",
         FnDecl::regular(
             vec![Param::ref_self()],
-            Some(Type::Path(Path::new(vec![PathSegment::new(
+            Some(Type::poly_path(
                 "MutexGuard",
-                None,
-            )]))),
+                vec![GenericArg::Type(Type::Path(
+                    Path::single("xlsx").chain(struct_info.name.clone()),
+                ))],
+            )),
         ),
         Block::single(ExprKind::method_call0(
-            ExprKind::method_call0(
-                ExprKind::field(ExprKind::Path(Path::single("self")), "inner").into(),
+            ExprKind::from(ExprKind::method_call0(
+                ExprKind::from(ExprKind::field(
+                    ExprKind::Path(Path::single("self")),
+                    "inner",
+                )),
                 "lock",
-            ).into(),
+            )),
             "unwrap",
         )),
     ));
     lock_fn.vis = Visibility::crate_();
 
-    // let lock_fn2 = Item::from(Fn::simple(
-    //     "lock".to_string(),
-    //     FnDecl::regular(
-    //         vec![Param::ref_self()],
-    //         Some(Type::Path(Path::new(vec![PathSegment::new(
-    //             "String",
-    //             None,
-    //         )]))),
-    //     ),
-    //     Block::single(Expr::new(ExprKind::MethodCall(MethodCall::new(
-    //         Expr::new(ExprKind::MethodCall(MethodCall::new(
-    //             Expr::new(Expr::add(
-    //                 Expr::new(Lit::int("1".to_string())),
-    //                 Expr::new(Lit::int("2".to_string())),
-    //             )),
-    //             "lock".to_string(),
-    //             vec![],
-    //         ))),
-    //         "unwrap".to_string(),
-    //         vec![],
-    //     )))),
-    // ));
-
+    let mut deep_clone_fn = Item::from(Fn::simple(
+        "deep_clone",
+        FnDecl::regular(
+            vec![Param::ref_self()],
+            Some(Type::Path(Path::single(PathSegment::new(
+                &struct_info.name,
+                None,
+            )))),
+        ),
+        Block::new(
+            vec![
+                Stmt::Local(Local::new(
+                    "inner",
+                    None,
+                    ExprKind::method_call0(
+                        ExprKind::from(ExprKind::method_call0(
+                            ExprKind::from(ExprKind::field(
+                                ExprKind::Path(Path::single("self")),
+                                "inner",
+                            )),
+                            "lock",
+                        )),
+                        "unwrap",
+                    ),
+                )),
+                Stmt::from(Expr::from(Struct::new(
+                    Path::single(&struct_info.name),
+                    vec![ExprField::new(
+                        "inner",
+                        ExprKind::from(ExprKind::call(
+                            ExprKind::Path(Path::single("Arc").chain("new")),
+                            vec![Expr::from(ExprKind::call(
+                                ExprKind::Path(Path::single("Mutex").chain("new")),
+                                vec![Expr::from(ExprKind::method_call0(
+                                    ExprKind::Path(Path::single("inner")),
+                                    "clone",
+                                ))],
+                            ))],
+                        )),
+                    )],
+                ))),
+            ],
+            None,
+        ),
+    ));
+    deep_clone_fn.vis = Visibility::Public;
+    deep_clone_fn.add_attr(Attribute::doc_comment(format!(
+        "/// Deep clones a {} object.",
+        struct_info.name
+    )));
+    deep_clone_fn.add_attr(Attribute::normal(AttributeItem::new(
+        "wasm_bindgen",
+        AttrArgs::Delimited(DelimArgs::parenthesis(
+            vec![
+                Token::Ident("js_name".to_string()),
+                Token::Eq,
+                Token::Lit(Lit::str("clone")),
+            ]
+            .into_tokens(),
+        )),
+    )));
 
     let impl_block = Impl::simple(
         Type::Path(Path::single(PathSegment::new(&struct_info.name, None))), // The struct name
-        vec![lock_fn],
+        vec![lock_fn, deep_clone_fn],
     );
     let mut item = Item::from(impl_block);
     item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
