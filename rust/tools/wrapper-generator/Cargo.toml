@@ -9,4 +9,4 @@ description = "Tool to automatically generate wasm_xlsxwriter wrapper methods fr
 crate_info_extractor = { path = "../crate_info_extractor" }
 anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
-ruast = { git = "https://github.com/rajyan/ruast.git" , branch = "feat/visibility-pub-in-path" }
+ruast = { git = "https://github.com/rajyan/ruast.git" , branch = "feat/visibility-pub-in-path-2" }

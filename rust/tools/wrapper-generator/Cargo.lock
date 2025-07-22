@@ -247,8 +247,8 @@ dependencies = [
 
 [[package]]
 name = "ruast"
-version = "0.0.16"
-source = "git+https://github.com/rajyan/ruast.git?branch=feat%2Fvisibility-pub-in-path#747d4c592304c4f1bbe92359184ced3735aff724"
+version = "0.0.17"
+source = "git+https://github.com/rajyan/ruast.git?branch=feat%2Fvisibility-pub-in-path-2#030877499bd26afabe62818d6ecfc8e9bd138f84"
 dependencies = [
  "indenter",
 ]

@@ -58,37 +58,22 @@ fn main() -> Result<()> {
 fn generate_use_statements() -> Vec<Use> {
     vec![
         // use std::sync::{Arc, Mutex, MutexGuard}
-        Use::path(Path::new(vec![
-            PathSegment::new("std", None),
-            PathSegment::new("sync", None),
-            PathSegment::new(
-                UseTree::group(vec![
-                    UseTree::path(Path::new(vec![PathSegment::new("Arc", None)])),
-                    UseTree::path(Path::new(vec![PathSegment::new("Mutex", None)])),
-                    UseTree::path(Path::new(vec![PathSegment::new("MutexGuard", None)])),
-                ])
-                .to_string(), // FIXME: UseTree is converted to string here
-                None,
-            ),
+        Use::from(Path::single("std").chain("sync").chain_use_group(vec![
+                UseTree::from(Path::single(PathSegment::new("Arc", None))),
+                UseTree::from(Path::single(PathSegment::new("Mutex", None))),
+                UseTree::from(Path::single(PathSegment::new("MutexGuard", None))),
         ])),
         // use wasm_bindgen::prelude::*;
-        Use::path(Path::new(vec![
-            PathSegment::new("wasm_bindgen", None),
-            PathSegment::new("prelude", None),
-            PathSegment::new("*", None),
-        ])),
+        Use::from(Path::single("wasm_bindgen").chain("prelude").chain_use_glob()),
         // use rust_xlsxwriter as xlsx;
-        Use::rename(UseRename {
-            path: Path::new(vec![PathSegment::new("rust_xlsxwriter", None)]),
-            alias: "xlsx".to_string(),
-        }),
+        Use::from(Path::single("rust_xlsxwriter").chain("xlsx").chain_use_rename("xlsx")),
     ]
 }
 
 fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
     let mut struct_def = StructDef::empty(struct_name.to_string());
     struct_def.add_field(FieldDef::new(
-        Visibility::Scoped(Path::single(PathSegment::new("crate", None))),
+        Visibility::crate_(),
         Some("inner"),
         Type::poly_path(
             "Arc",
@@ -134,21 +119,50 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
                 None,
             )]))),
         ),
-        Block::empty(),
-        // new(vec![Stmt::Expr(Expr::MethodCall(MethodCall {
-        //             receiver: Expr::Field(FieldAccess {
-        //                 expr: Expr::SelfValue,
-        //                 field: "inner".to_string(),
-        //             }),
-        //             method: "lock".to_string(),
-        //             args: vec![],
-        //         }))])
+        Block::single(Expr::new(ExprKind::MethodCall(MethodCall::new(
+            Expr::new(ExprKind::MethodCall(MethodCall::new(
+                Expr::new(ExprKind::Field(Field::new(
+                    Expr::new(ExprKind::Path(
+                        Path::single(PathSegment::new("self", None))
+                    )),
+                    "inner".to_string(),
+                ))),
+                "lock".to_string(),
+                vec![],
+            ))),
+            "unwrap".to_string(),
+            vec![],
+        )))),
     ));
-    lock_fn.vis = Visibility::Scoped(Path::single(PathSegment::new("crate", None)));
+    lock_fn.vis = Visibility::crate_();
+
+    // let lock_fn2 = Item::from(Fn::simple(
+    //     "lock".to_string(),
+    //     FnDecl::regular(
+    //         vec![Param::ref_self()],
+    //         Some(Type::Path(Path::new(vec![PathSegment::new(
+    //             "String",
+    //             None,
+    //         )]))),
+    //     ),
+    //     Block::single(Expr::new(ExprKind::MethodCall(MethodCall::new(
+    //         Expr::new(ExprKind::MethodCall(MethodCall::new(
+    //             Expr::new(Expr::add(
+    //                 Expr::new(Lit::int("1".to_string())),
+    //                 Expr::new(Lit::int("2".to_string())),
+    //             )),
+    //             "lock".to_string(),
+    //             vec![],
+    //         ))),
+    //         "unwrap".to_string(),
+    //         vec![],
+    //     )))),
+    // ));
+
 
     let impl_block = Impl::simple(
         Type::Path(Path::single(PathSegment::new(&struct_info.name, None))), // The struct name
-        vec![AssocItem::from(lock_fn)],
+        vec![lock_fn],
     );
     let mut item = Item::from(impl_block);
     item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
