@@ -24,13 +24,8 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Get crate info
     let crate_info = get_crate_info(&args.manifest_path).context("Failed to get crate info")?;
-
-    // Extract items from the crate
     let extracted_items = extract_crate_items(&crate_info);
-
-    // Find the specified struct
     let struct_info = extracted_items
         .structs
         .iter()
@@ -115,8 +110,61 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
 }
 
 /// Generate common methods for the struct
-/// lock, deep_clone
+/// new, lock, deep_clone
 fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
+    let mut items = vec![];
+    let existing_new_fn = struct_info.functions.iter().find(|f| f.name == "new");
+    if let Some(existing_fn) = existing_new_fn {
+        let params = if let Some(sig) = &existing_fn.sig {
+            sig.inputs.iter()
+                .map(|(name, ty)| {
+                    Param::new(Pat::ident(name), Type::Path(Path::single("xlsx").chain(struct_info.name.clone())))
+                })
+                .collect()
+        } else {
+            vec![]
+        };
+
+        let mut new_fn = Item::from(Fn::simple(
+            "new",
+            FnDecl::regular(
+                params,
+                Some(Type::Path(Path::single(PathSegment::new(&struct_info.name, None)))),
+            ),
+            Block::single(ExprKind::Struct(
+                Struct::new(
+                    Path::single(&struct_info.name),
+                    vec![ExprField::new(
+                        "inner",
+                        ExprKind::from(ExprKind::call(
+                            ExprKind::Path(Path::single("Arc").chain("new")),
+                            vec![Expr::from(ExprKind::call(
+                                ExprKind::Path(Path::single("Mutex").chain("new")),
+                                vec![Expr::from(ExprKind::Path(Path::single("inner")))],
+                            ))],
+                        )),
+                    )],
+                )
+            )),
+        ));
+        new_fn.vis = Visibility::Public;
+        if let Some(doc) = &existing_fn.doc {
+            new_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(omit_after_example(doc))));
+        }
+
+        // Add wasm_bindgen constructor attribute
+        new_fn.add_attr(Attribute::normal(AttributeItem::new(
+            "wasm_bindgen",
+            AttrArgs::Delimited(DelimArgs::parenthesis(
+                vec![
+                    Token::Ident("constructor".to_string()),
+                ]
+                    .into_tokens(),
+            )),
+        )));
+        items.push(new_fn);
+    }
+
     let mut lock_fn = Item::from(Fn::simple(
         "lock",
         FnDecl::regular(
@@ -140,6 +188,7 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
         )),
     ));
     lock_fn.vis = Visibility::crate_();
+    items.push(lock_fn);
 
     let mut deep_clone_fn = Item::from(Fn::simple(
         "deep_clone",
@@ -202,17 +251,38 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
             .into_tokens(),
         )),
     )));
+    items.push(deep_clone_fn);
 
     let impl_block = Impl::simple(
-        Type::Path(Path::single(PathSegment::new(&struct_info.name, None))), // The struct name
-        vec![lock_fn, deep_clone_fn],
+        Type::Path(Path::single(PathSegment::new(&struct_info.name, None))),
+        items,
     );
     let mut item = Item::from(impl_block);
-    item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
+    item.add_attr(Attribute::normal(AttributeItem::new(
         "wasm_bindgen",
         AttrArgs::Empty,
-    ))));
+    )));
+
     item
+}
+
+/// Add "/// " to the start of each line
+fn add_doc_comment_marker(s: &str) -> String {
+
+    s.lines()
+        .map(|line| format!("/// {}", line.trim()))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Find the first occurrence of "# Example" and return everything before it,
+/// because it's not relevant for the generated javascript code
+fn omit_after_example(s: &str) -> &str {
+    if let Some(pos) = s.find("# Example") {
+        s[..pos].trim()
+    } else {
+        s.trim()
+    }
 }
 
 /// Convert a snake_case string to camelCase
