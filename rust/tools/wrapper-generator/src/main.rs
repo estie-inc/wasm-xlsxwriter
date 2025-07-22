@@ -61,17 +61,15 @@ fn generate_use_statements() -> Vec<Use> {
         Use::path(Path::new(vec![
             PathSegment::new("std", None),
             PathSegment::new("sync", None),
-            PathSegment::new("Arc", None),
-        ])),
-        Use::path(Path::new(vec![
-            PathSegment::new("std", None),
-            PathSegment::new("sync", None),
-            PathSegment::new("Mutex", None),
-        ])),
-        Use::path(Path::new(vec![
-            PathSegment::new("std", None),
-            PathSegment::new("sync", None),
-            PathSegment::new("MutexGuard", None),
+            PathSegment::new(
+                UseTree::group(vec![
+                    UseTree::path(Path::new(vec![PathSegment::new("Arc", None)])),
+                    UseTree::path(Path::new(vec![PathSegment::new("Mutex", None)])),
+                    UseTree::path(Path::new(vec![PathSegment::new("MutexGuard", None)])),
+                ])
+                .to_string(), // FIXME: UseTree is converted to string here
+                None,
+            ),
         ])),
         // use wasm_bindgen::prelude::*;
         Use::path(Path::new(vec![
@@ -80,10 +78,10 @@ fn generate_use_statements() -> Vec<Use> {
             PathSegment::new("*", None),
         ])),
         // use rust_xlsxwriter as xlsx;
-        Use::rename(UseRename{
+        Use::rename(UseRename {
             path: Path::new(vec![PathSegment::new("rust_xlsxwriter", None)]),
             alias: "xlsx".to_string(),
-        })
+        }),
     ]
 }
 
@@ -124,7 +122,6 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
     item
 }
 
-
 /// Generate common methods for the struct
 /// lock, deep_clone
 fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
@@ -132,7 +129,10 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
         "lock".to_string(),
         FnDecl::regular(
             vec![Param::ref_self()],
-            Some(Type::Path(Path::new(vec![PathSegment::new("MutexGuard", None)])))
+            Some(Type::Path(Path::new(vec![PathSegment::new(
+                "MutexGuard",
+                None,
+            )]))),
         ),
         Block::empty(),
         // new(vec![Stmt::Expr(Expr::MethodCall(MethodCall {
@@ -148,7 +148,7 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
 
     let impl_block = Impl::simple(
         Type::Path(Path::single(PathSegment::new(&struct_info.name, None))), // The struct name
-        vec![AssocItem::from(lock_fn)]
+        vec![AssocItem::from(lock_fn)],
     );
     let mut item = Item::from(impl_block);
     item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
