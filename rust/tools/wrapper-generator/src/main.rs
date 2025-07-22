@@ -79,16 +79,13 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
             "Arc",
             vec![GenericArg::Type(Type::poly_path(
                 "Mutex",
-                vec![GenericArg::Type(Type::Path(Path::new(vec![
-                    PathSegment::new("xlsx", None),
-                    PathSegment::new(struct_name, None),
-                ])))],
+                vec![GenericArg::Type(Type::Path(Path::single("xlsx").chain(struct_name)))],
             ))],
         ),
     ));
 
     let mut item = Item::from(struct_def);
-    item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
+    item.add_attr(Attribute::normal(AttributeItem::new(
         "Derive",
         AttrArgs::Delimited(DelimArgs::parenthesis(
             vec![
@@ -98,11 +95,11 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
             ]
             .into_tokens(),
         )),
-    ))));
-    item.add_attr(Attribute::new(AttrKind::Normal(AttributeItem::new(
+    )));
+    item.add_attr(Attribute::normal(AttributeItem::new(
         "wasm_bindgen",
         AttrArgs::Empty,
-    ))));
+    )));
 
     item
 }
@@ -119,20 +116,13 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
                 None,
             )]))),
         ),
-        Block::single(Expr::new(ExprKind::MethodCall(MethodCall::new(
-            Expr::new(ExprKind::MethodCall(MethodCall::new(
-                Expr::new(ExprKind::Field(Field::new(
-                    Expr::new(ExprKind::Path(
-                        Path::single(PathSegment::new("self", None))
-                    )),
-                    "inner".to_string(),
-                ))),
-                "lock".to_string(),
-                vec![],
-            ))),
-            "unwrap".to_string(),
-            vec![],
-        )))),
+        Block::single(ExprKind::method_call0(
+            ExprKind::method_call0(
+                ExprKind::field(ExprKind::Path(Path::single("self")), "inner").into(),
+                "lock",
+            ).into(),
+            "unwrap",
+        )),
     ));
     lock_fn.vis = Visibility::crate_();
 
