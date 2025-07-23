@@ -136,9 +136,13 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
     let existing_new_fn = struct_info.functions.iter().find(|f| f.name == "new");
     if let Some(existing_fn) = existing_new_fn {
         let params = if let Some(sig) = &existing_fn.sig {
-            sig.inputs.iter()
+            sig.inputs
+                .iter()
                 .map(|(name, ty)| {
-                    Param::new(Pat::ident(name), Type::Path(Path::single("xlsx").chain(struct_info.name.clone())))
+                    Param::new(
+                        Pat::ident(name),
+                        Type::Path(Path::single("xlsx").chain(struct_info.name.clone())),
+                    )
                 })
                 .collect()
         } else {
@@ -149,37 +153,37 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
             "new",
             FnDecl::regular(
                 params,
-                Some(Type::Path(Path::single(PathSegment::new(&struct_info.name, None)))),
+                Some(Type::Path(Path::single(PathSegment::new(
+                    &struct_info.name,
+                    None,
+                )))),
             ),
-            Block::single(ExprKind::Struct(
-                Struct::new(
-                    Path::single(&struct_info.name),
-                    vec![ExprField::new(
-                        "inner",
-                        ExprKind::from(ExprKind::call(
-                            ExprKind::Path(Path::single("Arc").chain("new")),
-                            vec![Expr::from(ExprKind::call(
-                                ExprKind::Path(Path::single("Mutex").chain("new")),
-                                vec![Expr::from(ExprKind::Path(Path::single("inner")))],
-                            ))],
-                        )),
-                    )],
-                )
-            )),
+            Block::single(ExprKind::Struct(Struct::new(
+                Path::single(&struct_info.name),
+                vec![ExprField::new(
+                    "inner",
+                    ExprKind::from(ExprKind::call(
+                        ExprKind::Path(Path::single("Arc").chain("new")),
+                        vec![Expr::from(ExprKind::call(
+                            ExprKind::Path(Path::single("Mutex").chain("new")),
+                            vec![Expr::from(ExprKind::Path(Path::single("inner")))],
+                        ))],
+                    )),
+                )],
+            ))),
         ));
         new_fn.vis = Visibility::Public;
         if let Some(doc) = &existing_fn.doc {
-            new_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(omit_after_example(doc))));
+            new_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
+                omit_after_example(doc),
+            )));
         }
 
         // Add wasm_bindgen constructor attribute
         new_fn.add_attr(Attribute::normal(AttributeItem::new(
             "wasm_bindgen",
             AttrArgs::Delimited(DelimArgs::parenthesis(
-                vec![
-                    Token::Ident("constructor".to_string()),
-                ]
-                    .into_tokens(),
+                vec![Token::Ident("constructor".to_string())].into_tokens(),
             )),
         )));
         items.push(new_fn);
@@ -285,4 +289,3 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
 
     item
 }
-

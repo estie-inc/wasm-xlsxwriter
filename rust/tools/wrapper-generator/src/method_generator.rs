@@ -1,6 +1,6 @@
+use crate::utils::{add_doc_comment_marker, omit_after_example, to_camel_case};
 use crate_info_extractor::{ImplFnInfo, StructInfo};
 use ruast::*;
-use crate::utils::{add_doc_comment_marker, omit_after_example, to_camel_case};
 
 /// Generate wrapper methods for the original struct's methods and functions
 pub fn generate_wrapper_methods(struct_info: &StructInfo) -> Vec<Item<AssocItemKind>> {
@@ -37,17 +37,21 @@ fn create_impl_function_macro(struct_info: &StructInfo) -> Item<ItemKind> {
                 inner: Arc::new(Mutex::new(result)),
             }
         };
-    "#.replace("$struct_name", &struct_info.name);
+    "#
+    .replace("$struct_name", &struct_info.name);
 
     // Create a macro_rules item
-    let macro_item = Item::from(MacroDef::new("impl_function", DelimArgs::brace(
-        vec![
-            Token::Ident("function".to_string()),
-            Token::Eq,
-            Token::Lit(Lit::str(macro_body)),
-        ]
-        .into_tokens(),
-    )));
+    let macro_item = Item::from(MacroDef::new(
+        "impl_function",
+        DelimArgs::brace(
+            vec![
+                Token::Ident("function".to_string()),
+                Token::Eq,
+                Token::Lit(Lit::str(macro_body)),
+            ]
+            .into_tokens(),
+        ),
+    ));
 
     macro_item
 }
@@ -74,14 +78,22 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
     for (i, (name, ty)) in sig.inputs.iter().enumerate().skip(start_idx) {
         // Extract the type name from the Type enum
         let type_name = match ty {
-            rustdoc_types::Type::ResolvedPath(path) => path.path.split("::").last().unwrap_or(&path.path).to_string(),
+            rustdoc_types::Type::ResolvedPath(path) => path
+                .path
+                .split("::")
+                .last()
+                .unwrap_or(&path.path)
+                .to_string(),
             rustdoc_types::Type::Primitive(prim) => prim.clone(),
-            rustdoc_types::Type::BorrowedRef { type_, .. } => {
-                match &**type_ {
-                    rustdoc_types::Type::ResolvedPath(path) => path.path.split("::").last().unwrap_or(&path.path).to_string(),
-                    rustdoc_types::Type::Primitive(prim) => prim.clone(),
-                    _ => "Unknown".to_string(),
-                }
+            rustdoc_types::Type::BorrowedRef { type_, .. } => match &**type_ {
+                rustdoc_types::Type::ResolvedPath(path) => path
+                    .path
+                    .split("::")
+                    .last()
+                    .unwrap_or(&path.path)
+                    .to_string(),
+                rustdoc_types::Type::Primitive(prim) => prim.clone(),
+                _ => "Unknown".to_string(),
             },
             _ => "Unknown".to_string(),
         };
@@ -119,15 +131,6 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
     }
 
     // Create the method body
-    // Convert call_args to a comma-separated list of tokens
-    let mut tokens = Vec::new();
-    for (i, arg) in call_args.iter().enumerate() {
-        if i > 0 {
-            tokens.push(Token::Comma);
-        }
-        tokens.push(Token::Ident(arg.to_string()));
-    }
-
     // Use different macro based on whether it's a method or function
     let macro_name = if function.is_method {
         "impl_method"
@@ -135,19 +138,49 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         "impl_function"
     };
 
-    let method_body = Block::single(
-        ExprKind::MacCall(MacCall::new(
-            Path::single(macro_name),
-            DelimArgs::parenthesis(tokens.into_tokens())
-        ))
-    );
+    // For methods, create a self.method_name(args) expression
+    let macro_content = if function.is_method {
+        // Create a method call expression using AST: self.method_name(args)
+        let receiver = Expr::from(Path::single("self"));
+        let method_segment = PathSegment::simple(function.name.clone());
+
+        // Convert call_args to Expr
+        let args: Vec<Expr> = call_args
+            .iter()
+            .map(|arg| Expr::from(Path::single(arg.to_string())))
+            .collect();
+
+        // Create the method call
+        let method_call = MethodCall::new(receiver, method_segment, args);
+
+        // Convert to token stream
+        TokenStream::from(method_call)
+    } else {
+        // For functions, just use the arguments
+        let mut tokens = Vec::new();
+        for (i, arg) in call_args.iter().enumerate() {
+            if i > 0 {
+                tokens.push(Token::Comma);
+            }
+            tokens.push(Token::Ident(arg.to_string()));
+        }
+        tokens.into_tokens()
+    };
+
+    let method_body = Block::single(ExprKind::MacCall(MacCall::new(
+        Path::single(macro_name),
+        DelimArgs::parenthesis(macro_content),
+    )));
 
     // Create the function
     let mut wrapper_fn = Item::from(Fn::simple(
         &function.name,
         FnDecl::regular(
             params,
-            Some(Type::Path(Path::single(PathSegment::new(&struct_info.name, None)))),
+            Some(Type::Path(Path::single(PathSegment::new(
+                &struct_info.name,
+                None,
+            )))),
         ),
         method_body,
     ));
@@ -172,7 +205,9 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
 
     // Add documentation if available
     if let Some(doc) = &function.doc {
-        wrapper_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(omit_after_example(doc))));
+        wrapper_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
+            omit_after_example(doc),
+        )));
     }
 
     // Add wasm_bindgen attribute with js_name
@@ -207,7 +242,9 @@ fn determine_param_type(original_type: &str) -> Type {
         Type::Path(Path::single("Color"))
     } else if original_type.starts_with("xlsx::") {
         // Convert xlsx::Type to Type
-        let wrapper_type = original_type.strip_prefix("xlsx::").unwrap_or(original_type);
+        let wrapper_type = original_type
+            .strip_prefix("xlsx::")
+            .unwrap_or(original_type);
         Type::Path(Path::single(wrapper_type))
     } else {
         // Other types are used as-is
@@ -219,9 +256,23 @@ fn determine_param_type(original_type: &str) -> Type {
 fn is_primitive_type(ty: &str) -> bool {
     matches!(
         ty,
-        "i8" | "i16" | "i32" | "i64" | "i128" | "isize" |
-        "u8" | "u16" | "u32" | "u64" | "u128" | "usize" |
-        "f32" | "f64" | "bool" | "char" | "&str" | "String"
+        "i8" | "i16"
+            | "i32"
+            | "i64"
+            | "i128"
+            | "isize"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "u128"
+            | "usize"
+            | "f32"
+            | "f64"
+            | "bool"
+            | "char"
+            | "&str"
+            | "String"
     )
 }
 
@@ -237,4 +288,3 @@ fn needs_inner(ty: &str) -> bool {
     // Struct types like Color need to access the inner field
     matches!(ty, "Color")
 }
-
