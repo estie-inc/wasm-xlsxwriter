@@ -4,6 +4,11 @@ use crate_info_extractor::{extract_crate_items, get_crate_info, StructInfo};
 use ruast::*;
 use std::path::PathBuf;
 
+mod method_generator;
+mod utils;
+
+use utils::{add_doc_comment_marker, omit_after_example, to_camel_case};
+
 /// Tool to automatically generate wasm_xlsxwriter wrapper methods from rust_xlsxwriter
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -36,14 +41,29 @@ fn main() -> Result<()> {
 
     let uses = generate_use_statements();
     let struct_ = generate_struct_wrapper(&struct_info.name);
-    let impl_block = impl_common_methods(&struct_info);
+    let common_impl_block = impl_common_methods(&struct_info);
+
+    // Generate wrapper methods
+    let wrapper_methods = method_generator::generate_wrapper_methods(&struct_info);
+
+    // Create a new impl block for the wrapper methods
+    let mut wrapper_impl_block = Impl::simple(
+        Type::Path(Path::single(PathSegment::new(&struct_info.name, None))),
+        wrapper_methods.into(),
+    );
+    let mut wrapper_item = Item::from(wrapper_impl_block);
+    wrapper_item.add_attr(Attribute::normal(AttributeItem::new(
+        "wasm_bindgen",
+        AttrArgs::Empty,
+    )));
 
     // Build crate
     uses.into_iter().for_each(|use_item| {
         krate.add_item(use_item);
     });
     krate.add_item(struct_);
-    krate.add_item(impl_block);
+    krate.add_item(common_impl_block);
+    krate.add_item(wrapper_item);
 
     println!("{}", krate);
 
@@ -266,40 +286,3 @@ fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
     item
 }
 
-/// Add "/// " to the start of each line
-fn add_doc_comment_marker(s: &str) -> String {
-
-    s.lines()
-        .map(|line| format!("/// {}", line.trim()))
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-/// Find the first occurrence of "# Example" and return everything before it,
-/// because it's not relevant for the generated javascript code
-fn omit_after_example(s: &str) -> &str {
-    if let Some(pos) = s.find("# Example") {
-        s[..pos].trim()
-    } else {
-        s.trim()
-    }
-}
-
-/// Convert a snake_case string to camelCase
-fn to_camel_case(s: &str) -> String {
-    let mut result = String::new();
-    let mut capitalize_next = false;
-
-    for c in s.chars() {
-        if c == '_' {
-            capitalize_next = true;
-        } else if capitalize_next {
-            result.push(c.to_ascii_uppercase());
-            capitalize_next = false;
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
-}
