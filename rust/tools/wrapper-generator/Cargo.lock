@@ -545,4 +545,5 @@ dependencies = [
  "clap",
  "crate_info_extractor",
  "ruast",
+ "rustdoc-types",
 ]

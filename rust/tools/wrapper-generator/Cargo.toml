@@ -10,3 +10,4 @@ crate_info_extractor = { path = "../crate_info_extractor" }
 anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 ruast = { git = "https://github.com/rajyan/ruast.git" , branch = "feat/visibility-pub-in-path-2" }
+rustdoc-types = "0.53.0"
