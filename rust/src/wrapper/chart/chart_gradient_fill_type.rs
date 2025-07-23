@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ChartGradientFillType {
-    Linear, 
+    Linear,
     Radial,
     Rectangular,
     Path,

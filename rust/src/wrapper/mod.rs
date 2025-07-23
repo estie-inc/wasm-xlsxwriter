@@ -19,7 +19,6 @@ mod worksheet;
 use crate::error::XlsxError;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-
 type WasmResult<T> = std::result::Result<T, XlsxError>;
 
 // This runs once when the wasm module is instantiated

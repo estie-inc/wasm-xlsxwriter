@@ -116,4 +116,3 @@ impl ChartDataLabel {
         self.clone()
     }
 }
-

@@ -3,7 +3,9 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::chart::{chart_font::ChartFont, chart_format::ChartFormat, chart_layout::ChartLayout};
+use crate::wrapper::chart::{
+    chart_font::ChartFont, chart_format::ChartFormat, chart_layout::ChartLayout,
+};
 
 /// The `ChartTitle` struct represents a chart title.
 ///

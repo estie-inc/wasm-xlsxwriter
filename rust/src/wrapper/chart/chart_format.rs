@@ -1,9 +1,9 @@
-use rust_xlsxwriter::{self as xlsx};
-use wasm_bindgen::prelude::*;
+use crate::wrapper::chart::chart_gradient_fill::ChartGradientFill;
 use crate::wrapper::chart::chart_line::ChartLine;
 use crate::wrapper::chart::chart_pattern_fill::ChartPatternFill;
 use crate::wrapper::chart::chart_solid_fill::ChartSolidFill;
-use crate::wrapper::chart::chart_gradient_fill::ChartGradientFill;
+use rust_xlsxwriter::{self as xlsx};
+use wasm_bindgen::prelude::*;
 
 /// The `ChartFormat` struct represents formatting for various chart objects.
 ///
