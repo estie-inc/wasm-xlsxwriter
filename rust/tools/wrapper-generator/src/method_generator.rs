@@ -1,4 +1,4 @@
-use crate::utils::{add_doc_comment_marker, new_line, omit_after_example, to_camel_case};
+use crate::utils::{new_line, process_doc_comment, to_camel_case};
 use crate_info_extractor::{ImplFnInfo, StructInfo};
 use ruast::*;
 
@@ -49,9 +49,7 @@ pub(crate) fn generate_common_methods(struct_info: &StructInfo) -> Vec<Item<Asso
 
         new_fn.vis = Visibility::Public;
         if let Some(doc) = &existing_fn.doc {
-            new_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
-                omit_after_example(doc),
-            )));
+            new_fn.add_attr(Attribute::doc_comment(process_doc_comment(doc)));
         }
         // Add wasm_bindgen constructor attribute
         new_fn.add_attr(Attribute::normal(AttributeItem::new(
@@ -300,9 +298,7 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
     wrapper_fn.add_attr(new_line());
     // inherit documentation if available
     if let Some(doc) = &function.doc {
-        wrapper_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
-            omit_after_example(doc),
-        )));
+        wrapper_fn.add_attr(Attribute::doc_comment(process_doc_comment(doc)));
     }
     // Add wasm_bindgen attribute with js_name in camelCase
     let js_name = to_camel_case(&function.name);
