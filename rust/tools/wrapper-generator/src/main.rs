@@ -1,13 +1,14 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use crate_info_extractor::{extract_crate_items, get_crate_info, StructInfo};
+use method_generator::{generate_common_methods, generate_wrapper_methods};
 use ruast::*;
 use std::path::PathBuf;
 
 mod method_generator;
 mod utils;
 
-use utils::{add_doc_comment_marker, omit_after_example, to_camel_case};
+use crate::utils::new_line;
 
 /// Tool to automatically generate wasm_xlsxwriter wrapper methods from rust_xlsxwriter
 #[derive(Parser, Debug)]
@@ -41,18 +42,16 @@ fn main() -> Result<()> {
 
     let uses = generate_use_statements();
     let struct_ = generate_struct_wrapper(&struct_info.name);
-    let common_impl_block = impl_common_methods(&struct_info);
 
-    // Generate wrapper methods
-    let wrapper_methods = method_generator::generate_wrapper_methods(&struct_info);
+    let common_methods = generate_common_methods(&struct_info);
+    let wrapper_methods = generate_wrapper_methods(&struct_info);
 
-    // Create a new impl block for the wrapper methods
-    let mut wrapper_impl_block = Impl::simple(
+    let mut impl_block = Item::from(Impl::simple(
         Type::Path(Path::single(PathSegment::new(&struct_info.name, None))),
-        wrapper_methods.into(),
-    );
-    let mut wrapper_item = Item::from(wrapper_impl_block);
-    wrapper_item.add_attr(Attribute::normal(AttributeItem::new(
+        common_methods.into_iter().chain(wrapper_methods).collect(),
+    ));
+    impl_block.add_attr(new_line());
+    impl_block.add_attr(Attribute::normal(AttributeItem::new(
         "wasm_bindgen",
         AttrArgs::Empty,
     )));
@@ -62,8 +61,7 @@ fn main() -> Result<()> {
         krate.add_item(use_item);
     });
     krate.add_item(struct_);
-    krate.add_item(common_impl_block);
-    krate.add_item(wrapper_item);
+    krate.add_item(impl_block);
 
     println!("{}", krate);
 
@@ -110,6 +108,7 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
     ));
 
     let mut item = Item::from(struct_def);
+    item.add_attr(new_line());
     item.add_attr(Attribute::normal(AttributeItem::new(
         "Derive",
         AttrArgs::Delimited(DelimArgs::parenthesis(
@@ -121,167 +120,6 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
             .into_tokens(),
         )),
     )));
-    item.add_attr(Attribute::normal(AttributeItem::new(
-        "wasm_bindgen",
-        AttrArgs::Empty,
-    )));
-
-    item
-}
-
-/// Generate common methods for the struct
-/// new, lock, deep_clone
-fn impl_common_methods(struct_info: &StructInfo) -> Item<ItemKind> {
-    let mut items = vec![];
-    let existing_new_fn = struct_info.functions.iter().find(|f| f.name == "new");
-    if let Some(existing_fn) = existing_new_fn {
-        let params = if let Some(sig) = &existing_fn.sig {
-            sig.inputs
-                .iter()
-                .map(|(name, ty)| {
-                    Param::new(
-                        Pat::ident(name),
-                        Type::Path(Path::single("xlsx").chain(struct_info.name.clone())),
-                    )
-                })
-                .collect()
-        } else {
-            vec![]
-        };
-
-        let mut new_fn = Item::from(Fn::simple(
-            "new",
-            FnDecl::regular(
-                params,
-                Some(Type::Path(Path::single(PathSegment::new(
-                    &struct_info.name,
-                    None,
-                )))),
-            ),
-            Block::single(ExprKind::Struct(Struct::new(
-                Path::single(&struct_info.name),
-                vec![ExprField::new(
-                    "inner",
-                    ExprKind::from(ExprKind::call(
-                        ExprKind::Path(Path::single("Arc").chain("new")),
-                        vec![Expr::from(ExprKind::call(
-                            ExprKind::Path(Path::single("Mutex").chain("new")),
-                            vec![Expr::from(ExprKind::Path(Path::single("inner")))],
-                        ))],
-                    )),
-                )],
-            ))),
-        ));
-        new_fn.vis = Visibility::Public;
-        if let Some(doc) = &existing_fn.doc {
-            new_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
-                omit_after_example(doc),
-            )));
-        }
-
-        // Add wasm_bindgen constructor attribute
-        new_fn.add_attr(Attribute::normal(AttributeItem::new(
-            "wasm_bindgen",
-            AttrArgs::Delimited(DelimArgs::parenthesis(
-                vec![Token::Ident("constructor".to_string())].into_tokens(),
-            )),
-        )));
-        items.push(new_fn);
-    }
-
-    let mut lock_fn = Item::from(Fn::simple(
-        "lock",
-        FnDecl::regular(
-            vec![Param::ref_self()],
-            Some(Type::poly_path(
-                "MutexGuard",
-                vec![GenericArg::Type(Type::Path(
-                    Path::single("xlsx").chain(struct_info.name.clone()),
-                ))],
-            )),
-        ),
-        Block::single(ExprKind::method_call0(
-            ExprKind::from(ExprKind::method_call0(
-                ExprKind::from(ExprKind::field(
-                    ExprKind::Path(Path::single("self")),
-                    "inner",
-                )),
-                "lock",
-            )),
-            "unwrap",
-        )),
-    ));
-    lock_fn.vis = Visibility::crate_();
-    items.push(lock_fn);
-
-    let mut deep_clone_fn = Item::from(Fn::simple(
-        "deep_clone",
-        FnDecl::regular(
-            vec![Param::ref_self()],
-            Some(Type::Path(Path::single(PathSegment::new(
-                &struct_info.name,
-                None,
-            )))),
-        ),
-        Block::new(
-            vec![
-                Stmt::Local(Local::new(
-                    "inner",
-                    None,
-                    ExprKind::method_call0(
-                        ExprKind::from(ExprKind::method_call0(
-                            ExprKind::from(ExprKind::field(
-                                ExprKind::Path(Path::single("self")),
-                                "inner",
-                            )),
-                            "lock",
-                        )),
-                        "unwrap",
-                    ),
-                )),
-                Stmt::from(Expr::from(Struct::new(
-                    Path::single(&struct_info.name),
-                    vec![ExprField::new(
-                        "inner",
-                        ExprKind::from(ExprKind::call(
-                            ExprKind::Path(Path::single("Arc").chain("new")),
-                            vec![Expr::from(ExprKind::call(
-                                ExprKind::Path(Path::single("Mutex").chain("new")),
-                                vec![Expr::from(ExprKind::method_call0(
-                                    ExprKind::Path(Path::single("inner")),
-                                    "clone",
-                                ))],
-                            ))],
-                        )),
-                    )],
-                ))),
-            ],
-            None,
-        ),
-    ));
-    deep_clone_fn.vis = Visibility::Public;
-    deep_clone_fn.add_attr(Attribute::doc_comment(format!(
-        "/// Deep clones a {} object.",
-        struct_info.name
-    )));
-    deep_clone_fn.add_attr(Attribute::normal(AttributeItem::new(
-        "wasm_bindgen",
-        AttrArgs::Delimited(DelimArgs::parenthesis(
-            vec![
-                Token::Ident("js_name".to_string()),
-                Token::Eq,
-                Token::Lit(Lit::str("clone")),
-            ]
-            .into_tokens(),
-        )),
-    )));
-    items.push(deep_clone_fn);
-
-    let impl_block = Impl::simple(
-        Type::Path(Path::single(PathSegment::new(&struct_info.name, None))),
-        items,
-    );
-    let mut item = Item::from(impl_block);
     item.add_attr(Attribute::normal(AttributeItem::new(
         "wasm_bindgen",
         AttrArgs::Empty,

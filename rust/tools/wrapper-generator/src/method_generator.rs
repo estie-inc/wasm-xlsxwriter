@@ -1,59 +1,178 @@
-use crate::utils::{add_doc_comment_marker, omit_after_example, to_camel_case};
+use crate::utils::{add_doc_comment_marker, new_line, omit_after_example, to_camel_case};
 use crate_info_extractor::{ImplFnInfo, StructInfo};
 use ruast::*;
 
-/// Generate wrapper methods for the original struct's methods and functions
-pub fn generate_wrapper_methods(struct_info: &StructInfo) -> Vec<Item<AssocItemKind>> {
-    let mut items = Vec::new();
+/// Generate common methods for the struct
+/// new, lock, deep_clone
+pub(crate) fn generate_common_methods(struct_info: &StructInfo) -> Vec<Item<AssocItemKind>> {
+    let mut items = vec![];
 
-    for function in &struct_info.methods {
-        items.push(create_wrapper_method(function, struct_info));
-    }
+    let existing_new_fn = struct_info.functions.iter().find(|f| f.name == "new");
+    if let Some(existing_fn) = existing_new_fn {
+        let params = if let Some(sig) = &existing_fn.sig {
+            sig.inputs
+                .iter()
+                .map(|(name, ty)| {
+                    Param::new(
+                        Pat::ident(name),
+                        Type::Path(Path::single("xlsx").chain(struct_info.name.clone())),
+                    )
+                })
+                .collect()
+        } else {
+            vec![]
+        };
 
-    for function in &struct_info.functions {
-        // skip new because it is already handled in impl_common_methods
-        if function.name == "new" {
-            continue;
+        let mut new_fn = Item::from(Fn::simple(
+            "new",
+            FnDecl::regular(
+                params,
+                Some(Type::Path(Path::single(PathSegment::new(
+                    &struct_info.name,
+                    None,
+                )))),
+            ),
+            Block::single(ExprKind::Struct(Struct::new(
+                Path::single(&struct_info.name),
+                vec![ExprField::new(
+                    "inner",
+                    ExprKind::from(ExprKind::call(
+                        ExprKind::Path(Path::single("Arc").chain("new")),
+                        vec![Expr::from(ExprKind::call(
+                            ExprKind::Path(Path::single("Mutex").chain("new")),
+                            vec![Expr::from(ExprKind::Path(Path::single("inner")))],
+                        ))],
+                    )),
+                )],
+            ))),
+        ));
+
+        new_fn.vis = Visibility::Public;
+        if let Some(doc) = &existing_fn.doc {
+            new_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
+                omit_after_example(doc),
+            )));
         }
-        items.push(create_wrapper_method(function, struct_info));
+        // Add wasm_bindgen constructor attribute
+        new_fn.add_attr(Attribute::normal(AttributeItem::new(
+            "wasm_bindgen",
+            AttrArgs::Delimited(DelimArgs::parenthesis(
+                vec![Token::Ident("constructor".to_string())].into_tokens(),
+            )),
+        )));
+
+        items.push(new_fn);
     }
 
-    // // Add the impl_function macro definition if there are any functions
-    // if !struct_info.functions.is_empty() {
-    //     let macro_def = create_impl_function_macro(struct_info);
-    //     items.push(macro_def);
-    // }
+    let mut lock_fn = Item::from(Fn::simple(
+        "lock",
+        FnDecl::regular(
+            vec![Param::ref_self()],
+            Some(Type::poly_path(
+                "MutexGuard",
+                vec![GenericArg::Type(Type::Path(
+                    Path::single("xlsx").chain(struct_info.name.clone()),
+                ))],
+            )),
+        ),
+        Block::single(ExprKind::method_call0(
+            ExprKind::from(ExprKind::method_call0(
+                ExprKind::from(ExprKind::field(
+                    ExprKind::Path(Path::single("self")),
+                    "inner",
+                )),
+                "lock",
+            )),
+            "unwrap",
+        )),
+    ));
+
+    lock_fn.vis = Visibility::crate_();
+    lock_fn.add_attr(new_line());
+    items.push(lock_fn);
+
+    let mut deep_clone_fn = Item::from(Fn::simple(
+        "deep_clone",
+        FnDecl::regular(
+            vec![Param::ref_self()],
+            Some(Type::Path(Path::single(PathSegment::new(
+                &struct_info.name,
+                None,
+            )))),
+        ),
+        Block::new(
+            vec![
+                Stmt::Local(Local::new(
+                    "inner",
+                    None,
+                    ExprKind::method_call0(
+                        ExprKind::from(ExprKind::method_call0(
+                            ExprKind::from(ExprKind::field(
+                                ExprKind::Path(Path::single("self")),
+                                "inner",
+                            )),
+                            "lock",
+                        )),
+                        "unwrap",
+                    ),
+                )),
+                Stmt::from(Expr::from(Struct::new(
+                    Path::single(&struct_info.name),
+                    vec![ExprField::new(
+                        "inner",
+                        ExprKind::from(ExprKind::call(
+                            ExprKind::Path(Path::single("Arc").chain("new")),
+                            vec![Expr::from(ExprKind::call(
+                                ExprKind::Path(Path::single("Mutex").chain("new")),
+                                vec![Expr::from(ExprKind::method_call0(
+                                    ExprKind::Path(Path::single("inner")),
+                                    "clone",
+                                ))],
+                            ))],
+                        )),
+                    )],
+                ))),
+            ],
+            None,
+        ),
+    ));
+
+    deep_clone_fn.vis = Visibility::Public;
+    deep_clone_fn.add_attr(new_line());
+    deep_clone_fn.add_attr(Attribute::doc_comment(format!(
+        "/// Deep clones a {} object.",
+        struct_info.name
+    )));
+    deep_clone_fn.add_attr(Attribute::normal(AttributeItem::new(
+        "wasm_bindgen",
+        AttrArgs::Delimited(DelimArgs::parenthesis(
+            vec![
+                Token::Ident("js_name".to_string()),
+                Token::Eq,
+                Token::Lit(Lit::str("clone")),
+            ]
+            .into_tokens(),
+        )),
+    )));
+    items.push(deep_clone_fn);
 
     items
 }
 
-/// Create the impl_function macro definition
-fn create_impl_function_macro(struct_info: &StructInfo) -> Item<ItemKind> {
-    // Create a macro definition for impl_function
-    let macro_body = r#"
-        ($function:ident($($arg:expr),*)) => {
-            let result = xlsx::$function($($arg),*);
-            return $struct_name {
-                inner: Arc::new(Mutex::new(result)),
-            }
-        };
-    "#
-    .replace("$struct_name", &struct_info.name);
+/// Generate wrapper methods for the original struct's methods and functions
 
-    // Create a macro_rules item
-    let macro_item = Item::from(MacroDef::new(
-        "impl_function",
-        DelimArgs::brace(
-            vec![
-                Token::Ident("function".to_string()),
-                Token::Eq,
-                Token::Lit(Lit::str(macro_body)),
-            ]
-            .into_tokens(),
-        ),
-    ));
+pub(crate) fn generate_wrapper_methods(struct_info: &StructInfo) -> Vec<Item<AssocItemKind>> {
+    let wrapped_methods = struct_info
+        .methods
+        .iter()
+        .map(|method| create_wrapper_method(method, struct_info));
+    let wrapped_functions = struct_info
+        .functions
+        .iter()
+        .filter(|f| f.name != "new") // Skip the new function
+        .map(|function| create_wrapper_method(function, struct_info));
 
-    macro_item
+    wrapped_functions.chain(wrapped_methods).collect()
 }
 
 /// Create a wrapper method for a single function
@@ -100,6 +219,7 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
 
         // Create parameter with the appropriate type
         let param_type = determine_param_type(&type_name);
+
         params.push(Param::new(Pat::ident(name), param_type));
 
         // Create argument for the method call
@@ -122,38 +242,26 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
 
     // Create the method body using the impl_method! macro
     let mut args_str = String::new();
+
     for (i, arg) in call_args.iter().enumerate() {
         if i > 0 {
             args_str.push_str(", ");
         }
+
         // This is a simplification - in a real implementation we'd need to convert the Expr to a string
         args_str.push_str(&format!("${}", i + 1));
     }
 
-    // Create the method body
-    // Use different macro based on whether it's a method or function
-    let macro_name = if function.is_method {
-        "impl_method"
-    } else {
-        "impl_function"
-    };
-
-    // For methods, create a self.method_name(args) expression
-    let macro_content = if function.is_method {
-        // Create a method call expression using AST: self.method_name(args)
+    let method_body_macro = if function.is_method {
+        // For methods, create a self.method_name(args) expression
         let receiver = Expr::from(Path::single("self"));
         let method_segment = PathSegment::simple(function.name.clone());
-
-        // Convert call_args to Expr
         let args: Vec<Expr> = call_args
             .iter()
             .map(|arg| Expr::from(Path::single(arg.to_string())))
             .collect();
 
-        // Create the method call
         let method_call = MethodCall::new(receiver, method_segment, args);
-
-        // Convert to token stream
         TokenStream::from(method_call)
     } else {
         // For functions, just use the arguments
@@ -166,10 +274,13 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         }
         tokens.into_tokens()
     };
-
     let method_body = Block::single(ExprKind::MacCall(MacCall::new(
-        Path::single(macro_name),
-        DelimArgs::parenthesis(macro_content),
+        Path::single(if function.is_method {
+            "impl_method"
+        } else {
+            "impl_function"
+        }),
+        DelimArgs::parenthesis(method_body_macro),
     )));
 
     // Create the function
@@ -185,32 +296,15 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         method_body,
     ));
 
-    // Add static keyword for functions (not methods)
-    if !function.is_method {
-        wrapper_fn.add_attr(Attribute::normal(AttributeItem::new(
-            "wasm_bindgen",
-            AttrArgs::Delimited(DelimArgs::parenthesis(
-                vec![
-                    Token::Ident("static_method_of".to_string()),
-                    Token::Eq,
-                    Token::Lit(Lit::str(&struct_info.name)),
-                ]
-                .into_tokens(),
-            )),
-        )));
-    }
-
-    // Set visibility to public
     wrapper_fn.vis = Visibility::Public;
-
-    // Add documentation if available
+    wrapper_fn.add_attr(new_line());
+    // inherit documentation if available
     if let Some(doc) = &function.doc {
         wrapper_fn.add_attr(Attribute::doc_comment(add_doc_comment_marker(
             omit_after_example(doc),
         )));
     }
-
-    // Add wasm_bindgen attribute with js_name
+    // Add wasm_bindgen attribute with js_name in camelCase
     let js_name = to_camel_case(&function.name);
     wrapper_fn.add_attr(Attribute::normal(AttributeItem::new(
         "wasm_bindgen",
@@ -230,6 +324,7 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
 }
 
 /// Determine the parameter type for the wrapper method
+
 fn determine_param_type(original_type: &str) -> Type {
     if is_primitive_type(original_type) {
         // Primitive types are used as-is
@@ -245,6 +340,7 @@ fn determine_param_type(original_type: &str) -> Type {
         let wrapper_type = original_type
             .strip_prefix("xlsx::")
             .unwrap_or(original_type);
+
         Type::Path(Path::single(wrapper_type))
     } else {
         // Other types are used as-is
@@ -253,6 +349,7 @@ fn determine_param_type(original_type: &str) -> Type {
 }
 
 /// Check if a type is a primitive type
+
 fn is_primitive_type(ty: &str) -> bool {
     matches!(
         ty,
@@ -276,7 +373,7 @@ fn is_primitive_type(ty: &str) -> bool {
     )
 }
 
-/// Check if a type needs .into()
+/// Check if a type needs .into()\
 fn needs_into(ty: &str) -> bool {
     // Enum types like FormatAlign, FormatBorder, etc. need .into()
     // We can identify them by their naming convention (Format* but not Format itself)
