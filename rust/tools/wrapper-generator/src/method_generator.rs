@@ -23,6 +23,10 @@ pub(crate) fn generate_common_methods(struct_info: &StructInfo) -> Vec<Item<Asso
         } else {
             vec![]
         };
+        let args = params
+            .iter()
+            .map(|p| Expr::from(ExprKind::Path(Path::single(p.pat.to_string()))))
+            .collect();
 
         let mut new_fn = Item::from(Fn::simple(
             "new",
@@ -41,7 +45,14 @@ pub(crate) fn generate_common_methods(struct_info: &StructInfo) -> Vec<Item<Asso
                         ExprKind::Path(Path::single("Arc").chain("new")),
                         vec![Expr::from(ExprKind::call(
                             ExprKind::Path(Path::single("Mutex").chain("new")),
-                            vec![Expr::from(ExprKind::Path(Path::single("inner")))],
+                            vec![Expr::from(ExprKind::call(
+                                ExprKind::Path(
+                                    Path::single("xlsx")
+                                        .chain(struct_info.name.clone())
+                                        .chain("new"),
+                                ),
+                                args,
+                            ))],
                         ))],
                     )),
                 )],
@@ -194,12 +205,10 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         params.push(Param::new(Pat::ident(name), determine_param_type(ty)));
 
         let arg_expr = match ty {
-            rustdoc_types::Type::ResolvedPath(_) => {
-                Expr::from(ExprKind::method_call0(
-                    ExprKind::Path(Path::single(name)),
-                    "into",
-                ))
-            }
+            rustdoc_types::Type::ResolvedPath(_) => Expr::from(ExprKind::method_call0(
+                ExprKind::Path(Path::single(name)),
+                "into",
+            )),
             _ => {
                 // For other types, just pass the name
                 Expr::from(ExprKind::Path(Path::single(name)))
@@ -207,7 +216,6 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         };
         call_args.push(arg_expr);
     }
-
 
     let method_body_macro = if function.is_method {
         // For methods, create a self.method_name(args) expression
@@ -284,15 +292,9 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
 /// Determine the parameter type recursively
 fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
     match ty {
-        rustdoc_types::Type::ResolvedPath(path) => {
-            Type::Path(Path::single(&path.path))
-        }
-        rustdoc_types::Type::Primitive(prim) => {
-            Type::Path(Path::single(prim))
-        }
-        rustdoc_types::Type::BorrowedRef { type_, .. } => {
-            determine_param_type(type_)
-        }
+        rustdoc_types::Type::ResolvedPath(path) => Type::Path(Path::single(&path.path)),
+        rustdoc_types::Type::Primitive(prim) => Type::Path(Path::single(prim)),
+        rustdoc_types::Type::BorrowedRef { type_, .. } => determine_param_type(type_),
         rustdoc_types::Type::Array { type_, .. } => {
             let inner_type = determine_param_type(type_);
             Type::poly_path("Vec", vec![GenericArg::Type(inner_type)])
@@ -321,8 +323,6 @@ fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
             // TODO: Extract the generic type from constraints if available
             Type::Path(Path::single("UnknownGeneric"))
         }
-        _ => {
-            abort()
-        }
+        _ => abort(),
     }
 }
