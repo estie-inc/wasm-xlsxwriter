@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
-
+use crate::impl_method;
 use super::color::Color;
 
 /// The `Format` struct is used to define cell formatting for data in a
@@ -174,18 +174,6 @@ use super::color::Color;
 #[wasm_bindgen]
 pub struct Format {
     pub(crate) inner: Arc<Mutex<xlsx::Format>>,
-}
-
-macro_rules! impl_method {
-    ($self:ident.$method:ident($($arg:expr),*)) => {
-        let mut lock = $self.inner.lock().unwrap();
-        let mut inner = std::mem::take(&mut *lock);
-        inner = inner.$method($($arg),*);
-        let _ = std::mem::replace(&mut *lock, inner);
-        return Format {
-            inner: Arc::clone(&$self.inner),
-        }
-    };
 }
 
 #[wasm_bindgen]
