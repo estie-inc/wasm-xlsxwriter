@@ -85,7 +85,6 @@ fn generate_use_statements() -> Vec<Use> {
         // use rust_xlsxwriter as xlsx;
         Use::from(
             Path::single("rust_xlsxwriter")
-                .chain("xlsx")
                 .chain_use_rename("xlsx"),
         ),
     ]
@@ -113,7 +112,7 @@ fn generate_struct_wrapper(struct_info: &StructInfo) -> Item<ItemKind> {
         item.add_attr(Attribute::doc_comment(process_doc_comment(doc)));
     }
     item.add_attr(Attribute::normal(AttributeItem::new(
-        "Derive",
+        "derive",
         AttrArgs::Delimited(DelimArgs::parenthesis(
             vec![
                 Token::Ident("Debug".to_string()),
