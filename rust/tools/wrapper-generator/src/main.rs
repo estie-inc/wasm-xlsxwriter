@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use crate_info_extractor::{extract_crate_items, get_crate_info};
+use crate_info_extractor::{extract_crate_items, get_crate_info, StructInfo};
 use method_generator::{generate_common_methods, generate_wrapper_methods};
 use ruast::*;
 use std::path::PathBuf;
@@ -8,7 +8,7 @@ use std::path::PathBuf;
 mod method_generator;
 mod utils;
 
-use crate::utils::new_line;
+use crate::utils::{new_line, process_doc_comment};
 
 /// Tool to automatically generate wasm_xlsxwriter wrapper methods from rust_xlsxwriter
 #[derive(Parser, Debug)]
@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     let mut krate = Crate::new();
 
     let uses = generate_use_statements();
-    let struct_ = generate_struct_wrapper(&struct_info.name);
+    let struct_ = generate_struct_wrapper(struct_info);
 
     let common_methods = generate_common_methods(&struct_info);
     let wrapper_methods = generate_wrapper_methods(&struct_info);
@@ -91,8 +91,8 @@ fn generate_use_statements() -> Vec<Use> {
     ]
 }
 
-fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
-    let mut struct_def = StructDef::empty(struct_name);
+fn generate_struct_wrapper(struct_info: &StructInfo) -> Item<ItemKind> {
+    let mut struct_def = StructDef::empty(&struct_info.name);
     struct_def.add_field(FieldDef::new(
         Visibility::crate_(),
         Some("inner"),
@@ -101,7 +101,7 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
             vec![GenericArg::Type(Type::poly_path(
                 "Mutex",
                 vec![GenericArg::Type(Type::Path(
-                    Path::single("xlsx").chain(struct_name),
+                    Path::single("xlsx").chain(&struct_info.name),
                 ))],
             ))],
         ),
@@ -109,6 +109,9 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
 
     let mut item = Item::from(struct_def);
     item.add_attr(new_line());
+    if let Some(doc) = &struct_info.doc {
+        item.add_attr(Attribute::doc_comment(process_doc_comment(doc)));
+    }
     item.add_attr(Attribute::normal(AttributeItem::new(
         "Derive",
         AttrArgs::Delimited(DelimArgs::parenthesis(

@@ -3,6 +3,517 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use wasm_bindgen::prelude::*;
 use rust_xlsxwriter::xlsx as xlsx;
 
+/// The `Format` struct is used to define cell formatting for data in a
+/// worksheet.
+/// 
+/// The properties of a cell that can be formatted include: fonts, colors,
+/// patterns, borders, alignment and number formatting.
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_intro.png">
+/// 
+/// The output file above was created with the following code:
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_intro.rs
+/// #
+/// use rust_xlsxwriter::{Format, Workbook, FormatBorder, Color, XlsxError};
+/// 
+/// fn main() -> Result<(), XlsxError> {
+/// // Create a new Excel file object.
+/// let mut workbook = Workbook::new();
+/// 
+/// // Add a worksheet.
+/// let worksheet = workbook.add_worksheet();
+/// 
+/// // Make the first column wider for clarity.
+/// worksheet.set_column_width(0, 14)?;
+/// 
+/// // Create some sample formats to display
+/// let format1 = Format::new().set_font_name("Arial");
+/// worksheet.write_with_format(0, 0, "Fonts", &format1)?;
+/// 
+/// let format2 = Format::new().set_font_name("Algerian").set_font_size(14);
+/// worksheet.write_with_format(1, 0, "Fonts", &format2)?;
+/// 
+/// let format3 = Format::new().set_font_name("Comic Sans MS");
+/// worksheet.write_with_format(2, 0, "Fonts", &format3)?;
+/// 
+/// let format4 = Format::new().set_font_name("Edwardian Script ITC");
+/// worksheet.write_with_format(3, 0, "Fonts", &format4)?;
+/// 
+/// let format5 = Format::new().set_font_color(Color::Red);
+/// worksheet.write_with_format(4, 0, "Font color", &format5)?;
+/// 
+/// let format6 = Format::new().set_background_color(Color::RGB(0xDAA520));
+/// worksheet.write_with_format(5, 0, "Fills", &format6)?;
+/// 
+/// let format7 = Format::new().set_border(FormatBorder::Thin);
+/// worksheet.write_with_format(6, 0, "Borders", &format7)?;
+/// 
+/// let format8 = Format::new().set_bold();
+/// worksheet.write_with_format(7, 0, "Bold", &format8)?;
+/// 
+/// let format9 = Format::new().set_italic();
+/// worksheet.write_with_format(8, 0, "Italic", &format9)?;
+/// 
+/// let format10 = Format::new().set_bold().set_italic();
+/// worksheet.write_with_format(9, 0, "Bold and Italic", &format10)?;
+/// 
+/// workbook.save("formats.xlsx")?;
+/// 
+/// Ok(())
+/// }
+/// ```
+/// 
+/// # Contents
+/// 
+/// - [Creating and using a Format object](#creating-and-using-a-format-object)
+/// - [Format methods and Format
+/// properties](#format-methods-and-format-properties)
+/// - [Format Colors](#format-colors)
+/// - [Format Defaults](#format-defaults)
+/// - [Row and Column Formats](#row-and-column-formats)
+/// - [Number Format Categories](#number-format-categories)
+/// - [Number Formats in Different
+/// Locales](#number-formats-in-different-locales)
+/// - [API](#implementations)
+/// 
+/// # Creating and using a Format object
+/// 
+/// Formats are created by calling the `Format::new()` method and properties as
+/// set using the various methods shown is this section of the document. Once
+/// the Format has been created it can be passed to one of the worksheet
+/// `write_*()` methods. Multiple properties can be set by chaining them
+/// together:
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_create.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, Color, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// #     // Create a new Excel file object.
+/// #     let mut workbook = Workbook::new();
+/// #
+/// #     // Add a worksheet.
+/// #     let worksheet = workbook.add_worksheet();
+/// #
+/// // Create a new format and set some properties.
+/// let format = Format::new()
+/// .set_bold()
+/// .set_italic()
+/// .set_font_color(Color::Red);
+/// 
+/// worksheet.write_with_format(0, 0, "Hello", &format)?;
+/// 
+/// #     workbook.save("formats.xlsx")?;
+/// #
+/// #     Ok(())
+/// # }
+/// ```
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_create.png">
+/// 
+/// Formats can be cloned in the usual way:
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_clone.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, Color, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// #     // Create a new Excel file object.
+/// #     let mut workbook = Workbook::new();
+/// #
+/// #     // Add a worksheet.
+/// #     let worksheet = workbook.add_worksheet();
+/// #
+/// #     // Create a new format and set some properties.
+/// let format1 = Format::new()
+/// .set_bold();
+/// 
+/// // Clone a new format and set some properties.
+/// let format2 = format1.clone()
+/// .set_font_color(Color::Blue);
+/// 
+/// worksheet.write_with_format(0, 0, "Hello", &format1)?;
+/// worksheet.write_with_format(1, 0, "Hello", &format2)?;
+/// 
+/// #     workbook.save("formats.xlsx")?;
+/// #
+/// #     Ok(())
+/// # }
+/// ```
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_clone.png">
+/// 
+/// You can also merge two formats into a new combined format using the
+/// [`Format::merge()`] method, as shown in the example below. The example also
+/// demonstrates that properties in the primary format take precedence.
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_merge2.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// #     // Create a new Excel file object.
+/// #     let mut workbook = Workbook::new();
+/// #
+/// #     // Add a worksheet.
+/// #     let worksheet = workbook.add_worksheet();
+/// #
+/// // Add some formats.
+/// let format1 = Format::new().set_font_color("006100").set_bold();
+/// let format2 = Format::new().set_font_color("9C0006").set_italic();
+/// 
+/// // Create new formats based on a merge of two formats.
+/// let merged1 = format1.merge(&format2);
+/// let merged2 = format2.merge(&format1);
+/// 
+/// // Write some strings with the formats.
+/// worksheet.write_with_format(0, 0, "Format 1: green and bold", &format1)?;
+/// worksheet.write_with_format(1, 0, "Format 2: red and italic", &format2)?;
+/// worksheet.write_with_format(3, 0, "Merged 2 into 1", &merged1)?;
+/// worksheet.write_with_format(4, 0, "Merged 1 into 2", &merged2)?;
+/// #
+/// #     // Autofit for clarity.
+/// #     worksheet.autofit();
+/// #
+/// #     // Save the file.
+/// #     workbook.save("formats.xlsx")?;
+/// #
+/// #     Ok(())
+/// # }
+/// ```
+/// 
+/// Output file:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_merge2.png">
+/// 
+/// 
+/// 
+/// 
+/// # Format methods and Format properties
+/// 
+/// The following table shows the Excel format categories, in the order shown in
+/// the Excel "Format Cell" dialog, and the equivalent `rust_xlsxwriter` Format
+/// method:
+/// 
+/// | Category        | Description           |  Method Name                             |
+/// | :-------------- | :-------------------- |  :-------------------------------------- |
+/// | **Number**      | Numeric format        |  [`Format::setNumFormat()`]            |
+/// | **Alignment**   | Horizontal align      |  [`Format::setAlign()`]                 |
+/// |                 | Vertical align        |  [`Format::setAlign()`]                 |
+/// |                 | Rotation              |  [`Format::setRotation()`]              |
+/// |                 | Text wrap             |  [`Format::setTextWrap()`]             |
+/// |                 | Indentation           |  [`Format::setIndent()`]                |
+/// |                 | Reading direction     |  [`Format::setReadingDirection()`]     |
+/// |                 | Shrink to fit         |  [`Format::setShrink()`]                |
+/// | **Font**        | Font type             |  [`Format::setFontName()`]             |
+/// |                 | Font size             |  [`Format::setFontSize()`]             |
+/// |                 | Font color            |  [`Format::setFontColor()`]            |
+/// |                 | Bold                  |  [`Format::setBold()`]                  |
+/// |                 | Italic                |  [`Format::setItalic()`]                |
+/// |                 | Underline             |  [`Format::setUnderline()`]             |
+/// |                 | Strikethrough         |  [`Format::setFontStrikethrough()`]    |
+/// |                 | Super/Subscript       |  [`Format::setFontScript()`]           |
+/// | **Border**      | Cell border           |  [`Format::setBorder()`]                |
+/// |                 | Bottom border         |  [`Format::setBorderBottom()`]         |
+/// |                 | Top border            |  [`Format::setBorderTop()`]            |
+/// |                 | Left border           |  [`Format::setBorderLeft()`]           |
+/// |                 | Right border          |  [`Format::setBorderRight()`]          |
+/// |                 | Border color          |  [`Format::setBorderColor()`]          |
+/// |                 | Bottom color          |  [`Format::setBorderBottomColor()`]   |
+/// |                 | Top color             |  [`Format::setBorderTopColor()`]      |
+/// |                 | Left color            |  [`Format::setBorderLeftColor()`]     |
+/// |                 | Right color           |  [`Format::setBorderRightColor()`]    |
+/// |                 | Diagonal border       |  [`Format::setBorderDiagonal()`]       |
+/// |                 | Diagonal border color |  [`Format::setBorderDiagonalColor()`] |
+/// |                 | Diagonal border type  |  [`Format::setBorderDiagonalType()`]  |
+/// | **Fill**        | Cell pattern          |  [`Format::setPattern()`]               |
+/// |                 | Background color      |  [`Format::setBackgroundColor()`]      |
+/// |                 | Foreground color      |  [`Format::setForegroundColor()`]      |
+/// | **Protection**  | Unlock cells          |  [`Format::setUnlocked()`]              |
+/// |                 | Hide formulas         |  [`Format::setHidden()`]                |
+/// 
+/// # Format Colors
+/// 
+/// Format property colors are specified by using the [`Color`] enum with a Html
+/// style RGB integer value or a limited number of defined colors:
+/// 
+/// ```
+/// # // This code is available in examples/doc_enum_Color.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, Color, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// // Create a new Excel file object.
+/// let mut workbook = Workbook::new();
+/// 
+/// let format1 = Format::new().set_font_color(Color::Red);
+/// let format2 = Format::new().set_font_color(Color::Green);
+/// let format3 = Format::new().set_font_color(Color::RGB(0x4F026A));
+/// let format4 = Format::new().set_font_color(Color::RGB(0x73CC5F));
+/// let format5 = Format::new().set_font_color(Color::RGB(0xFFACFF));
+/// let format6 = Format::new().set_font_color(Color::RGB(0xCC7E16));
+/// 
+/// let worksheet = workbook.add_worksheet();
+/// worksheet.write_with_format(0, 0, "Red", &format1)?;
+/// worksheet.write_with_format(1, 0, "Green", &format2)?;
+/// worksheet.write_with_format(2, 0, "#4F026A", &format3)?;
+/// worksheet.write_with_format(3, 0, "#73CC5F", &format4)?;
+/// worksheet.write_with_format(4, 0, "#FFACFF", &format5)?;
+/// worksheet.write_with_format(5, 0, "#CC7E16", &format6)?;
+/// 
+/// #     workbook.save("colors.xlsx")?;
+/// #
+/// #     Ok(())
+/// # }
+/// ```
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/enum_xlsxcolor.png">
+/// 
+/// # Format Defaults
+/// 
+/// The default Excel 365 cell format is a font setting of Calibri size 11 with
+/// all other properties turned off.
+/// 
+/// It is occasionally useful to use a default format with a method that
+/// requires a format but where you don't actually want to change the
+/// formatting.
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_default.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// #     // Create a new Excel file object.
+/// #     let mut workbook = Workbook::new();
+/// #
+/// #     // Add a worksheet.
+/// #     let worksheet = workbook.add_worksheet();
+/// #
+/// // Create a new default format.
+/// let format = Format::default();
+/// 
+/// // These methods calls are equivalent.
+/// worksheet.write(0, 0, "Hello")?;
+/// worksheet.write_with_format(1, 0, "Hello", &format)?;
+/// #
+/// #     workbook.save("formats.xlsx")?;
+/// #
+/// #     Ok(())
+/// # }
+/// ```
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_default.png">
+/// 
+/// 
+/// # Row and Column Formats
+/// 
+/// Formatting can be applied to rows and columns in a worksheet using the
+/// [`Worksheet::setRowFormat()`](crate::Worksheet::set_row_format) and
+/// [`Worksheet::setColumnFormat()`](crate::Worksheet::set_column_format)
+/// methods. The `rust_xlsxwriter` library ensures that the row and column
+/// formats are applied to any cells in the row or column that contain data but
+/// don't have an explicit format. It also ensures that the cell at the
+/// intersection of a row and column format inherits the properties of both
+/// formats, like in Excel:
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_merge3.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// #     // Create a new Excel file object.
+/// #     let mut workbook = Workbook::new();
+/// #
+/// #     // Add a worksheet.
+/// #     let worksheet = workbook.add_worksheet();
+/// #
+/// // Add some formats.
+/// let red = Format::new().set_font_color("9C0006");
+/// let bold = Format::new().set_bold();
+/// 
+/// // Set some row and column formats.
+/// worksheet.set_row_format(2, &bold)?;
+/// worksheet.set_column_format(2, &red)?;
+/// 
+/// // Write some strings without explicit formats.
+/// worksheet.write(0, 2, "C1")?; // Red.
+/// worksheet.write(2, 0, "A3")?; // Bold.
+/// worksheet.write(2, 2, "C3")?; // Bold and red.
+/// #
+/// #     // Save the file.
+/// #     workbook.save("formats.xlsx")?;
+/// #
+/// #     Ok(())
+/// # }
+/// ```
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_merge3.png">
+/// 
+/// It should be noted that the intersection format (in cell C3 in the example
+/// above) requires that the row and column formats are set before data is
+/// written to the intersection cell. This restriction doesn't apply to
+/// non-intersection row and column cells.
+/// 
+/// 
+/// # Number Format Categories
+/// 
+/// The [`Format::setNumFormat()`] method is used to set the number format for
+/// numbers used with
+/// [`Worksheet::writeWithFormat()`](crate::Worksheet::write_with_format())
+/// and
+/// [`Worksheet::writeNumberWithFormat()`](crate::Worksheet::write_number_with_format()):
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_currency1.rs
+/// 
+/// use rust_xlsxwriter::{Format, Workbook, XlsxError};
+/// 
+/// fn main() -> Result<(), XlsxError> {
+/// // Create a new Excel file object.
+/// let mut workbook = Workbook::new();
+/// 
+/// // Add a worksheet.
+/// let worksheet = workbook.add_worksheet();
+/// 
+/// // Add a format.
+/// let currency_format = Format::new().set_num_format("$#,##0.00");
+/// 
+/// worksheet.write_with_format(0, 0, 1234.56, &currency_format)?;
+/// 
+/// workbook.save("currency_format.xlsx")?;
+/// 
+/// Ok(())
+/// }
+/// ```
+/// 
+/// If the number format you use is the same as one of Excel's built in number
+/// formats then it will have a number category other than "General" or
+/// "Number". The Excel number categories are:
+/// 
+/// - General
+/// - Number
+/// - Currency
+/// - Accounting
+/// - Date
+/// - Time
+/// - Percentage
+/// - Fraction
+/// - Scientific
+/// - Text
+/// - Custom
+/// 
+/// In the case of the example above the formatted output shows up as a Number
+/// category:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency1.png">
+/// 
+/// If we wanted to have the number format display as a different category, such
+/// as Currency, then would need to match the number format string used in the
+/// code with the number format used by Excel. The easiest way to do this is to
+/// open the Number Formatting dialog in Excel and set the required format:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency2.png">
+/// 
+/// Then, while still in the dialog, change to Custom. The format displayed is
+/// the format used by Excel.
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency3.png">
+/// 
+/// If we put the format that we found (`"[$$-409]#,##0.00"`) into our previous
+/// example and rerun it we will get a number format in the Currency category:
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_currency2.rs
+/// #
+/// # use rust_xlsxwriter::{Format, Workbook, XlsxError};
+/// #
+/// # fn main() -> Result<(), XlsxError> {
+/// #    // Create a new Excel file object.
+/// #    let mut workbook = Workbook::new();
+/// #
+/// #    // Add a worksheet.
+/// #    let worksheet = workbook.add_worksheet();
+/// #
+/// #    // Add a format.
+/// let currency_format = Format::new().set_num_format("[$$-409]#,##0.00");
+/// 
+/// worksheet.write_with_format(0, 0, 1234.56, &currency_format)?;
+/// 
+/// #   workbook.save("currency_format.xlsx")?;
+/// #
+/// #   Ok(())
+/// # }
+/// ```
+/// 
+/// That give us the following updated output. Note that the number category is
+/// now shown as Currency:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency4.png">
+/// 
+/// The same process can be used to find format strings for "Date" or
+/// "Accountancy" formats.
+/// 
+/// # Number Formats in Different Locales
+/// 
+/// As shown in the previous section the `format.set_num_format()` method is
+/// used to set the number format for `rust_xlsxwriter` formats. A common use
+/// case is to set a number format with a "grouping/thousands" separator and a
+/// "decimal" point:
+/// 
+/// ```
+/// # // This code is available in examples/doc_format_locale.rs
+/// #
+/// use rust_xlsxwriter::{Format, Workbook, XlsxError};
+/// 
+/// fn main() -> Result<(), XlsxError> {
+/// // Create a new Excel file object.
+/// let mut workbook = Workbook::new();
+/// 
+/// 
+/// // Add a worksheet.
+/// let worksheet = workbook.add_worksheet();
+/// 
+/// // Add a format.
+/// let currency_format = Format::new().set_num_format("#,##0.00");
+/// 
+/// worksheet.write_with_format(0, 0, 1234.56, &currency_format)?;
+/// 
+/// workbook.save("number_format.xlsx")?;
+/// 
+/// Ok(())
+/// }
+/// ```
+/// 
+/// In the US locale (and some others) where the number "grouping/thousands"
+/// separator is `","` and the "decimal" point is `"."` which would be shown in
+/// Excel as:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency5.png">
+/// 
+/// In other locales these values may be reversed or different. They are
+/// generally set in the "Region" settings of Windows or Mac OS.  Excel handles
+/// this by storing the number format in the file format in the US locale, in
+/// this case `#,##0.00`, but renders it according to the regional settings of
+/// the host OS. For example, here is the same, unmodified, output file shown
+/// above in a German locale:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency6.png">
+/// 
+/// And here is the same file in a Russian locale. Note the use of a space as
+/// the "grouping/thousands" separator:
+/// 
+/// <img src="https://rustxlsxwriter.github.io/images/format_currency7.png">
+/// 
+/// In order to replicate Excel's behavior all `rust_xlsxwriter` programs should
+/// use US locale formatting which will then be rendered in the settings of your
+/// host OS.
 #[Derive(Debug, Clone)]
 #[wasm_bindgen]
 struct Format {
