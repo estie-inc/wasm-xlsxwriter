@@ -70,6 +70,8 @@ fn main() -> Result<()> {
 
 fn generate_use_statements() -> Vec<Use> {
     vec![
+        // use rust_xlsxwriter as xlsx;
+        Use::from(Path::single("rust_xlsxwriter").chain_use_rename("xlsx")),
         // use std::sync::{Arc, Mutex, MutexGuard}
         Use::from(Path::single("std").chain("sync").chain_use_group(vec![
             UseTree::from(Path::single(PathSegment::new("Arc", None))),
@@ -82,11 +84,8 @@ fn generate_use_statements() -> Vec<Use> {
                 .chain("prelude")
                 .chain_use_glob(),
         ),
-        // use rust_xlsxwriter as xlsx;
-        Use::from(
-            Path::single("rust_xlsxwriter")
-                .chain_use_rename("xlsx"),
-        ),
+        // use crate::impl_method;
+        Use::from(Path::single("crate").chain("impl_method")),
     ]
 }
 

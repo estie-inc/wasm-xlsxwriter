@@ -1,7 +1,8 @@
 
+use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex, MutexGuard};
 use wasm_bindgen::prelude::*;
-use rust_xlsxwriter::xlsx as xlsx;
+use crate::impl_method;
 
 /// The `Format` struct is used to define cell formatting for data in a
 /// worksheet.
@@ -514,7 +515,7 @@ use rust_xlsxwriter::xlsx as xlsx;
 /// In order to replicate Excel's behavior all `rust_xlsxwriter` programs should
 /// use US locale formatting which will then be rendered in the settings of your
 /// host OS.
-#[Derive(Debug, Clone)]
+#[derive(Debug, Clone)]
 #[wasm_bindgen]
 struct Format {
     pub(crate) inner: Arc::<Mutex::<xlsx::Format>>
@@ -527,7 +528,7 @@ impl Format {
     /// Create a new Format object to use with worksheet formatting.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Format {
-        Format {inner: Arc::new(Mutex::new(inner))
+        Format {inner: Arc::new(Mutex::new(xlsx::Format::new()))
         }
     }
 
@@ -558,7 +559,7 @@ impl Format {
     /// - `other`: A Format object to merge with the primary Format.
     #[wasm_bindgen(js_name = "merge", skip_jsdoc)]
     pub fn merge(&self, other: Format) -> Format {
-        impl_method!(self.merge(other))
+        impl_method!(self.merge(other));
     }
 
     /// Set the Format alignment properties.
@@ -572,7 +573,7 @@ impl Format {
     /// defined by the [`FormatAlign`] enum.
     #[wasm_bindgen(js_name = "setAlign", skip_jsdoc)]
     pub fn set_align(&self, align: FormatAlign) -> Format {
-        impl_method!(self.set_align(align.into()))
+        impl_method!(self.set_align(align.into()));
     }
 
     /// Set the Format pattern background color property.
@@ -588,13 +589,13 @@ impl Format {
     /// value or a type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBackgroundColor", skip_jsdoc)]
     pub fn set_background_color(&self, color: Color) -> Format {
-        impl_method!(self.set_background_color(color))
+        impl_method!(self.set_background_color(color));
     }
 
     /// Set the bold property for a Format font.
     #[wasm_bindgen(js_name = "setBold", skip_jsdoc)]
     pub fn set_bold(&self) -> Format {
-        impl_method!(self.set_bold())
+        impl_method!(self.set_bold());
     }
 
     /// Set the Format border property.
@@ -613,7 +614,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setBorder", skip_jsdoc)]
     pub fn set_border(&self, border: FormatBorder) -> Format {
-        impl_method!(self.set_border(border.into()))
+        impl_method!(self.set_border(border.into()));
     }
 
     /// Set the cell bottom border style.
@@ -626,7 +627,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setBorderBottom", skip_jsdoc)]
     pub fn set_border_bottom(&self, border: FormatBorder) -> Format {
-        impl_method!(self.set_border_bottom(border.into()))
+        impl_method!(self.set_border_bottom(border.into()));
     }
 
     /// Set the cell bottom border color.
@@ -639,7 +640,7 @@ impl Format {
     /// type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBorderBottomColor", skip_jsdoc)]
     pub fn set_border_bottom_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_bottom_color(color))
+        impl_method!(self.set_border_bottom_color(color));
     }
 
     /// Set the Format border color property.
@@ -658,7 +659,7 @@ impl Format {
     /// a type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBorderColor", skip_jsdoc)]
     pub fn set_border_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_color(color))
+        impl_method!(self.set_border_color(color));
     }
 
     /// Set the Format border diagonal property.
@@ -673,7 +674,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setBorderDiagonal", skip_jsdoc)]
     pub fn set_border_diagonal(&self, border: FormatBorder) -> Format {
-        impl_method!(self.set_border_diagonal(border.into()))
+        impl_method!(self.set_border_diagonal(border.into()));
     }
 
     /// Set the cell diagonal border color.
@@ -686,7 +687,7 @@ impl Format {
     /// type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBorderDiagonalColor", skip_jsdoc)]
     pub fn set_border_diagonal_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_diagonal_color(color))
+        impl_method!(self.set_border_diagonal_color(color));
     }
 
     /// Set the cell diagonal border direction type.
@@ -699,7 +700,7 @@ impl Format {
     /// [`FormatDiagonalBorder`] enum value.
     #[wasm_bindgen(js_name = "setBorderDiagonalType", skip_jsdoc)]
     pub fn set_border_diagonal_type(&self, border_type: FormatDiagonalBorder) -> Format {
-        impl_method!(self.set_border_diagonal_type(border_type.into()))
+        impl_method!(self.set_border_diagonal_type(border_type.into()));
     }
 
     /// Set the cell left border style.
@@ -712,7 +713,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setBorderLeft", skip_jsdoc)]
     pub fn set_border_left(&self, border: FormatBorder) -> Format {
-        impl_method!(self.set_border_left(border.into()))
+        impl_method!(self.set_border_left(border.into()));
     }
 
     /// Set the cell left border color.
@@ -725,7 +726,7 @@ impl Format {
     /// type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBorderLeftColor", skip_jsdoc)]
     pub fn set_border_left_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_left_color(color))
+        impl_method!(self.set_border_left_color(color));
     }
 
     /// Set the cell right border style.
@@ -738,7 +739,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setBorderRight", skip_jsdoc)]
     pub fn set_border_right(&self, border: FormatBorder) -> Format {
-        impl_method!(self.set_border_right(border.into()))
+        impl_method!(self.set_border_right(border.into()));
     }
 
     /// Set the cell right border color.
@@ -751,7 +752,7 @@ impl Format {
     /// type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBorderRightColor", skip_jsdoc)]
     pub fn set_border_right_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_right_color(color))
+        impl_method!(self.set_border_right_color(color));
     }
 
     /// Set the cell top border style.
@@ -764,7 +765,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setBorderTop", skip_jsdoc)]
     pub fn set_border_top(&self, border: FormatBorder) -> Format {
-        impl_method!(self.set_border_top(border.into()))
+        impl_method!(self.set_border_top(border.into()));
     }
 
     /// Set the cell top border color.
@@ -777,7 +778,7 @@ impl Format {
     /// type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setBorderTopColor", skip_jsdoc)]
     pub fn set_border_top_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_top_color(color))
+        impl_method!(self.set_border_top_color(color));
     }
 
     /// Set the Format property to show a checkbox in a cell.
@@ -789,7 +790,7 @@ impl Format {
     /// method.
     #[wasm_bindgen(js_name = "setCheckbox", skip_jsdoc)]
     pub fn set_checkbox(&self) -> Format {
-        impl_method!(self.set_checkbox())
+        impl_method!(self.set_checkbox());
     }
 
     /// Set the Format font character set property.
@@ -802,7 +803,7 @@ impl Format {
     /// - `font_charset`: The font character set property.
     #[wasm_bindgen(js_name = "setFontCharset", skip_jsdoc)]
     pub fn set_font_charset(&self, font_charset: u8) -> Format {
-        impl_method!(self.set_font_charset(font_charset))
+        impl_method!(self.set_font_charset(font_charset));
     }
 
     /// Set the color property for the Format font.
@@ -817,7 +818,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setFontColor", skip_jsdoc)]
     pub fn set_font_color(&self, color: Color) -> Format {
-        impl_method!(self.set_font_color(color))
+        impl_method!(self.set_font_color(color));
     }
 
     /// Set the Format font family property.
@@ -830,7 +831,7 @@ impl Format {
     /// - `font_family`: The font family property.
     #[wasm_bindgen(js_name = "setFontFamily", skip_jsdoc)]
     pub fn set_font_family(&self, font_family: u8) -> Format {
-        impl_method!(self.set_font_family(font_family))
+        impl_method!(self.set_font_family(font_family));
     }
 
     /// Set the Format font name property.
@@ -844,7 +845,7 @@ impl Format {
     /// - `font_name`: The font name property.
     #[wasm_bindgen(js_name = "setFontName", skip_jsdoc)]
     pub fn set_font_name(&self, font_name: String) -> Format {
-        impl_method!(self.set_font_name(font_name))
+        impl_method!(self.set_font_name(font_name));
     }
 
     /// Set the Format font scheme property.
@@ -857,7 +858,7 @@ impl Format {
     /// - `font_scheme`: The font scheme property.
     #[wasm_bindgen(js_name = "setFontScheme", skip_jsdoc)]
     pub fn set_font_scheme(&self, font_scheme: String) -> Format {
-        impl_method!(self.set_font_scheme(font_scheme))
+        impl_method!(self.set_font_scheme(font_scheme));
     }
 
     /// Set the Format font super/subscript property.
@@ -872,7 +873,7 @@ impl Format {
     /// [`FormatScript`] enum.
     #[wasm_bindgen(js_name = "setFontScript", skip_jsdoc)]
     pub fn set_font_script(&self, font_script: FormatScript) -> Format {
-        impl_method!(self.set_font_script(font_script.into()))
+        impl_method!(self.set_font_script(font_script.into()));
     }
 
     /// Set the Format font size property.
@@ -889,13 +890,13 @@ impl Format {
     /// - `font_size`: The font size property.
     #[wasm_bindgen(js_name = "setFontSize", skip_jsdoc)]
     pub fn set_font_size(&self, font_size: UnknownGeneric) -> Format {
-        impl_method!(self.set_font_size(font_size))
+        impl_method!(self.set_font_size(font_size));
     }
 
     /// Set the Format font strikethrough property.
     #[wasm_bindgen(js_name = "setFontStrikethrough", skip_jsdoc)]
     pub fn set_font_strikethrough(&self) -> Format {
-        impl_method!(self.set_font_strikethrough())
+        impl_method!(self.set_font_strikethrough());
     }
 
     /// Set the Format pattern foreground color property.
@@ -910,7 +911,7 @@ impl Format {
     /// value or a type that can convert [`Into`] a [`Color`].
     #[wasm_bindgen(js_name = "setForegroundColor", skip_jsdoc)]
     pub fn set_foreground_color(&self, color: Color) -> Format {
-        impl_method!(self.set_foreground_color(color))
+        impl_method!(self.set_foreground_color(color));
     }
 
     /// Set the Format property to hide formulas in a cell.
@@ -924,7 +925,7 @@ impl Format {
     /// See the example above.
     #[wasm_bindgen(js_name = "setHidden", skip_jsdoc)]
     pub fn set_hidden(&self) -> Format {
-        impl_method!(self.set_hidden())
+        impl_method!(self.set_hidden());
     }
 
     /// Set the hyperlink style.
@@ -933,7 +934,7 @@ impl Format {
     /// automatically when writing urls without a format applied.
     #[wasm_bindgen(js_name = "setHyperlink", skip_jsdoc)]
     pub fn set_hyperlink(&self) -> Format {
-        impl_method!(self.set_hyperlink())
+        impl_method!(self.set_hyperlink());
     }
 
     /// Set the Format indent property.
@@ -950,13 +951,13 @@ impl Format {
     /// - `indent`: The indentation level for the cell.
     #[wasm_bindgen(js_name = "setIndent", skip_jsdoc)]
     pub fn set_indent(&self, indent: u8) -> Format {
-        impl_method!(self.set_indent(indent))
+        impl_method!(self.set_indent(indent));
     }
 
     /// Set the italic property for the Format font.
     #[wasm_bindgen(js_name = "setItalic", skip_jsdoc)]
     pub fn set_italic(&self) -> Format {
-        impl_method!(self.set_italic())
+        impl_method!(self.set_italic());
     }
 
     /// Set the locked Format property back to its default "on" state.
@@ -964,7 +965,7 @@ impl Format {
     /// The opposite of [`Format::setUnlocked()`].
     #[wasm_bindgen(js_name = "setLocked", skip_jsdoc)]
     pub fn set_locked(&self) -> Format {
-        impl_method!(self.set_locked())
+        impl_method!(self.set_locked());
     }
 
     /// Set the number format for a Format.
@@ -986,7 +987,7 @@ impl Format {
     /// - `num_format`: The number format property.
     #[wasm_bindgen(js_name = "setNumFormat", skip_jsdoc)]
     pub fn set_num_format(&self, num_format: String) -> Format {
-        impl_method!(self.set_num_format(num_format))
+        impl_method!(self.set_num_format(num_format));
     }
 
     /// Set the number format for a Format using a legacy format index.
@@ -1057,7 +1058,7 @@ impl Format {
     /// the table above.
     #[wasm_bindgen(js_name = "setNumFormatIndex", skip_jsdoc)]
     pub fn set_num_format_index(&self, num_format_index: u8) -> Format {
-        impl_method!(self.set_num_format_index(num_format_index))
+        impl_method!(self.set_num_format_index(num_format_index));
     }
 
     /// Set the Format pattern property.
@@ -1074,7 +1075,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setPattern", skip_jsdoc)]
     pub fn set_pattern(&self, pattern: FormatPattern) -> Format {
-        impl_method!(self.set_pattern(pattern.into()))
+        impl_method!(self.set_pattern(pattern.into()));
     }
 
     /// Set the `quote_prefix` property for a Format.
@@ -1085,7 +1086,7 @@ impl Format {
     /// but you do need to add the format.
     #[wasm_bindgen(js_name = "setQuotePrefix", skip_jsdoc)]
     pub fn set_quote_prefix(&self) -> Format {
-        impl_method!(self.set_quote_prefix())
+        impl_method!(self.set_quote_prefix());
     }
 
     /// Set the Format text reading order property.
@@ -1107,7 +1108,7 @@ impl Format {
     /// 2. The text is displayed Right-to-Left, like Hebrew or Arabic.
     #[wasm_bindgen(js_name = "setReadingDirection", skip_jsdoc)]
     pub fn set_reading_direction(&self, reading_direction: u8) -> Format {
-        impl_method!(self.set_reading_direction(reading_direction))
+        impl_method!(self.set_reading_direction(reading_direction));
     }
 
     /// Set the Format rotation property.
@@ -1121,7 +1122,7 @@ impl Format {
     /// - `rotation`: The rotation angle.
     #[wasm_bindgen(js_name = "setRotation", skip_jsdoc)]
     pub fn set_rotation(&self, rotation: i16) -> Format {
-        impl_method!(self.set_rotation(rotation))
+        impl_method!(self.set_rotation(rotation));
     }
 
     /// Set the Format shrink property.
@@ -1129,7 +1130,7 @@ impl Format {
     /// This method can be used to shrink text so that it fits in a cell
     #[wasm_bindgen(js_name = "setShrink", skip_jsdoc)]
     pub fn set_shrink(&self) -> Format {
-        impl_method!(self.set_shrink())
+        impl_method!(self.set_shrink());
     }
 
     /// Set the Format text wrap property.
@@ -1143,7 +1144,7 @@ impl Format {
     /// [`Worksheet::setRowHeight()`](crate::Worksheet::set_row_height()).
     #[wasm_bindgen(js_name = "setTextWrap", skip_jsdoc)]
     pub fn set_text_wrap(&self) -> Format {
-        impl_method!(self.set_text_wrap())
+        impl_method!(self.set_text_wrap());
     }
 
     /// Set the underline properties for a format.
@@ -1158,7 +1159,7 @@ impl Format {
     /// value.
     #[wasm_bindgen(js_name = "setUnderline", skip_jsdoc)]
     pub fn set_underline(&self, underline: FormatUnderline) -> Format {
-        impl_method!(self.set_underline(underline.into()))
+        impl_method!(self.set_underline(underline.into()));
     }
 
     /// Set the Format cell unlocked state.
@@ -1169,7 +1170,7 @@ impl Format {
     /// the [`Worksheet::protect()`](crate::Worksheet::protect) method.
     #[wasm_bindgen(js_name = "setUnlocked", skip_jsdoc)]
     pub fn set_unlocked(&self) -> Format {
-        impl_method!(self.set_unlocked())
+        impl_method!(self.set_unlocked());
     }
 
     /// Unset the bold Format property back to its default "off" state.
@@ -1177,7 +1178,7 @@ impl Format {
     /// The opposite of [`Format::setBold()`].
     #[wasm_bindgen(js_name = "unsetBold", skip_jsdoc)]
     pub fn unset_bold(&self) -> Format {
-        impl_method!(self.unset_bold())
+        impl_method!(self.unset_bold());
     }
 
     /// Unset the `checkbox` Format property back to its default "off" state.
@@ -1185,7 +1186,7 @@ impl Format {
     /// The opposite of [`Format::setCheckbox()`].
     #[wasm_bindgen(js_name = "unsetCheckbox", skip_jsdoc)]
     pub fn unset_checkbox(&self) -> Format {
-        impl_method!(self.unset_checkbox())
+        impl_method!(self.unset_checkbox());
     }
 
     /// Unset the font strikethrough Format property back to its default "off" state.
@@ -1193,7 +1194,7 @@ impl Format {
     /// The opposite of [`Format::setFontStrikethrough()`].
     #[wasm_bindgen(js_name = "unsetFontStrikethrough", skip_jsdoc)]
     pub fn unset_font_strikethrough(&self) -> Format {
-        impl_method!(self.unset_font_strikethrough())
+        impl_method!(self.unset_font_strikethrough());
     }
 
     /// Unset the hidden Format property back to its default "off" state.
@@ -1201,13 +1202,13 @@ impl Format {
     /// The opposite of [`Format::setHidden()`].
     #[wasm_bindgen(js_name = "unsetHidden", skip_jsdoc)]
     pub fn unset_hidden(&self) -> Format {
-        impl_method!(self.unset_hidden())
+        impl_method!(self.unset_hidden());
     }
 
     /// Unset the hyperlink style. Doesn't reset the other properties.
     #[wasm_bindgen(js_name = "unsetHyperlinkStyle", skip_jsdoc)]
     pub fn unset_hyperlink_style(&self) -> Format {
-        impl_method!(self.unset_hyperlink_style())
+        impl_method!(self.unset_hyperlink_style());
     }
 
     /// Unset the italic Format property back to its default "off" state.
@@ -1215,7 +1216,7 @@ impl Format {
     /// The opposite of [`Format::setItalic()`].
     #[wasm_bindgen(js_name = "unsetItalic", skip_jsdoc)]
     pub fn unset_italic(&self) -> Format {
-        impl_method!(self.unset_italic())
+        impl_method!(self.unset_italic());
     }
 
     /// Unset the `quote_prefix` Format property back to its default "off" state.
@@ -1223,7 +1224,7 @@ impl Format {
     /// The opposite of [`Format::setQuotePrefix()`].
     #[wasm_bindgen(js_name = "unsetQuotePrefix", skip_jsdoc)]
     pub fn unset_quote_prefix(&self) -> Format {
-        impl_method!(self.unset_quote_prefix())
+        impl_method!(self.unset_quote_prefix());
     }
 
     /// Unset the shrink Format property back to its default "off" state.
@@ -1231,7 +1232,7 @@ impl Format {
     /// The opposite of [`Format::setShrink()`].
     #[wasm_bindgen(js_name = "unsetShrink", skip_jsdoc)]
     pub fn unset_shrink(&self) -> Format {
-        impl_method!(self.unset_shrink())
+        impl_method!(self.unset_shrink());
     }
 
     /// Unset the text wrap Format property back to its default "off" state.
@@ -1239,7 +1240,7 @@ impl Format {
     /// The opposite of [`Format::setTextWrap()`].
     #[wasm_bindgen(js_name = "unsetTextWrap", skip_jsdoc)]
     pub fn unset_text_wrap(&self) -> Format {
-        impl_method!(self.unset_text_wrap())
+        impl_method!(self.unset_text_wrap());
     }
 }
 

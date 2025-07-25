@@ -239,14 +239,44 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         }
         tokens.into_tokens()
     };
-    let method_body = Block::single(ExprKind::MacCall(MacCall::new(
-        Path::single(if function.is_method {
-            "impl_method"
-        } else {
-            "impl_function"
-        }),
-        DelimArgs::parenthesis(method_body_macro),
-    )));
+
+    let method_body = if function.is_method {
+        Block::new(
+            vec![Stmt::Semi(Semi(Expr::from(MacCall::new(
+                Path::single("impl_method"),
+                DelimArgs::parenthesis(method_body_macro),
+            ))))],
+            None,
+        )
+    } else {
+        Block::new(
+            vec![
+                Stmt::Local(Local::simple(
+                    "result",
+                    ExprKind::Call(Call::new(
+                        Path::single("xlsx")
+                            .chain(&struct_info.name)
+                            .chain(&function.name),
+                        vec![],
+                    )),
+                )),
+                Stmt::Expr(Expr::from(ExprKind::Struct(Struct::new(
+                    &struct_info.name,
+                    vec![ExprField::new(
+                        "inner",
+                        ExprKind::from(ExprKind::call(
+                            ExprKind::Path(Path::single("Arc").chain("new")),
+                            vec![Expr::from(ExprKind::call(
+                                ExprKind::Path(Path::single("Mutex").chain("new")),
+                                vec![Expr::from(ExprKind::Path(Path::single("result")))],
+                            ))],
+                        )),
+                    )],
+                )))),
+            ],
+            None,
+        )
+    };
 
     // Create the function
     let mut wrapper_fn = Item::from(Fn::simple(
