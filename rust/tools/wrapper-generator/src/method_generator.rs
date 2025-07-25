@@ -176,17 +176,8 @@ pub(crate) fn generate_wrapper_methods(struct_info: &StructInfo) -> Vec<Item<Ass
 
 /// Create a wrapper method for a single function
 fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Item<AssocItemKind> {
-    println!(
-        "\nProcessing function: {} (is_method: {})",
-        function.name, function.is_method
-    );
-
-    // Skip functions without signatures
     let sig = function.sig.as_ref().unwrap();
-
-    // Prepare parameters
     let mut params = Vec::new();
-    // Process parameters
     let mut call_args = Vec::new();
 
     // For methods, the first parameter is always a reference to self
@@ -200,19 +191,16 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
             continue;
         }
 
-        println!("Processing parameter '{}' with type: {:?}", name, ty);
         params.push(Param::new(Pat::ident(name), determine_param_type(ty)));
 
         let arg_expr = match ty {
             rustdoc_types::Type::ResolvedPath(_) => {
-                println!("  Parameter is a rust_xlsxwriter type, using .into()");
                 Expr::from(ExprKind::method_call0(
                     ExprKind::Path(Path::single(name)),
                     "into",
                 ))
             }
             _ => {
-                println!("  Parameter is a regular type, passing directly");
                 // For other types, just pass the name
                 Expr::from(ExprKind::Path(Path::single(name)))
             }
@@ -220,14 +208,6 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         call_args.push(arg_expr);
     }
 
-    println!("Final parameters list:");
-    for (i, param) in params.iter().enumerate() {
-        println!("  {}: {}", i, param);
-    }
-    println!("Final arguments list:");
-    for (i, arg) in call_args.iter().enumerate() {
-        println!("  {}: {}", i, arg);
-    }
 
     let method_body_macro = if function.is_method {
         // For methods, create a self.method_name(args) expression
@@ -286,9 +266,12 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
         AttrArgs::Delimited(DelimArgs::parenthesis(
             vec![
                 Token::Ident("js_name".to_string()),
+                Token::DocComment(" ".to_string()),
                 Token::Eq,
+                Token::DocComment(" ".to_string()),
                 Token::Lit(Lit::str(&js_name)),
                 Token::Comma,
+                Token::DocComment(" ".to_string()),
                 Token::Ident("skip_jsdoc".to_string()),
             ]
             .into_tokens(),
@@ -302,25 +285,19 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
 fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
     match ty {
         rustdoc_types::Type::ResolvedPath(path) => {
-            println!("Type is a resolved path: {}", path.path);
             Type::Path(Path::single(&path.path))
         }
         rustdoc_types::Type::Primitive(prim) => {
-            println!("Type is a primitive: {}", prim);
             Type::Path(Path::single(prim))
         }
         rustdoc_types::Type::BorrowedRef { type_, .. } => {
-            println!("Type is a borrowed reference to: {:?}", type_);
             determine_param_type(type_)
         }
         rustdoc_types::Type::Array { type_, .. } => {
-            println!("Type is an array of: {:?}", type_);
             let inner_type = determine_param_type(type_);
             Type::poly_path("Vec", vec![GenericArg::Type(inner_type)])
         }
         rustdoc_types::Type::ImplTrait(impl_trait) => {
-            println!("Type is impl Trait with bounds: {:?}", impl_trait);
-
             if impl_trait.len() == 1 {
                 if let rustdoc_types::GenericBound::TraitBound { trait_, .. } = &impl_trait[0] {
                     if trait_.path == "Into" || trait_.path.ends_with("::Into") {
@@ -329,7 +306,6 @@ fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
                             {
                                 if args.len() == 1 {
                                     if let rustdoc_types::GenericArg::Type(inner_type) = &args[0] {
-                                        println!("Found Into<T> trait bound, extracting inner type: {:?}", inner_type);
                                         return determine_param_type(inner_type);
                                     }
                                 }
@@ -339,16 +315,13 @@ fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
                 }
             }
 
-            println!("Failed to extract inner type from impl Trait, aborting");
             abort()
         }
         rustdoc_types::Type::Generic(generic) => {
-            println!("Type is a generic: {}", generic);
             // TODO: Extract the generic type from constraints if available
             Type::Path(Path::single("UnknownGeneric"))
         }
         _ => {
-            println!("Type is unknown, aborting");
             abort()
         }
     }

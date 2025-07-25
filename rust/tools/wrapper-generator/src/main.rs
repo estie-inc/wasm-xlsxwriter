@@ -115,6 +115,7 @@ fn generate_struct_wrapper(struct_name: &str) -> Item<ItemKind> {
             vec![
                 Token::Ident("Debug".to_string()),
                 Token::Comma,
+                Token::DocComment(" ".to_string()),
                 Token::Ident("Clone".to_string()),
             ]
             .into_tokens(),
