@@ -1,6 +1,7 @@
 use crate::utils::{new_line, process_doc_comment, to_camel_case};
 use crate_info_extractor::{ImplFnInfo, StructInfo};
 use ruast::*;
+use std::process::abort;
 
 /// Generate common methods for the struct
 /// new, lock, deep_clone
@@ -12,7 +13,7 @@ pub(crate) fn generate_common_methods(struct_info: &StructInfo) -> Vec<Item<Asso
         let params = if let Some(sig) = &existing_fn.sig {
             sig.inputs
                 .iter()
-                .map(|(name, ty)| {
+                .map(|(name, _)| {
                     Param::new(
                         Pat::ident(name),
                         Type::Path(Path::single("xlsx").chain(struct_info.name.clone())),
@@ -175,79 +176,57 @@ pub(crate) fn generate_wrapper_methods(struct_info: &StructInfo) -> Vec<Item<Ass
 
 /// Create a wrapper method for a single function
 fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Item<AssocItemKind> {
+    println!(
+        "\nProcessing function: {} (is_method: {})",
+        function.name, function.is_method
+    );
+
     // Skip functions without signatures
     let sig = function.sig.as_ref().unwrap();
 
     // Prepare parameters
     let mut params = Vec::new();
+    // Process parameters
+    let mut call_args = Vec::new();
 
-    // Add &self parameter for methods, skip for functions
+    // For methods, the first parameter is always a reference to self
     if function.is_method {
         params.push(Param::ref_self());
     }
 
-    // Process parameters
-    let mut call_args = Vec::new();
+    for (i, (name, ty)) in sig.inputs.iter().enumerate() {
+        // Skip the first parameter for methods (self)
+        if function.is_method && i == 0 {
+            continue;
+        }
 
-    // Determine which parameters to process
-    let start_idx = if function.is_method { 1 } else { 0 };
+        println!("Processing parameter '{}' with type: {:?}", name, ty);
+        params.push(Param::new(Pat::ident(name), determine_param_type(ty)));
 
-    for (i, (name, ty)) in sig.inputs.iter().enumerate().skip(start_idx) {
-        // Extract the type name from the Type enum
-        let type_name = match ty {
-            rustdoc_types::Type::ResolvedPath(path) => path
-                .path
-                .split("::")
-                .last()
-                .unwrap_or(&path.path)
-                .to_string(),
-            rustdoc_types::Type::Primitive(prim) => prim.clone(),
-            rustdoc_types::Type::BorrowedRef { type_, .. } => match &**type_ {
-                rustdoc_types::Type::ResolvedPath(path) => path
-                    .path
-                    .split("::")
-                    .last()
-                    .unwrap_or(&path.path)
-                    .to_string(),
-                rustdoc_types::Type::Primitive(prim) => prim.clone(),
-                _ => "Unknown".to_string(),
-            },
-            _ => "Unknown".to_string(),
+        let arg_expr = match ty {
+            rustdoc_types::Type::ResolvedPath(_) => {
+                println!("  Parameter is a rust_xlsxwriter type, using .into()");
+                Expr::from(ExprKind::method_call0(
+                    ExprKind::Path(Path::single(name)),
+                    "into",
+                ))
+            }
+            _ => {
+                println!("  Parameter is a regular type, passing directly");
+                // For other types, just pass the name
+                Expr::from(ExprKind::Path(Path::single(name)))
+            }
         };
-
-        // Create parameter with the appropriate type
-        let param_type = determine_param_type(&type_name);
-
-        params.push(Param::new(Pat::ident(name), param_type));
-
-        // Create argument for the method call
-        let arg_expr = if is_primitive_type(&type_name) {
-            // Primitive types are passed directly
-            Expr::from(ExprKind::Path(Path::single(name)))
-        } else if needs_into(&type_name) {
-            // Enum types that need .into()
-            Expr::from(ExprKind::method_call0(
-                ExprKind::Path(Path::single(name)),
-                "into",
-            ))
-        } else {
-            // Other types are passed directly
-            Expr::from(ExprKind::Path(Path::single(name)))
-        };
-
         call_args.push(arg_expr);
     }
 
-    // Create the method body using the impl_method! macro
-    let mut args_str = String::new();
-
+    println!("Final parameters list:");
+    for (i, param) in params.iter().enumerate() {
+        println!("  {}: {}", i, param);
+    }
+    println!("Final arguments list:");
     for (i, arg) in call_args.iter().enumerate() {
-        if i > 0 {
-            args_str.push_str(", ");
-        }
-
-        // This is a simplification - in a real implementation we'd need to convert the Expr to a string
-        args_str.push_str(&format!("${}", i + 1));
+        println!("  {}: {}", i, arg);
     }
 
     let method_body_macro = if function.is_method {
@@ -319,65 +298,58 @@ fn create_wrapper_method(function: &ImplFnInfo, struct_info: &StructInfo) -> Ite
     wrapper_fn
 }
 
-/// Determine the parameter type for the wrapper method
+/// Determine the parameter type recursively
+fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
+    match ty {
+        rustdoc_types::Type::ResolvedPath(path) => {
+            println!("Type is a resolved path: {}", path.path);
+            Type::Path(Path::single(&path.path))
+        }
+        rustdoc_types::Type::Primitive(prim) => {
+            println!("Type is a primitive: {}", prim);
+            Type::Path(Path::single(prim))
+        }
+        rustdoc_types::Type::BorrowedRef { type_, .. } => {
+            println!("Type is a borrowed reference to: {:?}", type_);
+            determine_param_type(type_)
+        }
+        rustdoc_types::Type::Array { type_, .. } => {
+            println!("Type is an array of: {:?}", type_);
+            let inner_type = determine_param_type(type_);
+            Type::poly_path("Vec", vec![GenericArg::Type(inner_type)])
+        }
+        rustdoc_types::Type::ImplTrait(impl_trait) => {
+            println!("Type is impl Trait with bounds: {:?}", impl_trait);
 
-fn determine_param_type(original_type: &str) -> Type {
-    if is_primitive_type(original_type) {
-        // Primitive types are used as-is
-        Type::Path(Path::single(original_type))
-    } else if original_type.starts_with("Format") && original_type != "Format" {
-        // Format* enum types (except Format itself) are used as-is
-        Type::Path(Path::single(original_type))
-    } else if original_type == "Color" {
-        // Color is a wrapper type
-        Type::Path(Path::single("Color"))
-    } else if original_type.starts_with("xlsx::") {
-        // Convert xlsx::Type to Type
-        let wrapper_type = original_type
-            .strip_prefix("xlsx::")
-            .unwrap_or(original_type);
+            if impl_trait.len() == 1 {
+                if let rustdoc_types::GenericBound::TraitBound { trait_, .. } = &impl_trait[0] {
+                    if trait_.path == "Into" || trait_.path.ends_with("::Into") {
+                        if let Some(args) = &trait_.args {
+                            if let rustdoc_types::GenericArgs::AngleBracketed { args, .. } = &**args
+                            {
+                                if args.len() == 1 {
+                                    if let rustdoc_types::GenericArg::Type(inner_type) = &args[0] {
+                                        println!("Found Into<T> trait bound, extracting inner type: {:?}", inner_type);
+                                        return determine_param_type(inner_type);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-        Type::Path(Path::single(wrapper_type))
-    } else {
-        // Other types are used as-is
-        Type::Path(Path::single(original_type))
+            println!("Failed to extract inner type from impl Trait, aborting");
+            abort()
+        }
+        rustdoc_types::Type::Generic(generic) => {
+            println!("Type is a generic: {}", generic);
+            // TODO: Extract the generic type from constraints if available
+            Type::Path(Path::single("UnknownGeneric"))
+        }
+        _ => {
+            println!("Type is unknown, aborting");
+            abort()
+        }
     }
-}
-
-/// Check if a type is a primitive type
-
-fn is_primitive_type(ty: &str) -> bool {
-    matches!(
-        ty,
-        "i8" | "i16"
-            | "i32"
-            | "i64"
-            | "i128"
-            | "isize"
-            | "u8"
-            | "u16"
-            | "u32"
-            | "u64"
-            | "u128"
-            | "usize"
-            | "f32"
-            | "f64"
-            | "bool"
-            | "char"
-            | "&str"
-            | "String"
-    )
-}
-
-/// Check if a type needs .into()\
-fn needs_into(ty: &str) -> bool {
-    // Enum types like FormatAlign, FormatBorder, etc. need .into()
-    // We can identify them by their naming convention (Format* but not Format itself)
-    ty.starts_with("Format") && ty != "Format"
-}
-
-/// Check if a type needs to access the inner field
-fn needs_inner(ty: &str) -> bool {
-    // Struct types like Color need to access the inner field
-    matches!(ty, "Color")
 }

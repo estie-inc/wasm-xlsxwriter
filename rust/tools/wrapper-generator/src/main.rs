@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use crate_info_extractor::{extract_crate_items, get_crate_info, StructInfo};
+use crate_info_extractor::{extract_crate_items, get_crate_info};
 use method_generator::{generate_common_methods, generate_wrapper_methods};
 use ruast::*;
 use std::path::PathBuf;
