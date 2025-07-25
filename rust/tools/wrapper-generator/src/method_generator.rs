@@ -317,7 +317,7 @@ fn determine_param_type(ty: &rustdoc_types::Type) -> Type {
 
             abort()
         }
-        rustdoc_types::Type::Generic(generic) => {
+        rustdoc_types::Type::Generic(_) => {
             // TODO: Extract the generic type from constraints if available
             Type::Path(Path::single("UnknownGeneric"))
         }
