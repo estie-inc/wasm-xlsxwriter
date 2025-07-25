@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
-
+use crate::impl_method;
 use super::color::Color;
 
 /// The `Format` struct is used to define cell formatting for data in a
@@ -176,18 +176,6 @@ pub struct Format {
     pub(crate) inner: Arc<Mutex<xlsx::Format>>,
 }
 
-macro_rules! impl_method {
-    ($self:ident.$method:ident($($arg:expr),*)) => {
-        let mut lock = $self.inner.lock().unwrap();
-        let mut inner = std::mem::take(&mut *lock);
-        inner = inner.$method($($arg),*);
-        let _ = std::mem::replace(&mut *lock, inner);
-        return Format {
-            inner: Arc::clone(&$self.inner),
-        }
-    };
-}
-
 #[wasm_bindgen]
 impl Format {
     /// Create a new Format object.
@@ -313,7 +301,7 @@ impl Format {
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setBorderColor", skip_jsdoc)]
     pub fn set_border_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_color(color.inner));
+        impl_method!(self.set_border_color(color));
     }
 
     /// Set the cell bottom border style.
@@ -336,7 +324,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderBottomColor", skip_jsdoc)]
     pub fn set_border_bottom_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_bottom_color(color.inner));
+        impl_method!(self.set_border_bottom_color(color));
     }
 
     /// Set the cell top border style.
@@ -359,7 +347,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderTopColor", skip_jsdoc)]
     pub fn set_border_top_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_top_color(color.inner));
+        impl_method!(self.set_border_top_color(color));
     }
 
     /// Set the cell left border style.
@@ -382,7 +370,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderLeftColor", skip_jsdoc)]
     pub fn set_border_left_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_left_color(color.inner));
+        impl_method!(self.set_border_left_color(color));
     }
 
     /// Set the cell right border style.
@@ -405,7 +393,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderRightColor", skip_jsdoc)]
     pub fn set_border_right_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_right_color(color.inner));
+        impl_method!(self.set_border_right_color(color));
     }
 
     /// Set the Format border diagonal property.
@@ -432,7 +420,7 @@ impl Format {
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setBorderDiagonalColor", skip_jsdoc)]
     pub fn set_border_diagonal_color(&self, color: Color) -> Format {
-        impl_method!(self.set_border_diagonal_color(color.inner));
+        impl_method!(self.set_border_diagonal_color(color));
     }
 
     /// Set the cell diagonal border direction type.

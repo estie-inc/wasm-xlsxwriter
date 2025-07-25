@@ -9,24 +9,17 @@ use rustdoc_json;
 pub struct StructInfo {
     pub name: String,
     pub doc: Option<String>,
-    pub methods: Vec<MethodInfo>,
-    pub functions: Vec<FunctionInfo>,
+    pub methods: Vec<ImplFnInfo>,
+    pub functions: Vec<ImplFnInfo>,
 }
 
 #[derive(Debug, Clone)]
-pub struct MethodInfo {
-    pub method_name: String,
-    pub doc: Option<String>,
-    pub sig: Option<FunctionSignature>,
-    pub struct_name: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct FunctionInfo {
+pub struct ImplFnInfo {
     pub name: String,
     pub doc: Option<String>,
     pub sig: Option<FunctionSignature>,
-    pub module_name: String,
+    pub impl_name: String,
+    pub is_method: bool,
 }
 
 #[derive(Debug)]
@@ -67,7 +60,7 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
         "write", "equivalent"
     ];
 
-    for (id, item) in &crate_info.index {
+    for (_id, item) in &crate_info.index {
         if !matches!(item.visibility, Visibility::Public) {
             continue;
         }
@@ -109,26 +102,28 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
                                     let is_method = function_data.sig.inputs.iter().any(|(name, _)| name == "self");
 
                                     if is_method {
-                                        if let Some(method_name) = &method_item.name {
-                                            if !standard_methods.contains(&method_name.as_str()) && 
+                                        if let Some(name) = &method_item.name {
+                                            if !standard_methods.contains(&name.as_str()) &&
                                                matches!(method_item.visibility, Visibility::Public) {
 
-                                                struct_info.methods.push(MethodInfo {
-                                                    struct_name: struct_info.name.clone(),
-                                                    method_name: method_name.clone(),
+                                                struct_info.methods.push(ImplFnInfo {
+                                                    impl_name: struct_info.name.clone(),
+                                                    name: name.clone(),
                                                     doc: method_item.docs.clone(),
                                                     sig: Some(function_data.sig.clone()),
+                                                    is_method: true,
                                                 });
                                             }
                                         }
                                     } else {
                                         if let Some(function_name) = &method_item.name {
                                             if matches!(method_item.visibility, Visibility::Public) {
-                                                struct_info.functions.push(FunctionInfo {
+                                                struct_info.functions.push(ImplFnInfo {
                                                     name: function_name.clone(),
-                                                    module_name: struct_info.name.clone(),
+                                                    impl_name: struct_info.name.clone(),
                                                     doc: method_item.docs.clone(),
                                                     sig: Some(function_data.sig.clone()),
+                                                    is_method: false,
                                                 });
                                             }
                                         }
@@ -136,7 +131,8 @@ pub fn extract_crate_items(crate_info: &Crate) -> ExtractedItems {
                                 }
                             }
                         }
-                        struct_info.methods.sort_by_key(|m| m.method_name.clone());
+                        // Sort methods and functions by name
+                        struct_info.methods.sort_by_key(|m| m.name.clone());
                         struct_info.functions.sort_by_key(|f| f.name.clone());
                     }
                 }

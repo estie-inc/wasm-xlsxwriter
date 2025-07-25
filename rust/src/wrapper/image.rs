@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::WasmResult;
 use crate::wrapper::object_movement::ObjectMovement;
+use crate::wrapper::WasmResult;
 
 /// Since the xlsx::Image does not have a default value, we use the smallest PNG image data as a dummy data.
 fn new_dummy_image() -> xlsx::Image {

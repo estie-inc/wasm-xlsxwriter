@@ -1,7 +1,7 @@
-use rust_xlsxwriter as xlsx;
-use wasm_bindgen::prelude::*;
 use crate::wrapper::chart::chart_gradient_fill_type::ChartGradientFillType;
 use crate::wrapper::chart::chart_gradient_stop::ChartGradientStop;
+use rust_xlsxwriter as xlsx;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct ChartGradientFill {
@@ -26,10 +26,12 @@ impl ChartGradientFill {
     }
 
     #[wasm_bindgen(js_name = "setGradientStops")]
-    pub fn set_gradient_stops(&mut self, gradient_stops: Vec<ChartGradientStop>) -> ChartGradientFill {
-        let gradient_stops: Vec<xlsx::ChartGradientStop> = gradient_stops.into_iter()
-            .map(|stop| stop.inner)
-            .collect();
+    pub fn set_gradient_stops(
+        &mut self,
+        gradient_stops: Vec<ChartGradientStop>,
+    ) -> ChartGradientFill {
+        let gradient_stops: Vec<xlsx::ChartGradientStop> =
+            gradient_stops.into_iter().map(|stop| stop.inner).collect();
         self.inner.set_gradient_stops(&gradient_stops);
         ChartGradientFill {
             inner: self.inner.clone(),

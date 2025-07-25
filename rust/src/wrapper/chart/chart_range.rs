@@ -41,7 +41,13 @@ impl ChartRange {
     ///
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "newFromRange")]
-    pub fn new_from_range(sheet: &str, first_row: xlsx::RowNum, first_col: xlsx::ColNum, last_row: xlsx::RowNum, last_col: xlsx::ColNum) -> ChartRange {
+    pub fn new_from_range(
+        sheet: &str,
+        first_row: xlsx::RowNum,
+        first_col: xlsx::ColNum,
+        last_row: xlsx::RowNum,
+        last_col: xlsx::ColNum,
+    ) -> ChartRange {
         let range = (sheet, first_row, first_col, last_row, last_col).new_chart_range();
         ChartRange { inner: range }
     }

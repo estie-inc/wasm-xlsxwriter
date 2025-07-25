@@ -1,6 +1,6 @@
+use crate::wrapper::color::Color;
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::wasm_bindgen;
-use crate::wrapper::color::Color;
 
 /// The `ChartLine` struct represents a chart line/border.
 ///

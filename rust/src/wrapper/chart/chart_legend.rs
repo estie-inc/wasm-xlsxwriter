@@ -3,7 +3,9 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use super::{chart_font::ChartFont, chart_format::ChartFormat, chart_legend_position::ChartLegendPosition};
+use super::{
+    chart_font::ChartFont, chart_format::ChartFormat, chart_legend_position::ChartLegendPosition,
+};
 
 #[wasm_bindgen]
 pub struct ChartLegend {

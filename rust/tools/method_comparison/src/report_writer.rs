@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use crate::crate_info_extractor::{ExtractedItems, StructInfo};
+use crate_info_extractor::{ExtractedItems, StructInfo};
 
 #[derive(Debug, Clone)]
 pub struct StructComparison {
@@ -172,11 +172,11 @@ pub fn compare_methods(
         let rust_struct = rust_structs_map.get(&struct_name);
 
         let wasm_struct_methods: HashSet<String> = wasm_struct
-            .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
+            .map(|s| s.methods.iter().map(|m| m.name.clone()).collect())
             .unwrap_or_default();
 
         let rust_struct_methods: HashSet<String> = rust_struct
-            .map(|s| s.methods.iter().map(|m| m.method_name.clone()).collect())
+            .map(|s| s.methods.iter().map(|m| m.name.clone()).collect())
             .unwrap_or_default();
 
         let wasm_struct_functions: HashSet<String> = wasm_struct

@@ -29,6 +29,12 @@ pub struct Color {
     pub(crate) inner: xlsx::Color,
 }
 
+impl From<Color> for xlsx::Color {
+    fn from(color: Color) -> Self {
+        color.inner
+    }
+}
+
 impl Color {
     pub fn new(inner: xlsx::Color) -> Self {
         Color { inner }

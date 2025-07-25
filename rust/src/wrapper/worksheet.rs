@@ -174,7 +174,11 @@ impl Worksheet {
     }
 
     #[wasm_bindgen(js_name = "setHeaderImage", skip_jsdoc)]
-    pub fn set_header_image(&self, image: &Image, position: HeaderImagePosition) -> WasmResult<Worksheet> {
+    pub fn set_header_image(
+        &self,
+        image: &Image,
+        position: HeaderImagePosition,
+    ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = sheet.set_header_image(&image.lock(), position.into())?;
@@ -190,7 +194,11 @@ impl Worksheet {
     }
 
     #[wasm_bindgen(js_name = "setFooterImage", skip_jsdoc)]
-    pub fn set_footer_image(&self, image: &Image, position: HeaderImagePosition) -> WasmResult<Worksheet> {
+    pub fn set_footer_image(
+        &self,
+        image: &Image,
+        position: HeaderImagePosition,
+    ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = sheet.set_footer_image(&image.lock(), position.into())?;
@@ -760,7 +768,12 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index)?;
-        let _ = sheet.write_date_with_format(row, col, &date.inner.lock().unwrap().clone(), &format.lock())?;
+        let _ = sheet.write_date_with_format(
+            row,
+            col,
+            &date.inner.lock().unwrap().clone(),
+            &format.lock(),
+        )?;
         Ok(self.clone())
     }
 
@@ -1297,13 +1310,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.insert_chart_with_offset(
-            row,
-            col,
-            &chart.lock(),
-            x_offset,
-            y_offset,
-        )?;
+        let _ = sheet.insert_chart_with_offset(row, col, &chart.lock(), x_offset, y_offset)?;
         Ok(self.clone())
     }
 
@@ -1669,7 +1676,11 @@ impl Worksheet {
     }
 
     #[wasm_bindgen(js_name = "setRepeatRows", skip_jsdoc)]
-    pub fn set_repeat_rows(&self, first_row: xlsx::RowNum, last_row: xlsx::RowNum) -> WasmResult<Worksheet> {
+    pub fn set_repeat_rows(
+        &self,
+        first_row: xlsx::RowNum,
+        last_row: xlsx::RowNum,
+    ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = sheet.set_repeat_rows(first_row, last_row)?;
@@ -1677,7 +1688,11 @@ impl Worksheet {
     }
 
     #[wasm_bindgen(js_name = "setRepeatColumns", skip_jsdoc)]
-    pub fn set_repeat_columns(&self, first_col: xlsx::ColNum, last_col: xlsx::ColNum) -> WasmResult<Worksheet> {
+    pub fn set_repeat_columns(
+        &self,
+        first_col: xlsx::ColNum,
+        last_col: xlsx::ColNum,
+    ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = sheet.set_repeat_columns(first_col, last_col)?;
@@ -1702,7 +1717,7 @@ impl Worksheet {
     ///
     /// - `first_row`: The first row of the range. Zero indexed.
     /// - `last_row`: The last row of the range.
-     #[wasm_bindgen(js_name = "groupRows", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "groupRows", skip_jsdoc)]
     pub fn group_rows(
         &mut self,
         first_row: xlsx::RowNum,

@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
+use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
-use crate::wrapper::WasmResult;
 
 // The `ExcelDateTime` struct is used to represent an Excel date and/or time.
 #[derive(Clone)]
@@ -66,8 +66,19 @@ impl ExcelDateTime {
 
     // Adds to a `ExcelDateTime` date instance with hours, minutes, seconds and milliseconds.
     #[wasm_bindgen(js_name = "andHMSMilli")]
-    pub fn and_hms_milli(&self, hour: u16, min: u8, sec: u8, milli: u16) -> WasmResult<ExcelDateTime> {
-        let dt = self.inner.lock().unwrap().clone().and_hms_milli(hour, min, sec, milli)?;
+    pub fn and_hms_milli(
+        &self,
+        hour: u16,
+        min: u8,
+        sec: u8,
+        milli: u16,
+    ) -> WasmResult<ExcelDateTime> {
+        let dt = self
+            .inner
+            .lock()
+            .unwrap()
+            .clone()
+            .and_hms_milli(hour, min, sec, milli)?;
         Ok(ExcelDateTime {
             inner: Arc::new(Mutex::new(dt)),
         })

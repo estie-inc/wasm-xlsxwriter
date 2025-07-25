@@ -3,7 +3,10 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use super::{chart_data_label::ChartDataLabel, chart_format::ChartFormat, chart_marker::ChartMarker, chart_point::ChartPoint, chart_range::ChartRange};
+use super::{
+    chart_data_label::ChartDataLabel, chart_format::ChartFormat, chart_marker::ChartMarker,
+    chart_point::ChartPoint, chart_range::ChartRange,
+};
 
 #[wasm_bindgen]
 pub struct ChartSeries {

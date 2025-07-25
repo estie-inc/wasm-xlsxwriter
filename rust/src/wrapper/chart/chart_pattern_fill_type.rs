@@ -4,54 +4,54 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ChartPatternFillType {
-  Dotted5Percent,
-  Dotted10Percent,
-  Dotted20Percent,
-  Dotted25Percent,
-  Dotted30Percent,
-  Dotted40Percent,
-  Dotted50Percent,
-  Dotted60Percent,
-  Dotted70Percent,
-  Dotted75Percent,
-  Dotted80Percent,
-  Dotted90Percent,
-  DiagonalStripesLightDownwards,
-  DiagonalStripesLightUpwards,
-  DiagonalStripesDarkDownwards,
-  DiagonalStripesDarkUpwards,
-  DiagonalStripesWideDownwards,
-  DiagonalStripesWideUpwards,
-  VerticalStripesLight,
-  HorizontalStripesLight,
-  VerticalStripesNarrow,
-  HorizontalStripesNarrow,
-  VerticalStripesDark,
-  HorizontalStripesDark,
-  StripesBackslashes,
-  StripesForwardSlashes,
-  HorizontalStripesAlternating,
-  VerticalStripesAlternating,
-  SmallConfetti,
-  LargeConfetti,
-  Zigzag,
-  Wave,
-  DiagonalBrick,
-  HorizontalBrick,
-  Weave,
-  Plaid,
-  Divot,
-  DottedGrid,
-  DottedDiamond,
-  Shingle,
-  Trellis,
-  Sphere,
-  SmallGrid,
-  LargeGrid,
-  SmallCheckerboard,
-  LargeCheckerboard,
-  OutlinedDiamondGrid,
-  SolidDiamondGrid,
+    Dotted5Percent,
+    Dotted10Percent,
+    Dotted20Percent,
+    Dotted25Percent,
+    Dotted30Percent,
+    Dotted40Percent,
+    Dotted50Percent,
+    Dotted60Percent,
+    Dotted70Percent,
+    Dotted75Percent,
+    Dotted80Percent,
+    Dotted90Percent,
+    DiagonalStripesLightDownwards,
+    DiagonalStripesLightUpwards,
+    DiagonalStripesDarkDownwards,
+    DiagonalStripesDarkUpwards,
+    DiagonalStripesWideDownwards,
+    DiagonalStripesWideUpwards,
+    VerticalStripesLight,
+    HorizontalStripesLight,
+    VerticalStripesNarrow,
+    HorizontalStripesNarrow,
+    VerticalStripesDark,
+    HorizontalStripesDark,
+    StripesBackslashes,
+    StripesForwardSlashes,
+    HorizontalStripesAlternating,
+    VerticalStripesAlternating,
+    SmallConfetti,
+    LargeConfetti,
+    Zigzag,
+    Wave,
+    DiagonalBrick,
+    HorizontalBrick,
+    Weave,
+    Plaid,
+    Divot,
+    DottedGrid,
+    DottedDiamond,
+    Shingle,
+    Trellis,
+    Sphere,
+    SmallGrid,
+    LargeGrid,
+    SmallCheckerboard,
+    LargeCheckerboard,
+    OutlinedDiamondGrid,
+    SolidDiamondGrid,
 }
 
 impl From<ChartPatternFillType> for xlsx::ChartPatternFillType {
@@ -69,22 +69,54 @@ impl From<ChartPatternFillType> for xlsx::ChartPatternFillType {
             ChartPatternFillType::Dotted75Percent => xlsx::ChartPatternFillType::Dotted75Percent,
             ChartPatternFillType::Dotted80Percent => xlsx::ChartPatternFillType::Dotted80Percent,
             ChartPatternFillType::Dotted90Percent => xlsx::ChartPatternFillType::Dotted90Percent,
-            ChartPatternFillType::DiagonalStripesLightDownwards => xlsx::ChartPatternFillType::DiagonalStripesLightDownwards,
-            ChartPatternFillType::DiagonalStripesLightUpwards => xlsx::ChartPatternFillType::DiagonalStripesLightUpwards,
-            ChartPatternFillType::DiagonalStripesDarkDownwards => xlsx::ChartPatternFillType::DiagonalStripesDarkDownwards,
-            ChartPatternFillType::DiagonalStripesDarkUpwards => xlsx::ChartPatternFillType::DiagonalStripesDarkUpwards,
-            ChartPatternFillType::DiagonalStripesWideDownwards => xlsx::ChartPatternFillType::DiagonalStripesWideDownwards,
-            ChartPatternFillType::DiagonalStripesWideUpwards => xlsx::ChartPatternFillType::DiagonalStripesWideUpwards,
-            ChartPatternFillType::VerticalStripesLight => xlsx::ChartPatternFillType::VerticalStripesLight,
-            ChartPatternFillType::HorizontalStripesLight => xlsx::ChartPatternFillType::HorizontalStripesLight,
-            ChartPatternFillType::VerticalStripesNarrow => xlsx::ChartPatternFillType::VerticalStripesNarrow,
-            ChartPatternFillType::HorizontalStripesNarrow => xlsx::ChartPatternFillType::HorizontalStripesNarrow,
-            ChartPatternFillType::VerticalStripesDark => xlsx::ChartPatternFillType::VerticalStripesDark,
-            ChartPatternFillType::HorizontalStripesDark => xlsx::ChartPatternFillType::HorizontalStripesDark,
-            ChartPatternFillType::StripesBackslashes => xlsx::ChartPatternFillType::StripesBackslashes,
-            ChartPatternFillType::StripesForwardSlashes => xlsx::ChartPatternFillType::StripesForwardSlashes,
-            ChartPatternFillType::HorizontalStripesAlternating => xlsx::ChartPatternFillType::HorizontalStripesAlternating,
-            ChartPatternFillType::VerticalStripesAlternating => xlsx::ChartPatternFillType::VerticalStripesAlternating,
+            ChartPatternFillType::DiagonalStripesLightDownwards => {
+                xlsx::ChartPatternFillType::DiagonalStripesLightDownwards
+            }
+            ChartPatternFillType::DiagonalStripesLightUpwards => {
+                xlsx::ChartPatternFillType::DiagonalStripesLightUpwards
+            }
+            ChartPatternFillType::DiagonalStripesDarkDownwards => {
+                xlsx::ChartPatternFillType::DiagonalStripesDarkDownwards
+            }
+            ChartPatternFillType::DiagonalStripesDarkUpwards => {
+                xlsx::ChartPatternFillType::DiagonalStripesDarkUpwards
+            }
+            ChartPatternFillType::DiagonalStripesWideDownwards => {
+                xlsx::ChartPatternFillType::DiagonalStripesWideDownwards
+            }
+            ChartPatternFillType::DiagonalStripesWideUpwards => {
+                xlsx::ChartPatternFillType::DiagonalStripesWideUpwards
+            }
+            ChartPatternFillType::VerticalStripesLight => {
+                xlsx::ChartPatternFillType::VerticalStripesLight
+            }
+            ChartPatternFillType::HorizontalStripesLight => {
+                xlsx::ChartPatternFillType::HorizontalStripesLight
+            }
+            ChartPatternFillType::VerticalStripesNarrow => {
+                xlsx::ChartPatternFillType::VerticalStripesNarrow
+            }
+            ChartPatternFillType::HorizontalStripesNarrow => {
+                xlsx::ChartPatternFillType::HorizontalStripesNarrow
+            }
+            ChartPatternFillType::VerticalStripesDark => {
+                xlsx::ChartPatternFillType::VerticalStripesDark
+            }
+            ChartPatternFillType::HorizontalStripesDark => {
+                xlsx::ChartPatternFillType::HorizontalStripesDark
+            }
+            ChartPatternFillType::StripesBackslashes => {
+                xlsx::ChartPatternFillType::StripesBackslashes
+            }
+            ChartPatternFillType::StripesForwardSlashes => {
+                xlsx::ChartPatternFillType::StripesForwardSlashes
+            }
+            ChartPatternFillType::HorizontalStripesAlternating => {
+                xlsx::ChartPatternFillType::HorizontalStripesAlternating
+            }
+            ChartPatternFillType::VerticalStripesAlternating => {
+                xlsx::ChartPatternFillType::VerticalStripesAlternating
+            }
             ChartPatternFillType::SmallConfetti => xlsx::ChartPatternFillType::SmallConfetti,
             ChartPatternFillType::LargeConfetti => xlsx::ChartPatternFillType::LargeConfetti,
             ChartPatternFillType::Zigzag => xlsx::ChartPatternFillType::Zigzag,
@@ -101,10 +133,16 @@ impl From<ChartPatternFillType> for xlsx::ChartPatternFillType {
             ChartPatternFillType::Sphere => xlsx::ChartPatternFillType::Sphere,
             ChartPatternFillType::SmallGrid => xlsx::ChartPatternFillType::SmallGrid,
             ChartPatternFillType::LargeGrid => xlsx::ChartPatternFillType::LargeGrid,
-            ChartPatternFillType::SmallCheckerboard => xlsx::ChartPatternFillType::SmallCheckerboard,
-            ChartPatternFillType::LargeCheckerboard => xlsx::ChartPatternFillType::LargeCheckerboard,
-            ChartPatternFillType::OutlinedDiamondGrid => xlsx::ChartPatternFillType::OutlinedDiamondGrid,
-            ChartPatternFillType::SolidDiamondGrid => xlsx::ChartPatternFillType::SolidDiamondGrid
+            ChartPatternFillType::SmallCheckerboard => {
+                xlsx::ChartPatternFillType::SmallCheckerboard
+            }
+            ChartPatternFillType::LargeCheckerboard => {
+                xlsx::ChartPatternFillType::LargeCheckerboard
+            }
+            ChartPatternFillType::OutlinedDiamondGrid => {
+                xlsx::ChartPatternFillType::OutlinedDiamondGrid
+            }
+            ChartPatternFillType::SolidDiamondGrid => xlsx::ChartPatternFillType::SolidDiamondGrid,
         }
     }
 }

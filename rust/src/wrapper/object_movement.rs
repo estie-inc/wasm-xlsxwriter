@@ -26,9 +26,15 @@ impl From<ObjectMovement> for xlsx::ObjectMovement {
     fn from(movement: ObjectMovement) -> xlsx::ObjectMovement {
         match movement {
             ObjectMovement::MoveAndSizeWithCells => xlsx::ObjectMovement::MoveAndSizeWithCells,
-            ObjectMovement::MoveButDontSizeWithCells => xlsx::ObjectMovement::MoveButDontSizeWithCells,
-            ObjectMovement::DontMoveOrSizeWithCells => xlsx::ObjectMovement::DontMoveOrSizeWithCells,
-            ObjectMovement::MoveAndSizeWithCellsAfter => xlsx::ObjectMovement::MoveAndSizeWithCellsAfter,
+            ObjectMovement::MoveButDontSizeWithCells => {
+                xlsx::ObjectMovement::MoveButDontSizeWithCells
+            }
+            ObjectMovement::DontMoveOrSizeWithCells => {
+                xlsx::ObjectMovement::DontMoveOrSizeWithCells
+            }
+            ObjectMovement::MoveAndSizeWithCellsAfter => {
+                xlsx::ObjectMovement::MoveAndSizeWithCellsAfter
+            }
         }
     }
-} 
+}

@@ -5,7 +5,5 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-rustdoc-types = "0.53.0"
-serde_json = "1.0.140"
-rustdoc-json = "0.9.6"
 clap = { version = "4.4", features = ["derive"] }
+crate_info_extractor = { path = "../crate_info_extractor" }

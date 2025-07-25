@@ -1,10 +1,9 @@
-mod crate_info_extractor;
 mod repo_downloader;
 mod report_writer;
 
 use anyhow::Result;
 use clap::Parser;
-use crate::crate_info_extractor::{get_crate_info, extract_crate_items};
+use crate_info_extractor::{get_crate_info, extract_crate_items};
 use crate::repo_downloader::download_repository;
 use crate::report_writer::write_comparison_report;
 
