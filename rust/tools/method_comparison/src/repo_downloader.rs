@@ -24,8 +24,7 @@ pub fn download_repository(repo_url: &str) -> Result<PathBuf> {
 
 fn ensure_repos_directory() -> Result<PathBuf> {
     let repos_dir = Path::new("./target/repos");
-    fs::create_dir_all(repos_dir)
-        .context("Failed to create repositories directory")?;
+    fs::create_dir_all(repos_dir).context("Failed to create repositories directory")?;
     Ok(repos_dir.to_path_buf())
 }
 

@@ -3,13 +3,13 @@
 ## Summary
   - ✅ Fully Migrated Structs: 18
   - ⚠️ Partially Migrated Structs: 10
-  - ❌ Not Migrated Structs: 37
+  - ❌ Not Migrated Structs: 34
   - ✅ Migrated Enums: 19
   - ❌ Not Migrated Enums: 32
-  - ✅ Total Migrated Methods: 261
-  - ❌ Total Not Migrated Methods: 368
+  - ✅ Total Migrated Methods: 262
+  - ❌ Total Not Migrated Methods: 365
   - ✅ Total Migrated Functions: 39
-  - ❌ Total Not Migrated Functions: 41
+  - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
   ### ✅ ChartDataLabel
   ### ✅ ChartFont
@@ -195,7 +195,7 @@
       - worksheets_mut
   ### ⚠️ Worksheet
     Summary
-      - Migrated methods: 77
+      - Migrated methods: 78
       - Not migrated methods: 64
       - Migrated functions: 0
       - Not migrated functions: 2
@@ -584,16 +584,6 @@
       - show_input_message
     ❌ Functions Not Yet Migrated
       - new
-  ### ❌ Drawing
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 1
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - assemble_xml_file
-    ❌ Functions Not Yet Migrated
-      - new
   ### ❌ FilterCondition
     Summary
       - Migrated methods: 0
@@ -616,16 +606,6 @@
     ❌ Functions Not Yet Migrated
       - new_number_and_criteria
       - new_string_and_criteria
-  ### ❌ Metadata
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 1
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - assemble_xml_file
-    ❌ Functions Not Yet Migrated
-      - new
   ### ❌ ProtectionOptions
     Summary
       - Migrated methods: 0
@@ -791,16 +771,6 @@
       - show_low_point
       - show_markers
       - show_negative_points
-    ❌ Functions Not Yet Migrated
-      - new
-  ### ❌ Vml
-    Summary
-      - Migrated methods: 0
-      - Not migrated methods: 1
-      - Migrated functions: 0
-      - Not migrated functions: 1
-    ❌ Methods Not Yet Migrated
-      - assemble_xml_file
     ❌ Functions Not Yet Migrated
       - new
 
