@@ -1,0 +1,13 @@
+[package]
+name = "wrapper_generator"
+version = "0.1.0"
+edition = "2021"
+description = "Tool to automatically generate wasm_xlsxwriter wrapper methods from rust_xlsxwriter"
+
+[dependencies]
+crate-inspector = { git = "https://github.com/rajyan/crate-inspector", branch = "for-wasm-xslxwriter" }
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+ruast = { git = "https://github.com/rajyan/ruast.git" , branch = "fix/token-display-extra-space" }
+rustdoc-types = "0.53.0"
+regex = "1.10.2"
