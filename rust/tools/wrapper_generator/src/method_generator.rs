@@ -1,7 +1,6 @@
 use crate::utils::{new_line, process_doc_comment, to_camel_case};
 use crate_inspector::{CrateItem, FunctionItem, StructItem};
 use ruast::*;
-
 /// Generate common methods for the struct
 /// new, lock, deep_clone
 pub(crate) fn generate_common_methods(struct_info: &StructItem) -> Vec<Item<AssocItemKind>> {
@@ -156,9 +155,7 @@ pub(crate) fn generate_common_methods(struct_info: &StructItem) -> Vec<Item<Asso
         AttrArgs::Delimited(DelimArgs::parenthesis(
             vec![
                 Token::Ident("js_name".to_string()),
-                Token::DocComment(" ".to_string()),
                 Token::Eq,
-                Token::DocComment(" ".to_string()),
                 Token::Lit(Lit::str("clone")),
             ]
             .into_tokens(),
@@ -252,7 +249,7 @@ fn create_wrapper_method(function: &FunctionItem, struct_info: &StructItem) -> I
             if i > 0 {
                 tokens.push(Token::Comma);
             }
-            tokens.push(Token::Ident(arg.to_string()));
+            tokens.push(Token::Ident(arg.to_string()).into_joint());
         }
         tokens.into_tokens()
     };
@@ -321,12 +318,9 @@ fn create_wrapper_method(function: &FunctionItem, struct_info: &StructItem) -> I
         AttrArgs::Delimited(DelimArgs::parenthesis(
             vec![
                 Token::Ident("js_name".to_string()),
-                Token::DocComment(" ".to_string()),
                 Token::Eq,
-                Token::DocComment(" ".to_string()),
-                Token::Lit(Lit::str(&js_name)),
+                Token::Lit(Lit::str(&js_name)).into_joint(),
                 Token::Comma,
-                Token::DocComment(" ".to_string()),
                 Token::Ident("skip_jsdoc".to_string()),
             ]
             .into_tokens(),
