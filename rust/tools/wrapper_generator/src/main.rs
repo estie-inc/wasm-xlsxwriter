@@ -118,9 +118,8 @@ fn generate_struct_wrapper(struct_info: &StructItem) -> Item<ItemKind> {
         "derive",
         AttrArgs::Delimited(DelimArgs::parenthesis(
             vec![
-                Token::Ident("Debug".to_string()),
+                Token::Ident("Debug".to_string()).into_joint(),
                 Token::Comma,
-                Token::DocComment(" ".to_string()),
                 Token::Ident("Clone".to_string()),
             ]
             .into_tokens(),
