@@ -1,10 +1,11 @@
 use crate_inspector::{CrateItem, StructItem};
-use crate::method_generator::{generate_common_methods, generate_wrapper_methods};
+use crate::method_wrapper::{generate_common_methods, generate_wrapper_methods};
 use ruast::*;
 
 use crate::utils::{new_line, process_doc_comment};
 
-pub fn generate_struct_wrapper_output(krate: &mut Crate, struct_info: &StructItem) {
+pub fn generate_struct_wrapper_output(struct_info: &StructItem) -> Crate {
+    let mut krate = Crate::new();
     let uses = crate::common::generate_use_statements();
     let struct_ = generate_struct_wrapper(&struct_info);
 
@@ -32,6 +33,8 @@ pub fn generate_struct_wrapper_output(krate: &mut Crate, struct_info: &StructIte
         krate.add_item(from_impl);
     });
     krate.add_item(impl_block);
+    
+    return krate
 }
 
 fn generate_struct_wrapper(struct_info: &StructItem) -> Item<ItemKind> {

@@ -346,7 +346,8 @@ fn determine_param_type(ty: &rustdoc_types::Type, generics: &rustdoc_types::Gene
                 }
             }
         }
-        panic!("Unsupported type for Into: {:?}", path);
+        eprintln!("Warning: Unsupported type for Into: {:?}", path);
+        return Type::Path(Path::single("String")); // Fallback to String type
     };
     match ty {
         rustdoc_types::Type::ResolvedPath(path) => Type::Path(Path::single(&path.path)),
@@ -380,6 +381,9 @@ fn determine_param_type(ty: &rustdoc_types::Type, generics: &rustdoc_types::Gene
             };
             extract_into_inner(param_bounds)
         }
-        _ => panic!("Unsupported type: {:?}", ty),
+        _ => {
+            eprintln!("Warning: Unsupported type: {:?}", ty);
+            Type::Path(Path::single("String")) // Fallback to String type
+        }
     }
 }

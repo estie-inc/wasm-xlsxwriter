@@ -3,7 +3,8 @@ use ruast::*;
 
 use crate::utils::{new_line, process_doc_comment};
 
-pub fn generate_enum_wrapper_output(krate: &mut Crate, enum_info: &EnumItem) {
+pub fn generate_enum_wrapper_output( enum_info: &EnumItem) -> Crate {
+    let mut krate = Crate::new();
     let uses = crate::common::generate_enum_use_statements();
     let enum_ = generate_enum_wrapper(&enum_info);
     let from_impl = generate_enum_impl_from(enum_info);
@@ -14,6 +15,8 @@ pub fn generate_enum_wrapper_output(krate: &mut Crate, enum_info: &EnumItem) {
     });
     krate.add_item(enum_);
     krate.add_item(from_impl);
+    
+    krate
 }
 
 fn generate_enum_wrapper(enum_info: &EnumItem) -> Item<ItemKind> {
