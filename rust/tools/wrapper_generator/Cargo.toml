@@ -1,0 +1,13 @@
+[package]
+name = "wrapper_generator"
+version = "0.1.0"
+edition = "2021"
+description = "Tool to automatically generate wasm_xlsxwriter wrapper methods from rust_xlsxwriter"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+crate-inspector = "0.3.0"
+ruast = "0.0.20"
+rustdoc-types = "0.54.0"
+regex = "1.10.2"
