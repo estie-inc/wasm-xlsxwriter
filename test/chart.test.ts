@@ -12,7 +12,6 @@ import {
   ChartMarkerType,
   ChartSolidFill,
   ChartFormat,
-  Color,
   ChartLine,
   ChartLayout,
   ChartGradientFill,
@@ -56,8 +55,8 @@ describe("xlsx-wasm test", () => {
     const chartDataLabel1 = new ChartDataLabel().setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left);
 
     const chartSeries1 = new ChartSeries();
-    const chartLine1 = new ChartLine().setColor(Color.green());
-    const chartSolidFill1 = new ChartSolidFill().setColor(Color.green());
+    const chartLine1 = new ChartLine().setColor("Green");
+    const chartSolidFill1 = new ChartSolidFill().setColor("Green");
     const chartFormat1 = new ChartFormat().setLine(chartLine1).setSolidFill(chartSolidFill1);
     const chartMarker1 = new ChartMarker().setType(ChartMarkerType.Circle).setSize(10).setFormat(chartFormat1);
     const categoriesRange1 = ChartRange.newFromRange("Sheet1", 1, 0, 6, 0);
@@ -82,9 +81,9 @@ describe("xlsx-wasm test", () => {
       .setName("Score 2")
       .setCategories(categoriesRange2)
       .setValues(valuesRange2)
-      .setFormat(chartFormat2.setLine(chartLine2.setColor(Color.purple())).setSolidFill(chartSolidFill2.setColor(Color.purple())))
+      .setFormat(chartFormat2.setLine(chartLine2.setColor("Purple")).setSolidFill(chartSolidFill2.setColor("Purple")))
       .setDataLabel(chartDataLabel2.setFont(chartFont).showValue().setPosition(ChartDataLabelPosition.Left))
-      .setMarker(chartMarker2.setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2.setLine(chartLine2.setColor(Color.purple())).setSolidFill(chartSolidFill2.setColor(Color.purple()))));
+      .setMarker(chartMarker2.setType(ChartMarkerType.Diamond).setSize(10).setFormat(chartFormat2.setLine(chartLine2.setColor("Purple")).setSolidFill(chartSolidFill2.setColor("Purple"))));
     chart
       .pushSeries(chartSeries1)
       .pushSeries(chartSeries2);
@@ -123,7 +122,7 @@ describe("xlsx-wasm test", () => {
     const categoriesRange = ChartRange.newFromRange("Sheet1", 1, 0, 6, 0);
 
     const chartSeries1 = new ChartSeries();
-    const chartGradientFill1 = new ChartGradientFill().setType(ChartGradientFillType.Linear).setAngle(45).setGradientStops([new ChartGradientStop(Color.green(), 0), new ChartGradientStop(Color.yellow(), 100)]);
+    const chartGradientFill1 = new ChartGradientFill().setType(ChartGradientFillType.Linear).setAngle(45).setGradientStops([new ChartGradientStop("Green", 0), new ChartGradientStop("Yellow", 100)]);
     const chartFormat1 = new ChartFormat().setGradientFill(chartGradientFill1);
     const valuesRange1 = ChartRange.newFromRange("Sheet1", 1, 1, 6, 1);
     chartSeries1
@@ -133,7 +132,7 @@ describe("xlsx-wasm test", () => {
       .setFormat(chartFormat1);
 
     const chartSeries2 = new ChartSeries();
-    const chartPatternFill = new ChartPatternFill().setPattern(ChartPatternFillType.DiagonalBrick).setBackgroundColor(Color.purple());
+    const chartPatternFill = new ChartPatternFill().setPattern(ChartPatternFillType.DiagonalBrick).setBackgroundColor("Purple");
     const chartFormat2 = new ChartFormat().setPatternFill(chartPatternFill);
     const valuesRange2 = ChartRange.newFromRange("Sheet1", 1, 2, 6, 2);
     chartSeries2

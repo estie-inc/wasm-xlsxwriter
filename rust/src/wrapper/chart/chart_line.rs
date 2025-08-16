@@ -37,8 +37,8 @@ impl ChartLine {
     }
 
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(&mut self, color: &Color) -> ChartLine {
-        self.inner.set_color(color.inner);
+    pub fn set_color(&mut self, color: Color) -> ChartLine {
+        self.inner.set_color(color);
         self.clone()
     }
 

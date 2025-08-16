@@ -68,7 +68,7 @@ impl Note {
     }
     #[wasm_bindgen(js_name = "setBackgroundColor", skip_jsdoc)]
     pub fn set_background_color(&self, color: Color) -> Note {
-        impl_method!(self.set_background_color(color.inner));
+        impl_method!(self.set_background_color(color));
     }
     #[wasm_bindgen(js_name = "setFontName", skip_jsdoc)]
     pub fn set_font_name(&self, font_name: &str) -> Note {

@@ -31,8 +31,8 @@ impl ChartSolidFill {
     /// @param {Color} color - The color property.
     /// @return {ChartSolidFill} - The ChartSolidFill instance.
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(&mut self, color: &Color) -> ChartSolidFill {
-        self.inner.set_color(color.inner);
+    pub fn set_color(&mut self, color: Color) -> ChartSolidFill {
+        self.inner.set_color(color);
         self.clone()
     }
 
