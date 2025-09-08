@@ -9,8 +9,8 @@ license = "MIT"
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = "0.4.41"
+chrono = "0.4.42"
 console_error_panic_hook = "0.1.7"
-js-sys = "0.3.77"
+js-sys = "0.3.78"
 rust_xlsxwriter = { version = "0.90.0", features = ["wasm", "chrono"] }
 wasm-bindgen = "0.2.94"
