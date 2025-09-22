@@ -7,7 +7,7 @@
   - ✅ Migrated Enums: 19
   - ❌ Not Migrated Enums: 32
   - ✅ Total Migrated Methods: 262
-  - ❌ Total Not Migrated Methods: 365
+  - ❌ Total Not Migrated Methods: 367
   - ✅ Total Migrated Functions: 39
   - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
@@ -62,7 +62,7 @@
   ### ⚠️ ChartAxis
     Summary
       - Migrated methods: 6
-      - Not migrated methods: 28
+      - Not migrated methods: 29
       - Migrated functions: 0
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
@@ -90,6 +90,7 @@
       - set_minor_tick_type
       - set_minor_unit
       - set_minor_unit_date_type
+      - set_name_format
       - set_position_between_ticks
       - set_reverse
       - set_text_axis
@@ -196,7 +197,7 @@
   ### ⚠️ Worksheet
     Summary
       - Migrated methods: 78
-      - Not migrated methods: 64
+      - Not migrated methods: 65
       - Migrated functions: 0
       - Not migrated functions: 2
     ❌ Methods Not Yet Migrated
@@ -260,6 +261,7 @@
       - set_view_page_break_preview
       - set_view_page_layout
       - set_zoom
+      - set_zoom_to_fit
       - show_all_notes
       - unprotect_range
       - unprotect_range_with_options
