@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-crate-inspector = { git = "https://github.com/rajyan/crate-inspector", branch = "for-wasm-xslxwriter" }
+crate-inspector = "0.4.0"
 clap = { version = "4.4", features = ["derive"] }

@@ -149,8 +149,9 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "crate-inspector"
-version = "0.2.0"
-source = "git+https://github.com/rajyan/crate-inspector?branch=for-wasm-xslxwriter#7563b46b26916b476ca130625fd0137707265952"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9d1d1613f3b22192e62047cbade939f4d16ec3c68fcfa8ed2c663b97230b35c"
 dependencies = [
  "rustdoc-json",
  "rustdoc-types",
@@ -264,9 +265,9 @@ dependencies = [
 
 [[package]]
 name = "rustdoc-types"
-version = "0.53.0"
+version = "0.55.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53175c56be456e96171b9c3efcd8e5216fbb7b40cc6355a1953090556621205b"
+checksum = "61f25a84ea78419de928cd82c3b2f76709a696a64a880486c567b4c4da8f2dda"
 dependencies = [
  "serde",
  "serde_derive",
