@@ -117,7 +117,7 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
   headerStyle
     .setAlign(FormatAlign.Top)
     .setTextWrap()
-    .setBackgroundColor(Color.red());
+    .setBackgroundColor("Red");
 
   // Write sheet header
   worksheet.writeRowWithFormat(0, 0, header, headerStyle);

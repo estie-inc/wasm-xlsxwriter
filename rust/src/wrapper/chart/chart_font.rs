@@ -52,8 +52,8 @@ impl ChartFont {
     /// @param {Color} color - The font color property.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(&mut self, color: &Color) -> ChartFont {
-        self.inner.set_color(color.inner);
+    pub fn set_color(&mut self, color: Color) -> ChartFont {
+        self.inner.set_color(color);
         self.clone()
     }
 

@@ -25,14 +25,14 @@ impl ChartPatternFill {
     }
 
     #[wasm_bindgen(js_name = "setBackgroundColor")]
-    pub fn set_background_color(&mut self, color: &Color) -> ChartPatternFill {
-        self.inner.set_background_color(color.inner);
+    pub fn set_background_color(&mut self, color: Color) -> ChartPatternFill {
+        self.inner.set_background_color(color);
         self.clone()
     }
 
     #[wasm_bindgen(js_name = "setForegroundColor")]
-    pub fn set_foreground_color(&mut self, color: &Color) -> ChartPatternFill {
-        self.inner.set_foreground_color(color.inner);
+    pub fn set_foreground_color(&mut self, color: Color) -> ChartPatternFill {
+        self.inner.set_foreground_color(color);
         self.clone()
     }
 }

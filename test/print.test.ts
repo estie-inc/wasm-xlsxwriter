@@ -1,4 +1,4 @@
-import { Color, Format, HeaderImagePosition, Image, Workbook } from "../web";
+import { Format, HeaderImagePosition, Image, Workbook } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
@@ -16,8 +16,7 @@ describe("xlsx-wasm test", () => {
     // Act
     const worksheet = workbook.addWorksheet();
 
-    const purple = Color.purple();
-    const format = new Format().setFontColor(purple);
+    const format = new Format().setFontColor("Purple");
     worksheet.writeWithFormat(0, 0, "Hello, World!", format);
 
     worksheet.setLandscape();
