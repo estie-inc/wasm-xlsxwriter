@@ -7,7 +7,7 @@
   - ✅ Migrated Enums: 19
   - ❌ Not Migrated Enums: 32
   - ✅ Total Migrated Methods: 262
-  - ❌ Total Not Migrated Methods: 367
+  - ❌ Total Not Migrated Methods: 369
   - ✅ Total Migrated Functions: 39
   - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
@@ -170,10 +170,12 @@
   ### ⚠️ Table
     Summary
       - Migrated methods: 8
-      - Not migrated methods: 2
+      - Not migrated methods: 4
       - Migrated functions: 1
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
+      - set_alt_text
+      - set_alt_text_title
       - set_autofilter
       - set_last_column
   ### ⚠️ Workbook
