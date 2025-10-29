@@ -27,6 +27,26 @@ describe("xlsx-wasm test", () => {
 });
 
 describe("xlsx-wasm test", () => {
+  test("insert image centered", async () => {
+    // Arrange
+    const workbook = new Workbook();
+    const imageBuf = loadFile("./fixtures/rust.png");
+    const image = new Image(imageBuf);
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.setColumnWidthPixels(0, 200);
+    worksheet.setRowHeight(0, 100);
+    worksheet.insertImageFitToCellCentered(0, 0, image);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/insert_image_fit_centered.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+});
+
+describe("xlsx-wasm test", () => {
   test("embed image", async () => {
     // Arrange
     const workbook = new Workbook();
