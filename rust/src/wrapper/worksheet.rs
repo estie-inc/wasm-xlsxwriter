@@ -1255,6 +1255,19 @@ impl Worksheet {
         Ok(self.clone())
     }
 
+    #[wasm_bindgen(js_name = "insertImageFitToCellCentered")]
+    pub fn insert_image_fit_to_cell_centered(
+        &self,
+        row: xlsx::RowNum,
+        col: xlsx::ColNum,
+        image: &Image,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.insert_image_fit_to_cell_centered(row, col, &image.lock())?;
+        Ok(self.clone())
+    }
+
     /// Add an chart to a worksheet.
     ///
     /// Add a chart to a worksheet at a cell location. The chart should be
