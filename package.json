@@ -21,13 +21,13 @@
         "test": "vitest"
     },
     "devDependencies": {
-        "@tsconfig/strictest": "2.0.6",
-        "@types/node": "24.9.1",
+        "@tsconfig/strictest": "2.0.7",
+        "@types/node": "24.10.0",
         "@types/unzipper": "0.10.11",
-        "jsdom": "27.0.1",
+        "jsdom": "27.1.0",
         "typescript": "5.9.3",
         "unzipper": "0.12.3",
-        "vitest": "4.0.4",
+        "vitest": "4.0.6",
         "wasm-pack": "0.13.1"
     }
 }
