@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::XlsxError,
-    wrapper::{doc_properties::DocProperties, worksheet::Worksheet},
+    wrapper::{doc_properties::DocProperties, format::Format, worksheet::Worksheet},
 };
 
 use super::WasmResult;
@@ -283,5 +283,39 @@ impl Workbook {
     pub fn set_properties(&self, properties: &DocProperties) {
         let mut workbook = self.inner.lock().unwrap();
         workbook.set_properties(&properties.lock());
+    }
+
+    /// Set the default cell format for the workbook.
+    ///
+    /// The `setDefaultFormat()` method is used to change the default cell format in
+    /// the workbook. The default font in `rust_xlsxwriter` is generally 'Calibri 11'
+    /// and you can change it to a different font such as 'Aptos Narrow 11' or 'Arial 10'.
+    ///
+    /// **Note**, this method must be called before any worksheet is added to the workbook.
+    /// Since changing the default format will affect row and column dimensions, you must
+    /// also specify those dimension values.
+    ///
+    /// The supported column pixel widths are: 56, 64, 72, 80, 96, 104, 120.
+    ///
+    /// @param {Format} format - A reference to a {@link Format} object.
+    /// @param {number} rowHeight - The default row height in pixels.
+    /// @param {number} colWidth - The default column width in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - [`XlsxError::DefaultFormatError`] - Error when the format is set after
+    ///   worksheets have been added or when an unsupported column width is specified.
+    ///
+    /// TODO: example omitted
+    #[wasm_bindgen(js_name = "setDefaultFormat", skip_jsdoc)]
+    pub fn set_default_format(
+        &mut self,
+        format: &Format,
+        row_height: u16,
+        col_width: u16,
+    ) -> WasmResult<()> {
+        let mut workbook = self.inner.lock().unwrap();
+        workbook.set_default_format(&format.lock().clone(), row_height, col_width)?;
+        Ok(())
     }
 }
