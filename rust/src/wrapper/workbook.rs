@@ -311,8 +311,8 @@ impl Workbook {
     pub fn set_default_format(
         &mut self,
         format: &Format,
-        row_height: u16,
-        col_width: u16,
+        row_height: u32,
+        col_width: u32,
     ) -> WasmResult<()> {
         let mut workbook = self.inner.lock().unwrap();
         workbook.set_default_format(&format.lock().clone(), row_height, col_width)?;

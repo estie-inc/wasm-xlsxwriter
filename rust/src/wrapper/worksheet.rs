@@ -270,7 +270,7 @@ impl Worksheet {
     ///
     /// TODO: example omitted
     #[wasm_bindgen(js_name = "setColumnWidthPixels", skip_jsdoc)]
-    pub fn set_column_width_pixels(&self, col: xlsx::ColNum, width: u16) -> WasmResult<Worksheet> {
+    pub fn set_column_width_pixels(&self, col: xlsx::ColNum, width: u32) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
         let _ = sheet.set_column_width_pixels(col, width)?;
@@ -1517,7 +1517,7 @@ impl Worksheet {
     pub fn set_row_height_pixels(
         &mut self,
         row: xlsx::RowNum,
-        height: u16,
+        height: u32,
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
