@@ -522,11 +522,11 @@ impl Format {
     /// This function is implemented for completeness but is rarely used in
     /// practice.
     ///
-    /// @param {string} font_scheme - The font scheme property.
+    /// @param {FontScheme} font_scheme - The font scheme property.
     /// @return {Format} - The Format instance.
     #[wasm_bindgen(js_name = "setFontScheme", skip_jsdoc)]
-    pub fn set_font_scheme(&self, font_scheme: &str) -> Format {
-        impl_method!(self.set_font_scheme(font_scheme));
+    pub fn set_font_scheme(&self, font_scheme: FontScheme) -> Format {
+        impl_method!(self.set_font_scheme(font_scheme.into()));
     }
 
     /// Set the Format font character set property.
@@ -949,6 +949,30 @@ impl From<FormatScript> for xlsx::FormatScript {
             FormatScript::None => xlsx::FormatScript::None,
             FormatScript::Superscript => xlsx::FormatScript::Superscript,
             FormatScript::Subscript => xlsx::FormatScript::Subscript,
+        }
+    }
+}
+
+/// The `FontScheme` enum defines the {@link Format} font scheme property.
+///
+#[derive(Clone, Copy, Default)]
+#[wasm_bindgen]
+pub enum FontScheme {
+    /// This is used to indicate a theme font that is used for body text.
+    #[default]
+    Body,
+    /// This is used to indicate a theme font that is used for headings.
+    Headings,
+    /// This is used to indicate a custom font that is not part of the theme.
+    None,
+}
+
+impl From<FontScheme> for xlsx::FontScheme {
+    fn from(scheme: FontScheme) -> xlsx::FontScheme {
+        match scheme {
+            FontScheme::Body => xlsx::FontScheme::Body,
+            FontScheme::Headings => xlsx::FontScheme::Headings,
+            FontScheme::None => xlsx::FontScheme::None,
         }
     }
 }
