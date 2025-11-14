@@ -246,9 +246,9 @@ dependencies = [
 
 [[package]]
 name = "rust_xlsxwriter"
-version = "0.91.0"
+version = "0.92.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10b9cb296363ad01633b12bb93c5780fd692c847c60ea688c2846f95d9c2e3c8"
+checksum = "af3a05e4f65e6b9485c47be9d51b0f31ddc52f0279572e27de6e10e5212520e4"
 dependencies = [
  "chrono",
  "js-sys",
@@ -358,7 +358,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-xlsxwriter"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "chrono",
  "console_error_panic_hook",
