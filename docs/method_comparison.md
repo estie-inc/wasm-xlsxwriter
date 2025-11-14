@@ -4,10 +4,10 @@
   - ✅ Fully Migrated Structs: 18
   - ⚠️ Partially Migrated Structs: 10
   - ❌ Not Migrated Structs: 34
-  - ✅ Migrated Enums: 19
+  - ✅ Migrated Enums: 20
   - ❌ Not Migrated Enums: 32
-  - ✅ Total Migrated Methods: 263
-  - ❌ Total Not Migrated Methods: 369
+  - ✅ Total Migrated Methods: 264
+  - ❌ Total Not Migrated Methods: 372
   - ✅ Total Migrated Functions: 39
   - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
@@ -180,8 +180,8 @@
       - set_last_column
   ### ⚠️ Workbook
     Summary
-      - Migrated methods: 6
-      - Not migrated methods: 11
+      - Migrated methods: 7
+      - Not migrated methods: 13
       - Migrated functions: 1
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
@@ -193,13 +193,15 @@
       - save_to_buffer
       - save_to_writer
       - set_vba_name
+      - use_custom_theme
+      - use_excel_2023_theme
       - use_zip_large_file
       - worksheets
       - worksheets_mut
   ### ⚠️ Worksheet
     Summary
       - Migrated methods: 79
-      - Not migrated methods: 65
+      - Not migrated methods: 66
       - Migrated functions: 0
       - Not migrated functions: 2
     ❌ Methods Not Yet Migrated
@@ -234,6 +236,7 @@
       - set_column_range_format
       - set_column_range_hidden
       - set_column_range_width_pixels
+      - set_default_format
       - set_default_note_author
       - set_default_row_height
       - set_default_row_height_pixels
@@ -787,6 +790,7 @@
   - ChartPatternFillType
   - ChartType
   - Color
+  - FontScheme
   - FormatAlign
   - FormatBorder
   - FormatDiagonalBorder
