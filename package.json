@@ -27,7 +27,7 @@
         "jsdom": "27.2.0",
         "typescript": "5.9.3",
         "unzipper": "0.12.3",
-        "vitest": "4.0.10",
+        "vitest": "4.0.14",
         "wasm-pack": "0.13.1"
     }
 }
