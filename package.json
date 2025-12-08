@@ -24,10 +24,10 @@
         "@tsconfig/strictest": "2.0.8",
         "@types/node": "24.10.1",
         "@types/unzipper": "0.10.11",
-        "jsdom": "27.2.0",
+        "jsdom": "27.3.0",
         "typescript": "5.9.3",
         "unzipper": "0.12.3",
-        "vitest": "4.0.10",
+        "vitest": "4.0.15",
         "wasm-pack": "0.13.1"
     }
 }
