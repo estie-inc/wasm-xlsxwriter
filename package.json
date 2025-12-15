@@ -22,7 +22,7 @@
     },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.8",
-        "@types/node": "24.10.1",
+        "@types/node": "25.0.2",
         "@types/unzipper": "0.10.11",
         "jsdom": "27.3.0",
         "typescript": "5.9.3",
