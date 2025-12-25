@@ -18,9 +18,15 @@ jobs:
       - run: npm run build
       - name: Validate WebAssembly features
         run: |
-          expected="bulk-memory bulk-memory-opt mutable-globals sign-ext"
+          WASM_OPT=$(find "$HOME/.cache/.wasm-pack" -type f -name "wasm-opt" 2>/dev/null | head -1)
+          if [ -z "$WASM_OPT" ]; then
+            echo "::error::wasm-opt not found in wasm-pack cache"
+            exit 1
+          fi
+          echo "Using wasm-opt: $WASM_OPT"
+          expected="bulk-memory mutable-globals sign-ext"
           for target in nodejs web; do
-            actual=$(wasm-opt --print-features $target/wasm_xlsxwriter_bg.wasm 2>&1 | grep "^--enable-" | sed 's/--enable-//g' | sort | xargs)
+            actual=$($WASM_OPT --print-features $target/wasm_xlsxwriter_bg.wasm 2>&1 | sed -n 's/^--enable-//p' | sort | xargs)
             echo "$target: $actual"
             if [ "$actual" != "$expected" ]; then
               echo "::error::$target has unexpected features: $actual (expected: $expected)"
