@@ -24,7 +24,7 @@ jobs:
             exit 1
           fi
           echo "Using wasm-opt: $WASM_OPT"
-          expected="bulk-memory mutable-globals sign-ext"
+          expected="bulk-memory mutable-globals nontrapping-float-to-int sign-ext"
           for target in nodejs web; do
             actual=$($WASM_OPT --print-features $target/wasm_xlsxwriter_bg.wasm 2>&1 | sed -n 's/^--enable-//p' | sort | xargs)
             echo "$target: $actual"
