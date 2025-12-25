@@ -3,3 +3,6 @@ build-std = ["panic_abort", "std"]
 
 [build]
 target = "wasm32-unknown-unknown"
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-cpu=mvp", "-C", "target-feature=+mutable-globals,+sign-ext,+bulk-memory"]
