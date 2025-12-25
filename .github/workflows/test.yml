@@ -16,14 +16,17 @@ jobs:
           node-version: "20.x"
       - run: npm ci
       - run: npm run build
-      - name: Install wasm-tools
-        run: cargo install wasm-tools
       - name: Validate WebAssembly features
         run: |
-          echo "=== Validating nodejs wasm ==="
-          wasm-tools validate nodejs/wasm_xlsxwriter_bg.wasm --features mvp,mutable-global,sign-extension,bulk-memory
-          echo "=== Validating web wasm ==="
-          wasm-tools validate web/wasm_xlsxwriter_bg.wasm --features mvp,mutable-global,sign-extension,bulk-memory
+          expected="bulk-memory bulk-memory-opt mutable-globals sign-ext"
+          for target in nodejs web; do
+            actual=$(wasm-opt --print-features $target/wasm_xlsxwriter_bg.wasm 2>&1 | grep "^--enable-" | sed 's/--enable-//g' | sort | xargs)
+            echo "$target: $actual"
+            if [ "$actual" != "$expected" ]; then
+              echo "::error::$target has unexpected features: $actual (expected: $expected)"
+              exit 1
+            fi
+          done
       - run: npm test
       - run: |
           cd examples/nextjs
