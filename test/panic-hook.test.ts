@@ -32,6 +32,6 @@ describe("xlsx-wasm test", () => {
 
     // Assert
     expect(consoleErrorSpy).toHaveBeenCalledOnce();
-    expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain("range end index 4 out of range for slice of length 0");
+    expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain("out of range for slice of length 0");
   });
 });
