@@ -2,6 +2,9 @@ name: npm publish
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   npm-publish:
@@ -20,7 +23,28 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - name: Publish
-        run: npm publish --provenance --access public
+
+      - name: Validate and publish (alpha)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ ! "$VERSION" =~ -alpha ]]; then
+            echo "::error::workflow_dispatch requires alpha version (got $VERSION)"
+            exit 1
+          fi
+          npm publish --provenance --access public --tag alpha
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Validate and publish (release)
+        if: github.event_name == 'push'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="${{ github.ref_name }}"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match package.json version (expected $VERSION)"
+            exit 1
+          fi
+          npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
