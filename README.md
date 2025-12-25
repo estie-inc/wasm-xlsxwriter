@@ -144,6 +144,8 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
 
 This library is compiled with `-C target-cpu=mvp` to target WebAssembly MVP (Minimum Viable Product), with `mutable-globals`, `sign-ext`, and `bulk-memory` features explicitly enabled via [rustflags in .cargo/config.toml](rust/.cargo/config.toml).
 
+See [Enabled WebAssembly features](https://doc.rust-lang.org/rustc/platform-support/wasm32-unknown-unknown.html#enabled-webassembly-features) for additional information.
+
 As a result, the library should be compatible with:
 * Chrome (Edge) 75+
 * Firefox 79+
