@@ -142,7 +142,13 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
 
 ## Browser Support
 
-This library is compiled with `-C target-cpu=mvp` to target WebAssembly MVP (Minimum Viable Product), with `mutable-globals`, `sign-ext`, and `bulk-memory` features explicitly enabled via [rustflags in .cargo/config.toml](rust/.cargo/config.toml).
+This library is compiled with `-C target-cpu=mvp` to target WebAssembly MVP, with only the following features explicitly enabled via [rustflags in .cargo/config.toml](rust/.cargo/config.toml):
+* `mutable-globals`
+* `sign-ext`
+* `bulk-memory`
+* `nontrapping-fptoint`
+
+This build configuration uses nightly Rust with `-Z build-std` to avoid `reference-types` and `multivalue`, which are enabled by default in recent stable Rust versions but have limited browser support.
 
 See [Enabled WebAssembly features](https://doc.rust-lang.org/rustc/platform-support/wasm32-unknown-unknown.html#enabled-webassembly-features) for additional information.
 
