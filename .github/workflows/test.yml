@@ -16,6 +16,14 @@ jobs:
           node-version: "20.x"
       - run: npm ci
       - run: npm run build
+      - name: Install wasm-tools
+        run: cargo install wasm-tools
+      - name: Validate WebAssembly features
+        run: |
+          echo "=== Validating nodejs wasm ==="
+          wasm-tools validate nodejs/wasm_xlsxwriter_bg.wasm --features mvp,mutable-global,sign-extension,bulk-memory
+          echo "=== Validating web wasm ==="
+          wasm-tools validate web/wasm_xlsxwriter_bg.wasm --features mvp,mutable-global,sign-extension,bulk-memory
       - run: npm test
       - run: |
           cd examples/nextjs
