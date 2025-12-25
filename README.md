@@ -142,11 +142,7 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
 
 ## Browser Support
 
-This library is built with Rust v1.81.0, enabling the following WebAssembly features:
-* `mutable-globals`
-* `sign-ext`
-
-Additionally, `bulk-memory` is enabled via compile options in the [package.json build command](package.json).
+This library is compiled with `-C target-cpu=mvp` to target WebAssembly MVP (Minimum Viable Product), with `mutable-globals`, `sign-ext`, and `bulk-memory` features explicitly enabled via [RUSTFLAGS in the build command](package.json).
 
 As a result, the library should be compatible with:
 * Chrome (Edge) 75+
