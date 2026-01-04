@@ -358,7 +358,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-xlsxwriter"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "chrono",
  "console_error_panic_hook",
