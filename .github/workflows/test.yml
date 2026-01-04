@@ -16,6 +16,10 @@ jobs:
           node-version: "20.x"
       - run: npm ci
       - run: npm run build
+      # Validate that the compiled WASM only contains the expected features.
+      # This ensures reference-types and multivalue are NOT included,
+      # which would break compatibility with older browsers (Chrome <91, Firefox <78, Safari <15.4).
+      # Expected features: bulk-memory, mutable-globals, nontrapping-float-to-int, sign-ext
       - name: Validate WebAssembly features
         run: |
           WASM_OPT=$(find "$HOME/.cache/.wasm-pack" -type f -name "wasm-opt" 2>/dev/null | head -1)
