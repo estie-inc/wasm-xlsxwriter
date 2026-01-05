@@ -1,6 +1,6 @@
 {
     "name": "wasm-xlsxwriter",
-    "version": "0.10.1",
+    "version": "0.11.0",
     "type": "module",
     "main": "nodejs/wasm_xlsxwriter.js",
     "types": "nodejs/wasm_xlsxwriter.d.ts",
@@ -16,8 +16,8 @@
     },
     "scripts": {
         "build": "npm run build:web && npm run build:nodejs",
-        "build:web": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust -t web -d ../web --release && rm ./web/.gitignore",
-        "build:nodejs": "RUSTFLAGS='-C target-feature=+bulk-memory' wasm-pack build ./rust -t nodejs -d ../nodejs --release && rm ./nodejs/.gitignore",
+        "build:web": "wasm-pack build ./rust -t web -d ../web --release && rm ./web/.gitignore",
+        "build:nodejs": "wasm-pack build ./rust -t nodejs -d ../nodejs --release && rm ./nodejs/.gitignore",
         "test": "vitest"
     },
     "devDependencies": {
