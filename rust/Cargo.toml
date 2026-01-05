@@ -12,5 +12,5 @@ crate-type = ["cdylib"]
 chrono = "0.4.42"
 console_error_panic_hook = "0.1.7"
 js-sys = "0.3.82"
-rust_xlsxwriter = { version = "0.92.0", features = ["wasm", "chrono"] }
+rust_xlsxwriter = { version = "0.92.2", features = ["wasm", "chrono"] }
 wasm-bindgen = "0.2.106"
