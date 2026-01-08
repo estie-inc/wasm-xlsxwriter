@@ -1,6 +1,7 @@
 mod chart_axis;
 mod chart_data_label;
 mod chart_data_label_position;
+mod chart_empty_cells;
 mod chart_font;
 mod chart_format;
 mod chart_legend;
@@ -24,6 +25,7 @@ mod chart_gradient_stop;
 use std::sync::{Arc, Mutex};
 
 use chart_axis::ChartAxis;
+use chart_empty_cells::ChartEmptyCells;
 use chart_legend::ChartLegend;
 use chart_series::ChartSeries;
 use chart_title::ChartTitle;
@@ -220,6 +222,25 @@ impl Chart {
     pub fn legend(&self) -> ChartLegend {
         ChartLegend {
             chart: Arc::clone(&self.inner),
+        }
+    }
+
+    /// Set the option for displaying empty cells in a chart.
+    ///
+    /// This method sets how empty cells (or cells containing #N/A) are
+    /// displayed in a chart. The options are:
+    /// - `Gaps`: Show empty cells as gaps in the chart. This is the default.
+    /// - `Zero`: Show empty cells as zero values.
+    /// - `Connected`: Connect data points with a line across empty cells.
+    ///
+    /// @param {ChartEmptyCells} option - The empty cell display option.
+    /// @returns {Chart} - The Chart object.
+    #[wasm_bindgen(js_name = "showEmptyCellsAs", skip_jsdoc)]
+    pub fn show_empty_cells_as(&self, option: ChartEmptyCells) -> Chart {
+        let mut chart = self.inner.lock().unwrap();
+        chart.show_empty_cells_as(option.into());
+        Chart {
+            inner: Arc::clone(&self.inner),
         }
     }
 }
