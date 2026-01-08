@@ -20,6 +20,7 @@ import {
   ChartGradientFillType,
   ChartPatternFill,
   ChartPatternFillType,
+  ChartEmptyCells,
 } from "../web/wasm_xlsxwriter";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
@@ -150,6 +151,48 @@ describe("xlsx-wasm test", () => {
     // Assert
     const actual = await readXlsx(workbook.saveToBufferSync());
     const expected = await readXlsxFile("./expected/insert_chart_column.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+
+  test("insert chart with empty cells displayed as connected", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, "Number");
+    worksheet.write(0, 1, "Score");
+
+    // Data with gaps (empty cells at row 3 and 5)
+    const numbers = [1, 2, 3, 4, 5, 6];
+    const scores = [10, 20, null, 40, null, 60];
+
+    numbers.forEach((num, idx) => {
+      worksheet.write(idx + 1, 0, num);
+    });
+    scores.forEach((score, idx) => {
+      if (score !== null) {
+        worksheet.write(idx + 1, 1, score);
+      }
+    });
+
+    const chart = new Chart(ChartType.Line);
+    const chartSeries = new ChartSeries();
+    const categoriesRange = ChartRange.newFromRange("Sheet1", 1, 0, 6, 0);
+    const valuesRange = ChartRange.newFromRange("Sheet1", 1, 1, 6, 1);
+    chartSeries
+      .setName("Score")
+      .setCategories(categoriesRange)
+      .setValues(valuesRange);
+    chart
+      .pushSeries(chartSeries)
+      .showEmptyCellsAs(ChartEmptyCells.Connected);
+
+    worksheet.insertChart(0, 3, chart);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/insert_chart_empty_cells_connected.xlsx");
     expect(actual).matchXlsx(expected);
   });
 });
