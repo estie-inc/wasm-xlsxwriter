@@ -9,8 +9,8 @@ license = "MIT"
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = "0.4.42"
+chrono = "0.4.43"
 console_error_panic_hook = "0.1.7"
-js-sys = "0.3.82"
-rust_xlsxwriter = { version = "0.92.3", features = ["wasm", "chrono"] }
+js-sys = "0.3.85"
+rust_xlsxwriter = { version = "0.93.0", features = ["wasm", "chrono"] }
 wasm-bindgen = "0.2.106"
