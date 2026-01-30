@@ -1726,4 +1726,32 @@ impl Worksheet {
         let _ = sheet.group_rows(first_row, last_row)?;
         Ok(self.clone())
     }
+
+    /// Set the worksheet margins for the printed page.
+    ///
+    /// The `setMargins()` method is used to set the margins of the worksheet
+    /// when it is printed. The units are in inches.
+    ///
+    /// @param {number} left - Left margin in inches. Excel default is 0.7.
+    /// @param {number} right - Right margin in inches. Excel default is 0.7.
+    /// @param {number} top - Top margin in inches. Excel default is 0.75.
+    /// @param {number} bottom - Bottom margin in inches. Excel default is 0.75.
+    /// @param {number} header - Header margin in inches. Excel default is 0.3.
+    /// @param {number} footer - Footer margin in inches. Excel default is 0.3.
+    /// @returns {Worksheet} - The worksheet object.
+    #[wasm_bindgen(js_name = "setMargins", skip_jsdoc)]
+    pub fn set_margins(
+        &self,
+        left: f64,
+        right: f64,
+        top: f64,
+        bottom: f64,
+        header: f64,
+        footer: f64,
+    ) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.set_margins(left, right, top, bottom, header, footer);
+        self.clone()
+    }
 }

@@ -59,4 +59,19 @@ describe("xlsx-wasm test", () => {
     const expected = await readXlsxFile("./expected/print_portrait.xlsx");
     expect(actual).matchXlsx(expected);
   });
+
+  test("worksheet setMargins", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, "Hello, World!");
+    worksheet.setMargins(1.0, 1.0, 1.5, 1.5, 0.5, 0.5);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/print_margins.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
 });
