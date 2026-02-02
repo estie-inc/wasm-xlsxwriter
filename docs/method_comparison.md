@@ -4,10 +4,10 @@
   - ✅ Fully Migrated Structs: 18
   - ⚠️ Partially Migrated Structs: 10
   - ❌ Not Migrated Structs: 34
-  - ✅ Migrated Enums: 20
-  - ❌ Not Migrated Enums: 32
-  - ✅ Total Migrated Methods: 264
-  - ❌ Total Not Migrated Methods: 372
+  - ✅ Migrated Enums: 21
+  - ❌ Not Migrated Enums: 31
+  - ✅ Total Migrated Methods: 266
+  - ❌ Total Not Migrated Methods: 371
   - ✅ Total Migrated Functions: 39
   - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
@@ -31,8 +31,8 @@
   ### ✅ Url
   ### ⚠️ Chart
     Summary
-      - Migrated methods: 11
-      - Not migrated methods: 23
+      - Migrated methods: 12
+      - Not migrated methods: 22
       - Migrated functions: 10
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
@@ -55,7 +55,6 @@
       - set_style
       - set_up_bar_format
       - set_up_down_bars
-      - show_empty_cells_as
       - show_hidden_data
       - show_na_as_empty_cell
       - validate
@@ -200,7 +199,7 @@
       - worksheets_mut
   ### ⚠️ Worksheet
     Summary
-      - Migrated methods: 79
+      - Migrated methods: 80
       - Not migrated methods: 66
       - Migrated functions: 0
       - Not migrated functions: 2
@@ -209,7 +208,6 @@
       - add_data_validation
       - add_sparkline
       - add_sparkline_group
-      - autofit_to_max_width
       - filter_automatic_off
       - filter_column
       - group_columns
@@ -229,6 +227,8 @@
       - insert_shape_with_offset
       - protect_with_options
       - protect_with_password
+      - set_autofit_max_row
+      - set_autofit_max_width
       - set_cell_format
       - set_column_autofit_width
       - set_column_format
@@ -246,7 +246,6 @@
       - set_header_footer_align_with_page
       - set_header_footer_scale_with_doc
       - set_infinity_value
-      - set_margins
       - set_nan_value
       - set_neg_infinity_value
       - set_page_breaks
@@ -783,6 +782,7 @@
 
 ## ✅ Migrated Enums
   - ChartDataLabelPosition
+  - ChartEmptyCells
   - ChartGradientFillType
   - ChartLegendPosition
   - ChartLineDashType
@@ -811,7 +811,6 @@
   - ChartAxisLabelAlignment
   - ChartAxisLabelPosition
   - ChartAxisTickType
-  - ChartEmptyCells
   - ChartErrorBarsDirection
   - ChartErrorBarsType
   - ChartTrendlineType
