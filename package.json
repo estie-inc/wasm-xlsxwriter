@@ -24,7 +24,7 @@
         "@tsconfig/strictest": "2.0.8",
         "@types/node": "25.2.0",
         "@types/unzipper": "0.10.11",
-        "jsdom": "27.4.0",
+        "jsdom": "28.0.0",
         "typescript": "5.9.3",
         "unzipper": "0.12.3",
         "vitest": "4.0.18",
