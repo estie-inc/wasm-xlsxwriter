@@ -24,7 +24,7 @@ const generateXlsx = async () => {
 
 const download = (workbook: Workbook) => {
   const buffer = workbook.saveToBufferSync();
-  const blob = new Blob([buffer]);
+  const blob = new Blob([buffer.slice()]);
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
