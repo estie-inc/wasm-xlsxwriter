@@ -20,6 +20,10 @@
         "build:nodejs": "wasm-pack build ./rust -t nodejs -d ../nodejs --release && rm ./nodejs/.gitignore",
         "test": "vitest"
     },
+    "overrides": {
+        "tar": "^7.5.3",
+        "axios": "^1.7.9"
+    },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.8",
         "@types/node": "25.2.0",
