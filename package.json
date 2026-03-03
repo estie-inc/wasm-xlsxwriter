@@ -5,6 +5,23 @@
     "main": "nodejs/wasm_xlsxwriter.js",
     "types": "nodejs/wasm_xlsxwriter.d.ts",
     "browser": "web/wasm_xlsxwriter.js",
+    "exports": {
+      ".": {
+        "types": "./nodejs/wasm_xlsxwriter.d.ts",
+        "import": "./nodejs/wasm_xlsxwriter.js",
+        "default": "./nodejs/wasm_xlsxwriter.js"
+      },
+      "./web": {
+        "types": "./web/wasm_xlsxwriter.d.ts",
+        "import": "./web/wasm_xlsxwriter.js",
+        "default": "./web/wasm_xlsxwriter.js"
+      },
+      "./nodejs": {
+        "types": "./nodejs/wasm_xlsxwriter.d.ts",
+        "import": "./nodejs/wasm_xlsxwriter.js",
+        "default": "./nodejs/wasm_xlsxwriter.js"
+      }
+    },
     "files": [
         "web",
         "nodejs"
