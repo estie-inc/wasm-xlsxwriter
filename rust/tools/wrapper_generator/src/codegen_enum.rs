@@ -1,4 +1,4 @@
-// IR から enum ラッパーの Rust コードを生成する
+// Generate Rust code for enum wrappers from IR
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};

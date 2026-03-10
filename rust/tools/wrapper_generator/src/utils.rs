@@ -1,4 +1,4 @@
-// camelCase 変換、doc コメント処理等のユーティリティ
+// Utilities for camelCase conversion, doc comment processing, etc.
 
 /// Converts snake_case to camelCase for JS method names.
 pub fn to_camel_case(snake: &str) -> String {

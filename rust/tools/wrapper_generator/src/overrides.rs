@@ -1,4 +1,4 @@
-// overrides.toml のパースとメソッド単位のオーバーライド適用
+// Parse overrides.toml and apply per-method overrides
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -8,8 +8,8 @@ use serde::Deserialize;
 
 use crate::ir::{AnalyzedMethod, MethodOverride};
 
-/// overrides.toml の生デシリアライズ構造体。
-/// キーは `"StructName::method_name"` または `"*.method_name"` 形式、値は理由文字列。
+/// Raw deserialization struct for overrides.toml.
+/// Keys are in the format `"StructName::method_name"` or `"*.method_name"`, values are reason strings.
 #[derive(Debug, Deserialize, Default)]
 struct RawOverrides {
     #[serde(default)]
@@ -20,21 +20,21 @@ struct RawOverrides {
     rename: HashMap<String, String>,
 }
 
-/// overrides.toml をパースした結果。メソッド単位のオーバーライド情報を保持する。
+/// Parsed result of overrides.toml. Holds per-method override information.
 pub struct Overrides {
-    /// `"Struct::method"` → MethodOverride のマップ（ワイルドカードは `"*::method"` に正規化）
+    /// Map of `"Struct::method"` to MethodOverride (wildcards are normalized to `"*::method"`)
     entries: HashMap<String, MethodOverride>,
 }
 
 pub fn load_overrides(path: &Path) -> anyhow::Result<Overrides> {
     let content = std::fs::read_to_string(path)
-        .with_context(|| format!("overrides.toml の読み込みに失敗: {}", path.display()))?;
+        .with_context(|| format!("Failed to read overrides.toml: {}", path.display()))?;
     load_overrides_from_str(&content)
 }
 
 pub fn load_overrides_from_str(content: &str) -> anyhow::Result<Overrides> {
     let raw: RawOverrides =
-        toml::from_str(content).context("overrides.toml のパースに失敗")?;
+        toml::from_str(content).context("Failed to parse overrides.toml")?;
     Ok(Overrides::from_raw(raw))
 }
 
@@ -55,8 +55,8 @@ impl Overrides {
         Self { entries }
     }
 
-    /// 指定の struct::method に対するオーバーライドを返す。
-    /// ワイルドカードパターン `"*::method"` も照合する。
+    /// Return the override for the given struct::method.
+    /// Also matches wildcard patterns `"*::method"`.
     pub fn get(&self, struct_name: &str, method_name: &str) -> Option<MethodOverride> {
         let exact_key = format!("{}::{}", struct_name, method_name);
         let wildcard_key = format!("*::{}", method_name);
@@ -67,8 +67,8 @@ impl Overrides {
             .cloned()
     }
 
-    /// メソッドリストに対してオーバーライドを適用する。
-    /// `override_` が `Auto` のメソッドのみ上書き対象とする。
+    /// Apply overrides to a list of methods.
+    /// Only methods with `override_` set to `Auto` are eligible for overwriting.
     pub fn apply_to_methods(&self, struct_name: &str, methods: &mut Vec<AnalyzedMethod>) {
         for method in methods.iter_mut() {
             if let MethodOverride::Auto = method.override_ {
@@ -80,9 +80,9 @@ impl Overrides {
     }
 }
 
-/// `"Struct::method"` はそのまま、`"*.method"` は `"*::method"` に正規化する。
+/// Keep `"Struct::method"` as-is, normalize `"*.method"` to `"*::method"`.
 fn normalize_key(key: &str) -> String {
-    // `"*.method_name"` 形式は `"*::method_name"` に変換する
+    // Convert `"*.method_name"` format to `"*::method_name"`
     if let Some(method) = key.strip_prefix("*.") {
         return format!("*::{}", method);
     }
@@ -109,8 +109,8 @@ mod tests {
 
     const SAMPLE_TOML: &str = r#"
 [skip]
-"Workbook::save" = "File I/O、WASM不可"
-"Chart::validate" = "内部検証用"
+"Workbook::save" = "File I/O, not supported in WASM"
+"Chart::validate" = "internal validation only"
 
 [custom]
 "Worksheet::write" = "ExcelData polymorphism"
@@ -126,11 +126,11 @@ mod tests {
 
         assert_eq!(
             ov.get("Workbook", "save"),
-            Some(MethodOverride::Skip("File I/O、WASM不可".into()))
+            Some(MethodOverride::Skip("File I/O, not supported in WASM".into()))
         );
         assert_eq!(
             ov.get("Chart", "validate"),
-            Some(MethodOverride::Skip("内部検証用".into()))
+            Some(MethodOverride::Skip("internal validation only".into()))
         );
     }
 
@@ -152,7 +152,7 @@ mod tests {
     fn parse_rename_entries_including_wildcard() {
         let ov = load_overrides_from_str(SAMPLE_TOML).unwrap();
 
-        // ワイルドカードは任意の struct にマッチする
+        // Wildcard matches any struct
         assert_eq!(
             ov.get("Workbook", "deep_clone"),
             Some(MethodOverride::Rename("clone".into()))
@@ -175,7 +175,7 @@ mod tests {
     fn wildcard_does_not_match_partial_method_name() {
         let ov = load_overrides_from_str(SAMPLE_TOML).unwrap();
 
-        // "deep_clone" のワイルドカードは "clone" にはマッチしない
+        // The wildcard for "deep_clone" should not match "clone"
         assert_eq!(ov.get("Workbook", "clone"), None);
         assert_eq!(ov.get("Workbook", "deep"), None);
     }
@@ -194,7 +194,7 @@ mod tests {
 
         assert_eq!(
             methods[0].override_,
-            MethodOverride::Skip("File I/O、WASM不可".into())
+            MethodOverride::Skip("File I/O, not supported in WASM".into())
         );
         assert_eq!(
             methods[1].override_,
@@ -208,7 +208,7 @@ mod tests {
         let ov = load_overrides_from_str(SAMPLE_TOML).unwrap();
 
         let mut methods = vec![make_method("save")];
-        // 事前に別のオーバーライドが設定されている場合は上書きしない
+        // Should not overwrite when a different override is already set
         methods[0].override_ = MethodOverride::Custom("already set".into());
 
         ov.apply_to_methods("Workbook", &mut methods);
@@ -249,12 +249,12 @@ mod tests {
     fn missing_sections_are_ok() {
         let only_skip = r#"
 [skip]
-"Workbook::save" = "File I/O、WASM不可"
+"Workbook::save" = "File I/O, not supported in WASM"
 "#;
         let ov = load_overrides_from_str(only_skip).unwrap();
         assert_eq!(
             ov.get("Workbook", "save"),
-            Some(MethodOverride::Skip("File I/O、WASM不可".into()))
+            Some(MethodOverride::Skip("File I/O, not supported in WASM".into()))
         );
         assert_eq!(ov.get("Worksheet", "write"), None);
     }

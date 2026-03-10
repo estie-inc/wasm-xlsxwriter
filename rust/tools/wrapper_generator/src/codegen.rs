@@ -1,4 +1,4 @@
-// IR から struct ラッパーの Rust コードを生成する
+// Generate Rust code for struct wrappers from IR
 
 use std::collections::HashSet;
 
@@ -12,18 +12,18 @@ use crate::ir::{
 
 /// Context for code generation.
 pub struct CodegenContext {
-    /// upstream crate の全 enum 名（.into() パターン判定用）
+    /// All enum names from the upstream crate (used for .into() pattern detection)
     pub enum_names: HashSet<String>,
-    /// ラッパーに存在する型名（メソッド除外判定用）
+    /// Type names present in the wrapper (used for method exclusion decisions)
     pub available_types: HashSet<String>,
-    /// 手書きラッパーの struct 名（inner: T パターン。generated は inner: Arc<Mutex<T>>）
+    /// Handwritten wrapper struct names (inner: T pattern; generated ones use inner: Arc<Mutex<T>>)
     pub handwritten_struct_names: HashSet<String>,
-    /// 手書きラッパーで包まれた enum 名（inner: xlsx::T パターン。generated enum は From で変換）
+    /// Handwritten wrapper enum names (inner: xlsx::T pattern; generated enums use From conversion)
     pub handwritten_enum_names: HashSet<String>,
 }
 
 impl CodegenContext {
-    /// テスト用の空コンテキスト
+    /// Empty context for testing
     pub fn empty() -> Self {
         Self {
             enum_names: HashSet::new(),
@@ -416,7 +416,7 @@ fn generate_proxy_method(
 
     let body: TokenStream = match &m.returns {
         ReturnKind::SelfType => {
-            // match block はセミコロン不要、単一式はセミコロン必要
+            // match block needs no semicolon; single expression needs a semicolon
             if multi_accessor {
                 quote! {
                     let mut lock = self.parent.lock().unwrap();

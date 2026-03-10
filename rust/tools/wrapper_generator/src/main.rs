@@ -16,7 +16,7 @@ use crate::utils::to_snake_case_filename;
 
 #[derive(Parser)]
 #[command(name = "wrapper_generator")]
-#[command(about = "rust_xlsxwriter の wasm-bindgen ラッパーを自動生成する")]
+#[command(about = "Auto-generate wasm-bindgen wrappers for rust_xlsxwriter")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -24,53 +24,53 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// 全 struct/enum のラッパーコードを生成
+    /// Generate wrapper code for all structs/enums
     Generate {
-        /// 特定の型のみ生成 (カンマ区切り)
+        /// Generate only specific types (comma-separated)
         #[arg(long)]
         filter: Option<String>,
 
-        /// 出力ディレクトリ
+        /// Output directory
         #[arg(long, default_value = "../../src/wrapper/generated")]
         output_dir: PathBuf,
 
-        /// overrides.toml のパス
+        /// Path to overrides.toml
         #[arg(long, default_value = "overrides.toml")]
         overrides: PathBuf,
 
-        /// upstream rust_xlsxwriter の Cargo.toml パス
+        /// Path to the upstream rust_xlsxwriter Cargo.toml
         #[arg(long)]
         manifest: PathBuf,
 
-        /// 既存ラッパーのディレクトリ（存在する型は mod.rs から除外）
+        /// Directory of existing wrappers (types found here are excluded from mod.rs)
         #[arg(long)]
         existing_dir: Option<PathBuf>,
     },
-    /// upstream API の解析結果サマリーを表示
+    /// Display a summary of the upstream API analysis
     Verify {
-        /// overrides.toml のパス
+        /// Path to overrides.toml
         #[arg(long, default_value = "overrides.toml")]
         overrides: PathBuf,
 
-        /// upstream rust_xlsxwriter の Cargo.toml パス
+        /// Path to the upstream rust_xlsxwriter Cargo.toml
         #[arg(long)]
         manifest: PathBuf,
     },
-    /// 生成コードと既存手書きコードの差分を表示
+    /// Show differences between generated code and existing handwritten code
     Diff {
-        /// 特定の struct のみ表示
+        /// Show only a specific struct
         #[arg(long, value_name = "NAME")]
         struct_name: Option<String>,
 
-        /// overrides.toml のパス
+        /// Path to overrides.toml
         #[arg(long, default_value = "overrides.toml")]
         overrides: PathBuf,
 
-        /// upstream rust_xlsxwriter の Cargo.toml パス
+        /// Path to the upstream rust_xlsxwriter Cargo.toml
         #[arg(long)]
         manifest: PathBuf,
 
-        /// 既存ラッパーのディレクトリ
+        /// Directory of existing wrappers
         #[arg(long, default_value = "../../src/wrapper")]
         existing_dir: PathBuf,
     },
@@ -122,7 +122,7 @@ fn load_and_analyze(
     let krate = crate_inspector::CrateBuilder::default()
         .manifest_path(manifest)
         .build()
-        .context("upstream crate の rustdoc-json 生成に失敗")?;
+        .context("Failed to generate rustdoc-json for the upstream crate")?;
 
     let mut analyzed = analyze::analyze_crate(&krate);
 
@@ -147,7 +147,7 @@ fn cmd_generate(
     let filter_set: Option<Vec<&str>> =
         filter.map(|f| f.split(',').map(str::trim).collect());
 
-    // 既存ディレクトリにある型名を収集（重複回避のため mod.rs から除外する）
+    // Collect type names from the existing directory (excluded from mod.rs to avoid duplicates)
     let existing_types = existing_dir
         .map(|dir| collect_existing_type_names(dir))
         .unwrap_or_default();
@@ -159,14 +159,14 @@ fn cmd_generate(
         );
     }
 
-    // enum variant に含まれる型の判定用。struct は Arc<Mutex> で tsify 非互換なので区別する。
+    // Used to determine types in enum variants. Structs use Arc<Mutex> and are tsify-incompatible, so we distinguish them.
     let crate_enum_names: std::collections::HashSet<String> =
         analyzed.enums.iter().map(|e| e.name.clone()).collect();
     let crate_struct_names: std::collections::HashSet<String> =
         analyzed.structs.iter().map(|s| s.name.clone()).collect();
 
     std::fs::create_dir_all(output_dir)
-        .with_context(|| format!("出力ディレクトリの作成に失敗: {}", output_dir.display()))?;
+        .with_context(|| format!("Failed to create output directory: {}", output_dir.display()))?;
     let enums_dir = output_dir.join("enums");
     std::fs::create_dir_all(&enums_dir)?;
 
@@ -175,7 +175,7 @@ fn cmd_generate(
     let mut skipped_structs = Vec::new();
     let mut skipped_enums = Vec::new();
 
-    // enum を先に処理し、利用可能な型名を確定する
+    // Process enums first to determine the set of available type names
     for e in &analyzed.enums {
         if let Some(ref f) = filter_set {
             if !f.contains(&e.name.as_str()) {
@@ -198,7 +198,7 @@ fn cmd_generate(
         eprintln!("  enum:   {} -> {}", e.name, path.display());
     }
 
-    // ラッパーに存在する全型名を収集（既存 + 生成済み struct/enum − skipped）
+    // Collect all type names present in wrappers (existing + generated structs/enums - skipped)
     let skipped_set: std::collections::HashSet<&str> = skipped_enums
         .iter()
         .chain(skipped_structs.iter())
@@ -262,8 +262,8 @@ fn cmd_generate(
     Ok(())
 }
 
-/// 既存ラッパーディレクトリ内の .rs ファイルを再帰的にスキャンし、
-/// `pub struct TypeName` / `pub enum TypeName` の型名を収集する。
+/// Recursively scan .rs files in the existing wrapper directory and
+/// collect type names from `pub struct TypeName` / `pub enum TypeName` declarations.
 fn collect_existing_type_names(dir: &Path) -> std::collections::HashSet<String> {
     use std::collections::HashSet;
     let mut names = HashSet::new();
@@ -292,14 +292,14 @@ fn collect_existing_type_names(dir: &Path) -> std::collections::HashSet<String> 
     names
 }
 
-/// シンプルな再帰ディレクトリ走査（generated/ は除外）
+/// Simple recursive directory traversal (excludes generated/)
 fn walkdir(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            // generated/ ディレクトリ自体はスキップ
+            // Skip the generated/ directory itself
             if path.file_name().is_some_and(|n| n == "generated") {
                 continue;
             }
@@ -311,8 +311,8 @@ fn walkdir(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-/// enum variant にジェネリクスや tsify で扱えない型が含まれている場合 true。
-/// struct 型は Arc<Mutex> を使うため tsify/serde 非互換。enum 型は tsify 互換。
+/// Returns true if enum variants contain generics or types incompatible with tsify.
+/// Struct types use Arc<Mutex> and are tsify/serde-incompatible. Enum types are tsify-compatible.
 fn has_unresolvable_variants(
     e: &AnalyzedEnum,
     known_enum_names: &std::collections::HashSet<String>,
@@ -326,23 +326,23 @@ fn has_unresolvable_variants(
         if known_primitives.contains(&ty) {
             return false;
         }
-        // crate 内の enum は tsify/serde 互換
+        // Enums within the crate are tsify/serde-compatible
         if known_enum_names.contains(ty) {
             return false;
         }
-        // crate 内の struct は Arc<Mutex> で tsify 非互換
+        // Structs within the crate use Arc<Mutex> and are tsify-incompatible
         if known_struct_names.contains(ty) {
             return true;
         }
-        // 単一大文字はジェネリクス
+        // A single uppercase letter is a generic type parameter
         if ty.len() == 1 && ty.chars().next().is_some_and(|c| c.is_uppercase()) {
             return true;
         }
-        // パス付き型やジェネリクス付き型
+        // Types with paths or generic parameters
         if ty.contains('<') || ty.contains("::") {
             return true;
         }
-        // 未知の PascalCase 型 (Error, ZipError 等)
+        // Unknown PascalCase types (e.g., Error, ZipError)
         if ty.chars().next().is_some_and(|c| c.is_uppercase()) {
             return true;
         }
@@ -552,7 +552,7 @@ fn cmd_diff(
         }
 
         let existing_code = std::fs::read_to_string(&existing_path)
-            .with_context(|| format!("ファイル読み込みに失敗: {}", existing_path.display()))?;
+            .with_context(|| format!("Failed to read file: {}", existing_path.display()))?;
 
         let missing: Vec<_> = s
             .auto_methods()
@@ -575,7 +575,7 @@ fn cmd_diff(
                 );
             }
 
-            // --struct_name が指定されている場合のみ、生成コードを出力
+            // Only output the generated code when --struct_name is specified
             if struct_filter.is_some() {
                 println!("\n--- Generated wrapper (full) ---\n");
                 let code = codegen::generate_struct_file(s, &codegen::CodegenContext::empty());

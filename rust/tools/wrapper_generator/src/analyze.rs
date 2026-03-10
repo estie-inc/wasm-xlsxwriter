@@ -1,4 +1,4 @@
-// upstream の rustdoc-json (crate-inspector) を解析し、IR に変換する
+// Parse upstream rustdoc-json (crate-inspector) and convert to IR
 
 use std::collections::HashMap;
 
@@ -11,15 +11,15 @@ use crate::utils::{process_doc_comment, to_camel_case};
 use crate_inspector::{CrateItem, EnumItem, FunctionItem, StructItem};
 use rustdoc_types::{GenericArg, GenericArgs, GenericBound, GenericParamDefKind, WherePredicate};
 
-/// 親からアクセスされる子型の情報。
+/// Information about a child type accessed from a parent.
 struct ParentInfo {
     parent_name: String,
-    /// (親のメソッド名, 子の型名)
+    /// (parent method name, child type name)
     accessors: Vec<(String, String)>,
 }
 
-/// 全 struct の public メソッドを走査し、`&mut OtherStruct` を返すものを
-/// parent → child の関係として記録する。
+/// Scan all structs' public methods and record those returning `&mut OtherStruct`
+/// as parent-to-child relationships.
 fn build_parent_child_graph(
     krate: &crate_inspector::Crate,
 ) -> HashMap<String, ParentInfo> {
@@ -39,7 +39,7 @@ fn build_parent_child_graph(
                 let Some(output) = func.output() else {
                     continue;
                 };
-                // `&mut OtherStruct` を返すメソッドを探す
+                // Look for methods that return `&mut OtherStruct`
                 if let rustdoc_types::Type::BorrowedRef {
                     is_mutable: true,
                     type_: inner,
@@ -58,7 +58,7 @@ fn build_parent_child_graph(
                                 parent_name: parent_name.clone(),
                                 accessors: Vec::new(),
                             });
-                        // 同じ子を返す複数のアクセサを記録する
+                        // Record multiple accessors that return the same child
                         if entry.parent_name == parent_name {
                             entry.accessors.push((method_name, child_name));
                         }
@@ -71,7 +71,7 @@ fn build_parent_child_graph(
     child_to_parent
 }
 
-/// `"rust_xlsxwriter::format::Format"` → `"Format"` のように最後のセグメントを返す。
+/// Return the last segment, e.g. `"rust_xlsxwriter::format::Format"` -> `"Format"`.
 fn path_to_short_name(path: &str) -> &str {
     path.rsplit("::").next().unwrap_or(path)
 }
@@ -249,7 +249,7 @@ fn classify_return(func: &FunctionItem<'_>, struct_name: &str) -> ReturnKind {
     }
 }
 
-/// `Result<Self, E>` か `Result<(), E>` かを判定する。
+/// Determine whether the return type is `Result<Self, E>` or `Result<(), E>`.
 fn classify_result_return(
     result_path: &rustdoc_types::Path,
     struct_name: &str,
@@ -262,7 +262,7 @@ fn classify_result_return(
         return ReturnKind::Other("Result".to_string());
     };
 
-    // Result の第一型引数を取り出す
+    // Extract the first type argument of Result
     let first_type = args.iter().find_map(|arg| {
         if let GenericArg::Type(ty) = arg {
             Some(ty)
@@ -318,18 +318,18 @@ pub(crate) fn resolve_param_type(
         },
 
         rustdoc_types::Type::BorrowedRef { type_: inner, .. } => {
-            // `&str` は Str として扱う
+            // Treat `&str` as Str
             if let rustdoc_types::Type::Primitive(name) = inner.as_ref() {
                 if name == "str" {
                     return ParamType::Str;
                 }
             }
-            // `&[T]` → RefSliceOf(T) — upstream がスライス参照を要求
+            // `&[T]` -> RefSliceOf(T) -- upstream requires a slice reference
             if let rustdoc_types::Type::Slice(elem) = inner.as_ref() {
                 let elem_type = resolve_param_type(elem, generics);
                 return ParamType::RefSliceOf(Box::new(elem_type));
             }
-            // `&WrappedType` → RefWrappedType — upstream が参照を要求
+            // `&WrappedType` -> RefWrappedType -- upstream requires a reference
             let inner_resolved = resolve_param_type(inner, generics);
             match inner_resolved {
                 ParamType::WrappedType(name) => ParamType::RefWrappedType(name),
@@ -362,7 +362,7 @@ pub(crate) fn resolve_param_type(
         }
 
         rustdoc_types::Type::ImplTrait(bounds) => {
-            // `impl Into<T>` → T を解決する
+            // `impl Into<T>` -> resolve to T
             if let Some(inner_type) = extract_into_inner_from_bounds(bounds) {
                 resolve_param_type(inner_type, generics)
             } else {
@@ -371,7 +371,7 @@ pub(crate) fn resolve_param_type(
         }
 
         rustdoc_types::Type::Generic(name) => {
-            // ジェネリクスのパラメータから `Into<T>` 境界を探す
+            // Search generic parameters for an `Into<T>` bound
             if let Some(inner_type) = resolve_generic_into(name, generics) {
                 resolve_param_type(inner_type, generics)
             } else {
@@ -383,7 +383,7 @@ pub(crate) fn resolve_param_type(
     }
 }
 
-/// `Into<T>` の bounds リストから T を取り出す。
+/// Extract T from a bounds list containing `Into<T>`.
 fn extract_into_inner_from_bounds(bounds: &[GenericBound]) -> Option<&rustdoc_types::Type> {
     for bound in bounds {
         if let GenericBound::TraitBound { trait_: path, .. } = bound {
@@ -398,7 +398,7 @@ fn extract_into_inner_from_bounds(bounds: &[GenericBound]) -> Option<&rustdoc_ty
     None
 }
 
-/// `Path` の angle-bracket 引数から最初の型引数を取り出す。
+/// Extract the first type argument from a `Path`'s angle-bracket arguments.
 fn extract_first_type_arg(path: &rustdoc_types::Path) -> Option<&rustdoc_types::Type> {
     let args = path.args.as_deref()?;
     if let GenericArgs::AngleBracketed { args, .. } = args {
@@ -411,12 +411,12 @@ fn extract_first_type_arg(path: &rustdoc_types::Path) -> Option<&rustdoc_types::
     None
 }
 
-/// ジェネリクスのパラメータまたは where 節から `T: Into<U>` を探し、U を返す。
+/// Search generic parameters or where clauses for `T: Into<U>` and return U.
 fn resolve_generic_into<'a>(
     name: &str,
     generics: &'a rustdoc_types::Generics,
 ) -> Option<&'a rustdoc_types::Type> {
-    // まず型パラメータの bounds を確認
+    // First check bounds on the type parameter
     for param in &generics.params {
         if param.name != name {
             continue;
@@ -428,7 +428,7 @@ fn resolve_generic_into<'a>(
         }
     }
 
-    // where 節を確認
+    // Check where clauses
     for predicate in &generics.where_predicates {
         if let WherePredicate::BoundPredicate { type_, bounds, .. } = predicate {
             if let rustdoc_types::Type::Generic(pred_name) = type_ {
@@ -522,7 +522,7 @@ fn analyze_enum(enum_item: &EnumItem<'_>) -> AnalyzedEnum {
     }
 }
 
-/// 型を人間が読める文字列に変換する（Unknown 型のフォールバック用）。
+/// Convert a type to a human-readable string (fallback for Unknown types).
 fn type_to_string(ty: &rustdoc_types::Type) -> String {
     match ty {
         rustdoc_types::Type::Primitive(name) => name.clone(),
@@ -818,7 +818,7 @@ mod tests {
 
         let analyzed = analyze_crate(&krate);
 
-        // Format struct が解析されること
+        // Verify Format struct is analyzed
         let format_struct = analyzed
             .structs
             .iter()
@@ -829,7 +829,7 @@ mod tests {
         assert!(format_struct.constructor.is_some());
         assert!(!format_struct.methods.is_empty());
 
-        // Color enum が解析されること
+        // Verify Color enum is analyzed
         let color_enum = analyzed
             .enums
             .iter()
@@ -837,7 +837,7 @@ mod tests {
             .expect("Color enum not found");
         assert!(!color_enum.variants.is_empty());
 
-        // ChartAxis が Proxy として認識されること（Chart が x_axis を返す）
+        // Verify ChartAxis is recognized as Proxy (Chart returns x_axis)
         if let Some(chart_axis) = analyzed.structs.iter().find(|s| s.name == "ChartAxis") {
             assert!(chart_axis.is_proxy());
         }

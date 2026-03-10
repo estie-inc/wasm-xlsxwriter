@@ -1,13 +1,13 @@
-/// quote! ベースのコード生成で共有するトークンヘルパー。
+/// Shared token helpers for quote!-based code generation.
 ///
-/// ParamType → TokenStream の変換を一元化し、codegen / codegen_enum の両方から利用する。
+/// Centralizes ParamType to TokenStream conversion, used by both codegen and codegen_enum.
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::codegen::CodegenContext;
 use crate::ir::ParamType;
 
-/// ParamType を wasm-bindgen シグネチャ用の型トークンに変換
+/// Converts a ParamType to type tokens for wasm-bindgen signatures
 pub fn param_type_tokens(ty: &ParamType) -> TokenStream {
     match ty {
         ParamType::Bool => quote! { bool },
@@ -42,14 +42,14 @@ pub fn param_type_tokens(ty: &ParamType) -> TokenStream {
     }
 }
 
-/// パラメータのシグネチャトークン (e.g., `size: f64`)
+/// Parameter signature tokens (e.g., `size: f64`)
 pub fn param_sig_tokens(name: &str, ty: &ParamType) -> TokenStream {
     let name_ident = format_ident!("{}", name);
     let ty_tokens = param_type_tokens(ty);
     quote! { #name_ident: #ty_tokens }
 }
 
-/// パラメータの呼び出し式トークン (enum → xlsx::T::from, struct → inner access, etc.)
+/// Parameter call expression tokens (enum -> xlsx::T::from, struct -> inner access, etc.)
 pub fn param_call_tokens(name: &str, ty: &ParamType, ctx: &CodegenContext) -> TokenStream {
     let name_ident = format_ident!("{}", name);
     match ty {
