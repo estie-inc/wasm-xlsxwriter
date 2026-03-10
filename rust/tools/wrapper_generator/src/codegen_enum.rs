@@ -1,36 +1,26 @@
 // IR から enum ラッパーの Rust コードを生成する
 
-use crate::ir::{AnalyzedEnum, VariantKind};
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+
+use crate::ir::{AnalyzedEnum, AnalyzedVariant, VariantKind};
 
 pub fn generate_enum_file(e: &AnalyzedEnum) -> String {
-    let mut out = String::new();
-
-    // Imports
-    out.push_str("use rust_xlsxwriter as xlsx;\n");
-    out.push_str("use serde::{Deserialize, Serialize};\n");
-    out.push_str("use tsify::Tsify;\n");
-    out.push('\n');
-
-    // Enum-level doc comment
-    if let Some(doc) = &e.doc {
-        for line in doc.lines() {
-            out.push_str(&format!("/// {}\n", line));
-        }
-    }
+    let enum_ident = format_ident!("{}", e.name);
 
     // Derive macros
     let has_data = e.has_data_variants();
-    let mut derives = vec!["Debug", "Clone"];
-    if !has_data {
-        derives.push("Copy");
-    }
-    derives.extend(["Serialize", "Deserialize", "Tsify"]);
-    out.push_str(&format!("#[derive({})]\n", derives.join(", ")));
-    if e.has_default {
-        out.push_str("#[derive(Default)]\n");
-    }
-    out.push_str("#[tsify(into_wasm_abi, from_wasm_abi)]\n");
-    out.push_str(&format!("pub enum {} {{\n", e.name));
+    let core_derives = if has_data {
+        quote! { #[derive(Debug, Clone, Serialize, Deserialize, Tsify)] }
+    } else {
+        quote! { #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)] }
+    };
+
+    let default_derive = if e.has_default {
+        quote! { #[derive(Default)] }
+    } else {
+        quote! {}
+    };
 
     // Determine which variant gets #[default]
     let default_variant_idx = if e.has_default {
@@ -39,59 +29,93 @@ pub fn generate_enum_file(e: &AnalyzedEnum) -> String {
         None
     };
 
-    // Variants
-    for (idx, variant) in e.variants.iter().enumerate() {
-        if let Some(doc) = &variant.doc {
-            for line in doc.lines() {
-                out.push_str(&format!("    /// {}\n", line));
+    // Variants — doc comments are injected as raw /// lines
+    let variant_strings: Vec<String> = e
+        .variants
+        .iter()
+        .enumerate()
+        .map(|(idx, variant)| {
+            let mut parts = Vec::new();
+            if let Some(doc) = &variant.doc {
+                for line in doc.lines() {
+                    parts.push(format!("/// {}", line));
+                }
+            }
+            if default_variant_idx == Some(idx) {
+                parts.push("#[default]".to_string());
+            }
+            let variant_ident = format_ident!("{}", variant.name);
+            let variant_tokens = match &variant.kind {
+                VariantKind::Plain => {
+                    quote! { #variant_ident, }
+                }
+                VariantKind::Tuple(fields) => {
+                    let field_types: Vec<TokenStream> = fields
+                        .iter()
+                        .map(|ty_str| ty_str.parse::<TokenStream>().expect("valid type token"))
+                        .collect();
+                    quote! { #variant_ident(#(#field_types),*), }
+                }
+                VariantKind::Struct(fields) => {
+                    let field_tokens: Vec<TokenStream> = fields
+                        .iter()
+                        .map(|(name, ty_str)| {
+                            let field_ident = format_ident!("{}", name);
+                            let field_ty: TokenStream =
+                                ty_str.parse().expect("valid type token");
+                            quote! { #field_ident: #field_ty }
+                        })
+                        .collect();
+                    quote! { #variant_ident { #(#field_tokens),* }, }
+                }
+            };
+            parts.push(variant_tokens.to_string());
+            parts.join("\n")
+        })
+        .collect();
+    let variants_body = variant_strings.join("\n");
+
+    // From impl match arms
+    let match_arms = e
+        .variants
+        .iter()
+        .map(|variant| generate_match_arm_tokens(&enum_ident, variant))
+        .collect::<Vec<_>>();
+
+    let imports = quote! {
+        use rust_xlsxwriter as xlsx;
+        use serde::{Deserialize, Serialize};
+        use tsify::Tsify;
+    };
+
+    // Enum doc comment as raw /// lines
+    let enum_doc = format_doc_comments(&e.doc);
+
+    let enum_attrs = quote! {
+        #core_derives
+        #default_derive
+        #[tsify(into_wasm_abi, from_wasm_abi)]
+    };
+
+    let enum_header = format!(
+        "{}{}pub enum {} {{\n{}\n}}",
+        enum_doc,
+        enum_attrs,
+        enum_ident,
+        variants_body,
+    );
+
+    let from_impl = quote! {
+        impl From<#enum_ident> for xlsx::#enum_ident {
+            fn from(value: #enum_ident) -> xlsx::#enum_ident {
+                match value {
+                    #(#match_arms)*
+                }
             }
         }
-        if default_variant_idx == Some(idx) {
-            out.push_str("    #[default]\n");
-        }
-        match &variant.kind {
-            VariantKind::Plain => {
-                out.push_str(&format!("    {},\n", variant.name));
-            }
-            VariantKind::Tuple(fields) => {
-                let fields_str = fields.join(", ");
-                out.push_str(&format!("    {}({}),\n", variant.name, fields_str));
-            }
-            VariantKind::Struct(fields) => {
-                let fields_str = fields
-                    .iter()
-                    .map(|(name, ty)| format!("{}: {}", name, ty))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                out.push_str(&format!("    {} {{ {} }},\n", variant.name, fields_str));
-            }
-        }
-    }
+    };
 
-    out.push_str("}\n");
-    out.push('\n');
-
-    // From impl
-    out.push_str(&format!(
-        "impl From<{name}> for xlsx::{name} {{\n",
-        name = e.name
-    ));
-    out.push_str(&format!(
-        "    fn from(value: {name}) -> xlsx::{name} {{\n",
-        name = e.name
-    ));
-    out.push_str("        match value {\n");
-
-    for variant in &e.variants {
-        let arm = generate_match_arm(&e.name, variant);
-        out.push_str(&format!("            {}\n", arm));
-    }
-
-    out.push_str("        }\n");
-    out.push_str("    }\n");
-    out.push_str("}\n");
-
-    out
+    format!("{}\n\n{}\n\n{}\n", imports, enum_header, from_impl)
 }
 
 /// Returns the index of the variant that should get `#[default]`.
@@ -104,34 +128,45 @@ fn find_default_variant_idx(e: &AnalyzedEnum) -> Option<usize> {
     Some(preferred.unwrap_or(0))
 }
 
-fn generate_match_arm(enum_name: &str, variant: &crate::ir::AnalyzedVariant) -> String {
+fn format_doc_comments(doc: &Option<String>) -> String {
+    match doc {
+        Some(text) => {
+            let mut out = String::new();
+            for line in text.lines() {
+                out.push_str(&format!("/// {}\n", line));
+            }
+            out
+        }
+        None => String::new(),
+    }
+}
+
+fn generate_match_arm_tokens(
+    enum_ident: &proc_macro2::Ident,
+    variant: &AnalyzedVariant,
+) -> TokenStream {
+    let variant_ident = format_ident!("{}", variant.name);
     match &variant.kind {
         VariantKind::Plain => {
-            format!(
-                "{name}::{var} => xlsx::{name}::{var},",
-                name = enum_name,
-                var = variant.name
-            )
+            quote! {
+                #enum_ident::#variant_ident => xlsx::#enum_ident::#variant_ident,
+            }
         }
         VariantKind::Tuple(fields) => {
-            let bindings: Vec<String> = (0..fields.len()).map(|i| format!("v{}", i)).collect();
-            let bindings_str = bindings.join(", ");
-            format!(
-                "{name}::{var}({binds}) => xlsx::{name}::{var}({binds}),",
-                name = enum_name,
-                var = variant.name,
-                binds = bindings_str
-            )
+            let bindings: Vec<proc_macro2::Ident> =
+                (0..fields.len()).map(|i| format_ident!("v{}", i)).collect();
+            quote! {
+                #enum_ident::#variant_ident(#(#bindings),*) => xlsx::#enum_ident::#variant_ident(#(#bindings),*),
+            }
         }
         VariantKind::Struct(fields) => {
-            let field_names: Vec<String> = fields.iter().map(|(name, _)| name.clone()).collect();
-            let fields_str = field_names.join(", ");
-            format!(
-                "{name}::{var} {{ {fields} }} => xlsx::{name}::{var} {{ {fields} }},",
-                name = enum_name,
-                var = variant.name,
-                fields = fields_str
-            )
+            let field_idents: Vec<proc_macro2::Ident> = fields
+                .iter()
+                .map(|(name, _)| format_ident!("{}", name))
+                .collect();
+            quote! {
+                #enum_ident::#variant_ident { #(#field_idents),* } => xlsx::#enum_ident::#variant_ident { #(#field_idents),* },
+            }
         }
     }
 }
@@ -154,12 +189,12 @@ mod tests {
             doc: None,
         };
         let code = generate_enum_file(&e);
-        assert!(code.contains("#[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]"));
-        assert!(code.contains("#[tsify(into_wasm_abi, from_wasm_abi)]"));
-        assert!(code.contains("pub enum FormatAlign {"));
-        assert!(code.contains("General,"));
-        assert!(code.contains("Left,"));
-        assert!(code.contains("Center,"));
+        assert!(code.contains("derive (Debug , Clone , Copy , Serialize , Deserialize , Tsify)"));
+        assert!(code.contains("tsify (into_wasm_abi , from_wasm_abi)"));
+        assert!(code.contains("pub enum FormatAlign"));
+        assert!(code.contains("General ,"));
+        assert!(code.contains("Left ,"));
+        assert!(code.contains("Center ,"));
         // NOT wasm_bindgen
         assert!(!code.contains("wasm_bindgen"));
     }
@@ -176,9 +211,9 @@ mod tests {
             doc: None,
         };
         let code = generate_enum_file(&e);
-        assert!(code.contains("impl From<FormatBorder> for xlsx::FormatBorder {"));
-        assert!(code.contains("FormatBorder::None => xlsx::FormatBorder::None,"));
-        assert!(code.contains("FormatBorder::Thin => xlsx::FormatBorder::Thin,"));
+        assert!(code.contains("impl From < FormatBorder > for xlsx :: FormatBorder"));
+        assert!(code.contains("FormatBorder :: None => xlsx :: FormatBorder :: None"));
+        assert!(code.contains("FormatBorder :: Thin => xlsx :: FormatBorder :: Thin"));
     }
 
     #[test]
@@ -197,11 +232,11 @@ mod tests {
         let code = generate_enum_file(&e);
         // No Copy derive (has data variants)
         assert!(!code.contains("Copy"));
-        assert!(code.contains("RGB(u32),"));
-        assert!(code.contains("Theme(u8, u8),"));
+        assert!(code.contains("RGB (u32)"));
+        assert!(code.contains("Theme (u8 , u8)"));
         // From impl handles data
-        assert!(code.contains("Color::RGB(v0) => xlsx::Color::RGB(v0),"));
-        assert!(code.contains("Color::Theme(v0, v1) => xlsx::Color::Theme(v0, v1),"));
+        assert!(code.contains("Color :: RGB (v0) => xlsx :: Color :: RGB (v0)"));
+        assert!(code.contains("Color :: Theme (v0 , v1) => xlsx :: Color :: Theme (v0 , v1)"));
     }
 
     #[test]
@@ -216,7 +251,7 @@ mod tests {
             doc: None,
         };
         let code = generate_enum_file(&e);
-        assert!(code.contains("Default)]")); // derive(Default)
+        assert!(code.contains("derive (Default)"));
         assert!(code.contains("#[default]"));
     }
 
@@ -248,8 +283,10 @@ mod tests {
             doc: None,
         };
         let code = generate_enum_file(&e);
-        assert!(code.contains("use rust_xlsxwriter as xlsx;"));
-        assert!(code.contains("use serde::{Deserialize, Serialize};"));
-        assert!(code.contains("use tsify::Tsify;"));
+        assert!(code.contains("use rust_xlsxwriter as xlsx"));
+        assert!(code.contains("use serde"));
+        assert!(code.contains("Deserialize"));
+        assert!(code.contains("Serialize"));
+        assert!(code.contains("use tsify :: Tsify"));
     }
 }

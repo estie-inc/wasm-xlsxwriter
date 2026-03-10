@@ -3,44 +3,26 @@
 pub mod enums;
 pub use enums::*;
 
-mod comment;
-pub use comment::*;
+mod conditional_format_value;
+pub use conditional_format_value::*;
 
-mod shape_font;
-pub use shape_font::*;
+mod conditional_format_top;
+pub use conditional_format_top::*;
 
-mod shape_gradient_fill;
-pub use shape_gradient_fill::*;
-
-mod conditional_format_2_color_scale;
-pub use conditional_format_2_color_scale::*;
-
-mod chart_plot_area;
-pub use chart_plot_area::*;
-
-mod data_validation;
-pub use data_validation::*;
+mod shape_line;
+pub use shape_line::*;
 
 mod chart_error_bars;
 pub use chart_error_bars::*;
 
-mod conditional_format_cell;
-pub use conditional_format_cell::*;
-
-mod conditional_format_date;
-pub use conditional_format_date::*;
-
-mod chart_trendline;
-pub use chart_trendline::*;
-
-mod button;
-pub use button::*;
-
-mod filter_data;
-pub use filter_data::*;
+mod shape_solid_fill;
+pub use shape_solid_fill::*;
 
 mod conditional_format_error;
 pub use conditional_format_error::*;
+
+mod data_validation;
+pub use data_validation::*;
 
 mod shape_format;
 pub use shape_format::*;
@@ -48,68 +30,86 @@ pub use shape_format::*;
 mod shape_gradient_stop;
 pub use shape_gradient_stop::*;
 
-mod conditional_format_formula;
-pub use conditional_format_formula::*;
+mod comment;
+pub use comment::*;
 
-mod conditional_format_average;
-pub use conditional_format_average::*;
-
-mod conditional_format_icon_set;
-pub use conditional_format_icon_set::*;
-
-mod protection_options;
-pub use protection_options::*;
-
-mod shape_text;
-pub use shape_text::*;
-
-mod conditional_format_data_bar;
-pub use conditional_format_data_bar::*;
-
-mod shape_solid_fill;
-pub use shape_solid_fill::*;
-
-mod conditional_format_custom_icon;
-pub use conditional_format_custom_icon::*;
-
-mod filter_condition;
-pub use filter_condition::*;
-
-mod chart_area;
-pub use chart_area::*;
+mod shape;
+pub use shape::*;
 
 mod custom_property;
 pub use custom_property::*;
 
-mod conditional_format_text;
-pub use conditional_format_text::*;
+mod filter_data;
+pub use filter_data::*;
 
 mod conditional_format_3_color_scale;
 pub use conditional_format_3_color_scale::*;
 
-mod conditional_format_value;
-pub use conditional_format_value::*;
+mod conditional_format_formula;
+pub use conditional_format_formula::*;
 
-mod conditional_format_top;
-pub use conditional_format_top::*;
+mod conditional_format_text;
+pub use conditional_format_text::*;
+
+mod chart_plot_area;
+pub use chart_plot_area::*;
 
 mod shape_pattern_fill;
 pub use shape_pattern_fill::*;
 
-mod chart_data_table;
-pub use chart_data_table::*;
-
-mod shape_line;
-pub use shape_line::*;
-
 mod sparkline;
 pub use sparkline::*;
 
-mod conditional_format_blank;
-pub use conditional_format_blank::*;
+mod conditional_format_2_color_scale;
+pub use conditional_format_2_color_scale::*;
+
+mod conditional_format_custom_icon;
+pub use conditional_format_custom_icon::*;
+
+mod shape_text;
+pub use shape_text::*;
 
 mod conditional_format_duplicate;
 pub use conditional_format_duplicate::*;
 
-mod shape;
-pub use shape::*;
+mod shape_gradient_fill;
+pub use shape_gradient_fill::*;
+
+mod conditional_format_date;
+pub use conditional_format_date::*;
+
+mod shape_font;
+pub use shape_font::*;
+
+mod conditional_format_cell;
+pub use conditional_format_cell::*;
+
+mod chart_area;
+pub use chart_area::*;
+
+mod protection_options;
+pub use protection_options::*;
+
+mod conditional_format_blank;
+pub use conditional_format_blank::*;
+
+mod filter_condition;
+pub use filter_condition::*;
+
+mod chart_data_table;
+pub use chart_data_table::*;
+
+mod chart_trendline;
+pub use chart_trendline::*;
+
+mod conditional_format_data_bar;
+pub use conditional_format_data_bar::*;
+
+mod conditional_format_icon_set;
+pub use conditional_format_icon_set::*;
+
+mod conditional_format_average;
+pub use conditional_format_average::*;
+
+mod button;
+pub use button::*;

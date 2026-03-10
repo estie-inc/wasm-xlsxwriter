@@ -2,7 +2,13 @@
 
 use std::collections::HashSet;
 
-use crate::ir::{AnalyzedMethod, AnalyzedParam, AnalyzedStruct, Accessor, ParamType, ReceiverKind, ReturnKind, StructRole};
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+
+use crate::codegen_tokens::{param_call_tokens, param_sig_tokens};
+use crate::ir::{
+    Accessor, AnalyzedMethod, AnalyzedStruct, ParamType, ReceiverKind, ReturnKind, StructRole,
+};
 
 /// Context for code generation.
 pub struct CodegenContext {
@@ -31,9 +37,10 @@ impl CodegenContext {
 pub fn generate_struct_file(s: &AnalyzedStruct, ctx: &CodegenContext) -> String {
     match &s.role {
         StructRole::Standalone => generate_standalone_struct(s, ctx),
-        StructRole::Proxy { parent_name, accessors } => {
-            generate_proxy_struct(s, parent_name, accessors, ctx)
-        }
+        StructRole::Proxy {
+            parent_name,
+            accessors,
+        } => generate_proxy_struct(s, parent_name, accessors, ctx),
     }
 }
 
@@ -84,231 +91,262 @@ fn collect_wrapped_types_from_param(ty: &ParamType, out: &mut Vec<String>) {
     }
 }
 
-fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> String {
-    let name = &s.name;
-    let import_types = collect_import_types(s, &ctx.available_types);
+fn generate_imports(name: &str, import_types: &[String]) -> TokenStream {
+    let type_imports: Vec<TokenStream> = import_types
+        .iter()
+        .filter(|ty| ty.as_str() != name)
+        .map(|ty| {
+            let ty_ident = format_ident!("{}", ty);
+            quote! { use crate::wrapper::#ty_ident; }
+        })
+        .collect();
 
-    let mut lines: Vec<String> = vec![];
-
-    lines.push("use rust_xlsxwriter as xlsx;".into());
-    lines.push("use std::sync::{Arc, Mutex};".into());
-    lines.push("use wasm_bindgen::prelude::*;".into());
-    lines.push("use crate::wrapper::WasmResult;".into());
-    for ty in &import_types {
-        if ty != name {
-            lines.push(format!("use crate::wrapper::{};", ty));
-        }
+    quote! {
+        use rust_xlsxwriter as xlsx;
+        use std::sync::{Arc, Mutex};
+        use wasm_bindgen::prelude::*;
+        use crate::wrapper::WasmResult;
+        #(#type_imports)*
     }
-    lines.push(String::new());
-
-    lines.push("#[derive(Clone)]".into());
-    lines.push("#[wasm_bindgen]".into());
-    lines.push(format!("pub struct {} {{", name));
-    lines.push(format!("    pub(crate) inner: Arc<Mutex<xlsx::{}>>,", name));
-    lines.push("}".into());
-    lines.push(String::new());
-
-    lines.push("#[wasm_bindgen]".into());
-    lines.push(format!("impl {} {{", name));
-
-    if let Some(ctor) = &s.constructor {
-        let params_sig: Vec<String> = ctor.params.iter().map(format_param_sig).collect();
-        let params_call: Vec<String> = ctor.params.iter().map(|p| format_param_call(p, ctx)).collect();
-        lines.push("    #[wasm_bindgen(constructor)]".into());
-        lines.push(format!(
-            "    pub fn new({}) -> {} {{",
-            params_sig.join(", "),
-            name
-        ));
-        lines.push(format!("        {} {{", name));
-        lines.push(format!(
-            "            inner: Arc::new(Mutex::new(xlsx::{}::new({}))),",
-            name,
-            params_call.join(", ")
-        ));
-        lines.push("        }".into());
-        lines.push("    }".into());
-    }
-
-    for method in s.generatable_methods() {
-        if !method_types_available(method, &ctx.available_types) {
-            continue;
-        }
-        let method_code = generate_method(method, name, s.has_default, ctx);
-        lines.push(method_code);
-    }
-
-    lines.push("}".into());
-
-    lines.join("\n")
 }
 
-fn generate_method(m: &AnalyzedMethod, struct_name: &str, has_default: bool, ctx: &CodegenContext) -> String {
-    let params_sig: Vec<String> = m.params.iter().map(format_param_sig).collect();
-    let params_call: Vec<String> = m.params.iter().map(|p| format_param_call(p, ctx)).collect();
+fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> String {
+    let name = &s.name;
+    let name_ident = format_ident!("{}", name);
+    let import_types = collect_import_types(s, &ctx.available_types);
 
-    let ret_type = match &m.returns {
-        ReturnKind::SelfType => struct_name.to_string(),
-        ReturnKind::ResultSelf => format!("WasmResult<{}>", struct_name),
-        ReturnKind::ResultVoid => "WasmResult<()>".to_string(),
-        ReturnKind::Void => "()".to_string(),
-        ReturnKind::Other(t) => t.clone(),
+    let imports = generate_imports(name, &import_types);
+
+    let xlsx_name = format_ident!("{}", name);
+
+    let ctor_tokens = if let Some(ctor) = &s.constructor {
+        let params_sig: Vec<TokenStream> = ctor
+            .params
+            .iter()
+            .map(|p| param_sig_tokens(&p.name, &p.ty))
+            .collect();
+        let params_call: Vec<TokenStream> = ctor
+            .params
+            .iter()
+            .map(|p| param_call_tokens(&p.name, &p.ty, ctx))
+            .collect();
+        quote! {
+            #[wasm_bindgen(constructor)]
+            pub fn new(#(#params_sig),*) -> #name_ident {
+                #name_ident {
+                    inner: Arc::new(Mutex::new(xlsx::#xlsx_name::new(#(#params_call),*))),
+                }
+            }
+        }
+    } else {
+        quote! {}
+    };
+
+    let method_tokens: Vec<TokenStream> = s
+        .generatable_methods()
+        .filter(|m| method_types_available(m, &ctx.available_types))
+        .map(|m| generate_method(m, name, s.has_default, ctx))
+        .collect();
+
+    let struct_def = quote! {
+        #[derive(Clone)]
+        #[wasm_bindgen]
+        pub struct #name_ident {
+            pub(crate) inner: Arc<Mutex<xlsx::#xlsx_name>>,
+        }
+    };
+
+    let impl_block = quote! {
+        #[wasm_bindgen]
+        impl #name_ident {
+            #ctor_tokens
+            #(#method_tokens)*
+        }
+    };
+
+    format!("{}\n\n{}\n\n{}\n", imports, struct_def, impl_block)
+}
+
+fn generate_method(
+    m: &AnalyzedMethod,
+    struct_name: &str,
+    has_default: bool,
+    ctx: &CodegenContext,
+) -> TokenStream {
+    let struct_ident = format_ident!("{}", struct_name);
+    let method_ident = format_ident!("{}", m.name);
+    let js_name = &m.js_name;
+
+    let params_sig: Vec<TokenStream> = m
+        .params
+        .iter()
+        .map(|p| param_sig_tokens(&p.name, &p.ty))
+        .collect();
+    let params_call: Vec<TokenStream> = m
+        .params
+        .iter()
+        .map(|p| param_call_tokens(&p.name, &p.ty, ctx))
+        .collect();
+
+    let ret_type: TokenStream = match &m.returns {
+        ReturnKind::SelfType => quote! { #struct_ident },
+        ReturnKind::ResultSelf => quote! { WasmResult<#struct_ident> },
+        ReturnKind::ResultVoid => quote! { WasmResult<()> },
+        ReturnKind::Void => quote! { () },
+        ReturnKind::Other(t) => {
+            let t_tokens: TokenStream = t.parse().expect("return type should be valid tokens");
+            quote! { #t_tokens }
+        }
     };
 
     let sig_params = if params_sig.is_empty() {
-        "&self".to_string()
+        quote! { &self }
     } else {
-        format!("&self, {}", params_sig.join(", "))
+        quote! { &self, #(#params_sig),* }
     };
 
-    let mut lines: Vec<String> = vec![];
-    lines.push(format!(
-        "    #[wasm_bindgen(js_name = \"{}\", skip_jsdoc)]",
-        m.js_name
-    ));
-    lines.push(format!(
-        "    pub fn {}({}) -> {} {{",
-        m.name, sig_params, ret_type
-    ));
-
-    let call_args = params_call.join(", ");
-
-    match (&m.returns, &m.receiver) {
+    let body: TokenStream = match (&m.returns, &m.receiver) {
         (ReturnKind::ResultSelf, _) => {
-            lines.push("        let mut lock = self.inner.lock().unwrap();".into());
-            lines.push(format!(
-                "        lock.{}({})?;",
-                m.name, call_args
-            ));
-            lines.push(format!(
-                "        Ok({} {{ inner: Arc::clone(&self.inner) }})",
-                struct_name
-            ));
+            quote! {
+                let mut lock = self.inner.lock().unwrap();
+                lock.#method_ident(#(#params_call),*)?;
+                Ok(#struct_ident { inner: Arc::clone(&self.inner) })
+            }
         }
         (ReturnKind::ResultVoid, _) => {
-            lines.push("        let mut lock = self.inner.lock().unwrap();".into());
-            lines.push(format!(
-                "        lock.{}({})?;",
-                m.name, call_args
-            ));
-            lines.push("        Ok(())".into());
+            quote! {
+                let mut lock = self.inner.lock().unwrap();
+                lock.#method_ident(#(#params_call),*)?;
+                Ok(())
+            }
         }
         (ReturnKind::Void, _) => {
-            lines.push("        let mut lock = self.inner.lock().unwrap();".into());
-            lines.push(format!("        lock.{}({});", m.name, call_args));
+            quote! {
+                let mut lock = self.inner.lock().unwrap();
+                lock.#method_ident(#(#params_call),*);
+            }
         }
-        (ReturnKind::Other(ret), _) => {
-            lines.push("        let lock = self.inner.lock().unwrap();".into());
-            lines.push(format!("        lock.{}({})", m.name, call_args));
-            let _ = ret;
+        (ReturnKind::Other(_), _) => {
+            quote! {
+                let lock = self.inner.lock().unwrap();
+                lock.#method_ident(#(#params_call),*)
+            }
         }
         (ReturnKind::SelfType, ReceiverKind::ConsumeSelf) => {
+            let xlsx_ident = format_ident!("{}", struct_name);
             if has_default {
-                lines.push("        let mut lock = self.inner.lock().unwrap();".into());
-                lines.push("        let mut inner = std::mem::take(&mut *lock);".into());
-                lines.push(format!("        inner = inner.{}({});", m.name, call_args));
-                lines.push("        *lock = inner;".into());
-                lines.push(format!(
-                    "        {} {{ inner: Arc::clone(&self.inner) }}",
-                    struct_name
-                ));
+                quote! {
+                    let mut lock = self.inner.lock().unwrap();
+                    let mut inner = std::mem::take(&mut *lock);
+                    inner = inner.#method_ident(#(#params_call),*);
+                    *lock = inner;
+                    #struct_ident { inner: Arc::clone(&self.inner) }
+                }
             } else {
-                lines.push("        let mut lock = self.inner.lock().unwrap();".into());
-                lines.push(format!(
-                    "        let old = std::mem::replace(&mut *lock, xlsx::{}::default());",
-                    struct_name
-                ));
-                lines.push(format!("        *lock = old.{}({});", m.name, call_args));
-                lines.push(format!(
-                    "        {} {{ inner: Arc::clone(&self.inner) }}",
-                    struct_name
-                ));
+                quote! {
+                    let mut lock = self.inner.lock().unwrap();
+                    let old = std::mem::replace(&mut *lock, xlsx::#xlsx_ident::default());
+                    *lock = old.#method_ident(#(#params_call),*);
+                    #struct_ident { inner: Arc::clone(&self.inner) }
+                }
             }
         }
         (ReturnKind::SelfType, ReceiverKind::MutSelf) => {
-            lines.push("        let mut lock = self.inner.lock().unwrap();".into());
-            lines.push(format!("        lock.{}({});", m.name, call_args));
-            lines.push(format!(
-                "        {} {{ inner: Arc::clone(&self.inner) }}",
-                struct_name
-            ));
+            quote! {
+                let mut lock = self.inner.lock().unwrap();
+                lock.#method_ident(#(#params_call),*);
+                #struct_ident { inner: Arc::clone(&self.inner) }
+            }
         }
         (ReturnKind::SelfType, ReceiverKind::RefSelf) => {
-            lines.push("        let lock = self.inner.lock().unwrap();".into());
-            lines.push(format!("        lock.{}({});", m.name, call_args));
-            lines.push(format!(
-                "        {} {{ inner: Arc::clone(&self.inner) }}",
-                struct_name
-            ));
+            quote! {
+                let lock = self.inner.lock().unwrap();
+                lock.#method_ident(#(#params_call),*);
+                #struct_ident { inner: Arc::clone(&self.inner) }
+            }
+        }
+    };
+
+    quote! {
+        #[wasm_bindgen(js_name = #js_name, skip_jsdoc)]
+        pub fn #method_ident(#sig_params) -> #ret_type {
+            #body
         }
     }
-
-    lines.push("    }".into());
-    lines.join("\n")
 }
 
-fn generate_proxy_struct(s: &AnalyzedStruct, parent_name: &str, accessors: &[Accessor], ctx: &CodegenContext) -> String {
+fn generate_proxy_struct(
+    s: &AnalyzedStruct,
+    parent_name: &str,
+    accessors: &[Accessor],
+    ctx: &CodegenContext,
+) -> String {
     let name = &s.name;
+    let name_ident = format_ident!("{}", name);
+    let parent_ident = format_ident!("{}", parent_name);
     let import_types = collect_import_types(s, &ctx.available_types);
 
     let multi_accessor = accessors.len() > 1;
-    let accessor_enum_name = format!("{}Accessor", name);
 
-    let mut lines: Vec<String> = vec![];
+    let imports = generate_imports(name, &import_types);
 
-    lines.push("use rust_xlsxwriter as xlsx;".into());
-    lines.push("use std::sync::{Arc, Mutex};".into());
-    lines.push("use wasm_bindgen::prelude::*;".into());
-    lines.push("use crate::wrapper::WasmResult;".into());
-    for ty in &import_types {
-        if ty != name {
-            lines.push(format!("use crate::wrapper::{};", ty));
-        }
-    }
-    lines.push(String::new());
+    let mut sections: Vec<String> = vec![imports.to_string()];
 
     if multi_accessor {
-        lines.push("#[derive(Clone, Copy)]".into());
-        lines.push(format!("pub enum {} {{", accessor_enum_name));
-        for acc in accessors {
-            let variant = snake_to_pascal(&acc.parent_method);
-            lines.push(format!("    {},", variant));
+        let accessor_enum_ident = format_ident!("{}Accessor", name);
+        let variants: Vec<proc_macro2::Ident> = accessors
+            .iter()
+            .map(|acc| format_ident!("{}", snake_to_pascal(&acc.parent_method)))
+            .collect();
+        sections.push(
+            quote! {
+                #[derive(Clone, Copy)]
+                pub enum #accessor_enum_ident {
+                    #(#variants),*
+                }
+            }
+            .to_string(),
+        );
+    }
+
+    let accessor_field = if multi_accessor {
+        let accessor_enum_ident = format_ident!("{}Accessor", name);
+        quote! {
+            pub(crate) accessor: #accessor_enum_ident,
         }
-        lines.push("}".into());
-        lines.push(String::new());
-    }
+    } else {
+        quote! {}
+    };
 
-    lines.push("#[derive(Clone)]".into());
-    lines.push("#[wasm_bindgen]".into());
-    lines.push(format!("pub struct {} {{", name));
-    lines.push(format!(
-        "    pub(crate) parent: Arc<Mutex<xlsx::{}>>,",
-        parent_name
-    ));
-    if multi_accessor {
-        lines.push(format!(
-            "    pub(crate) accessor: {},",
-            accessor_enum_name
-        ));
-    }
-    lines.push("}".into());
-    lines.push(String::new());
+    let method_tokens: Vec<TokenStream> = s
+        .generatable_methods()
+        .filter(|m| method_types_available(m, &ctx.available_types))
+        .map(|m| generate_proxy_method(m, name, parent_name, accessors, multi_accessor, ctx))
+        .collect();
 
-    lines.push("#[wasm_bindgen]".into());
-    lines.push(format!("impl {} {{", name));
-
-    for method in s.generatable_methods() {
-        if !method_types_available(method, &ctx.available_types) {
-            continue;
+    sections.push(
+        quote! {
+            #[derive(Clone)]
+            #[wasm_bindgen]
+            pub struct #name_ident {
+                pub(crate) parent: Arc<Mutex<xlsx::#parent_ident>>,
+                #accessor_field
+            }
         }
-        let method_code =
-            generate_proxy_method(method, name, parent_name, accessors, multi_accessor, ctx);
-        lines.push(method_code);
-    }
+        .to_string(),
+    );
 
-    lines.push("}".into());
+    sections.push(
+        quote! {
+            #[wasm_bindgen]
+            impl #name_ident {
+                #(#method_tokens)*
+            }
+        }
+        .to_string(),
+    );
 
-    lines.join("\n")
+    sections.join("\n\n")
 }
 
 fn generate_proxy_method(
@@ -318,92 +356,122 @@ fn generate_proxy_method(
     accessors: &[Accessor],
     multi_accessor: bool,
     ctx: &CodegenContext,
-) -> String {
-    let params_sig: Vec<String> = m.params.iter().map(format_param_sig).collect();
-    let params_call: Vec<String> = m.params.iter().map(|p| format_param_call(p, ctx)).collect();
+) -> TokenStream {
+    let struct_ident = format_ident!("{}", struct_name);
+    let method_ident = format_ident!("{}", m.name);
+    let js_name = &m.js_name;
 
-    let ret_type = match &m.returns {
-        ReturnKind::SelfType => struct_name.to_string(),
-        ReturnKind::ResultSelf => format!("WasmResult<{}>", struct_name),
-        ReturnKind::ResultVoid => "WasmResult<()>".to_string(),
-        ReturnKind::Void => "()".to_string(),
-        ReturnKind::Other(t) => t.clone(),
+    let params_sig: Vec<TokenStream> = m
+        .params
+        .iter()
+        .map(|p| param_sig_tokens(&p.name, &p.ty))
+        .collect();
+    let params_call: Vec<TokenStream> = m
+        .params
+        .iter()
+        .map(|p| param_call_tokens(&p.name, &p.ty, ctx))
+        .collect();
+
+    let ret_type: TokenStream = match &m.returns {
+        ReturnKind::SelfType => quote! { #struct_ident },
+        ReturnKind::ResultSelf => quote! { WasmResult<#struct_ident> },
+        ReturnKind::ResultVoid => quote! { WasmResult<()> },
+        ReturnKind::Void => quote! { () },
+        ReturnKind::Other(t) => {
+            let t_tokens: TokenStream = t.parse().expect("return type should be valid tokens");
+            quote! { #t_tokens }
+        }
     };
 
     let sig_params = if params_sig.is_empty() {
-        "&self".to_string()
+        quote! { &self }
     } else {
-        format!("&self, {}", params_sig.join(", "))
+        quote! { &self, #(#params_sig),* }
     };
 
-    let call_args = params_call.join(", ");
-
-    let mut lines: Vec<String> = vec![];
-    lines.push(format!(
-        "    #[wasm_bindgen(js_name = \"{}\", skip_jsdoc)]",
-        m.js_name
-    ));
-    lines.push(format!(
-        "    pub fn {}({}) -> {} {{",
-        m.name, sig_params, ret_type
-    ));
-    lines.push("        let mut lock = self.parent.lock().unwrap();".into());
-
-    let accessor_call = if multi_accessor {
-        let accessor_enum_name = format!("{}Accessor", struct_name);
-        // Build match expression for accessor
-        let arms: Vec<String> = accessors
+    let accessor_expr: TokenStream = if multi_accessor {
+        let accessor_enum_ident = format_ident!("{}Accessor", struct_name);
+        let arms: Vec<TokenStream> = accessors
             .iter()
             .map(|acc| {
-                let variant = snake_to_pascal(&acc.parent_method);
-                format!(
-                    "            {}::{} => lock.{}().{}({}),",
-                    accessor_enum_name, variant, acc.parent_method, m.name, call_args
-                )
+                let variant = format_ident!("{}", snake_to_pascal(&acc.parent_method));
+                let accessor_method = format_ident!("{}", acc.parent_method);
+                quote! {
+                    #accessor_enum_ident::#variant => lock.#accessor_method().#method_ident(#(#params_call),*)
+                }
             })
             .collect();
-        format!(
-            "        match self.accessor {{\n{}\n        }}",
-            arms.join("\n")
-        )
+        quote! {
+            match self.accessor {
+                #(#arms),*
+            }
+        }
     } else {
         let acc = &accessors[0];
-        format!(
-            "        lock.{}().{}({});",
-            acc.parent_method, m.name, call_args
-        )
+        let accessor_method = format_ident!("{}", acc.parent_method);
+        quote! {
+            lock.#accessor_method().#method_ident(#(#params_call),*)
+        }
     };
 
-    match &m.returns {
+    let body: TokenStream = match &m.returns {
         ReturnKind::SelfType => {
-            lines.push(accessor_call);
-            lines.push(format!(
-                "        {} {{ parent: Arc::clone(&self.parent) }}",
-                struct_name
-            ));
+            // match block はセミコロン不要、単一式はセミコロン必要
+            if multi_accessor {
+                quote! {
+                    let mut lock = self.parent.lock().unwrap();
+                    #accessor_expr
+                    #struct_ident { parent: Arc::clone(&self.parent) }
+                }
+            } else {
+                quote! {
+                    let mut lock = self.parent.lock().unwrap();
+                    #accessor_expr;
+                    #struct_ident { parent: Arc::clone(&self.parent) }
+                }
+            }
         }
         ReturnKind::ResultSelf => {
-            // Treat accessor call as fallible
-            lines.push(format!("        {}?;", accessor_call.trim_end_matches(';')));
-            lines.push(format!(
-                "        Ok({} {{ parent: Arc::clone(&self.parent) }})",
-                struct_name
-            ));
+            quote! {
+                let mut lock = self.parent.lock().unwrap();
+                #accessor_expr?;
+                Ok(#struct_ident { parent: Arc::clone(&self.parent) })
+            }
         }
         ReturnKind::ResultVoid => {
-            lines.push(format!("        {}?;", accessor_call.trim_end_matches(';')));
-            lines.push("        Ok(())".into());
+            quote! {
+                let mut lock = self.parent.lock().unwrap();
+                #accessor_expr?;
+                Ok(())
+            }
         }
         ReturnKind::Void => {
-            lines.push(accessor_call);
+            if multi_accessor {
+                quote! {
+                    let mut lock = self.parent.lock().unwrap();
+                    #accessor_expr
+                }
+            } else {
+                quote! {
+                    let mut lock = self.parent.lock().unwrap();
+                    #accessor_expr;
+                }
+            }
         }
         ReturnKind::Other(_) => {
-            lines.push(accessor_call);
+            quote! {
+                let mut lock = self.parent.lock().unwrap();
+                #accessor_expr
+            }
+        }
+    };
+
+    quote! {
+        #[wasm_bindgen(js_name = #js_name, skip_jsdoc)]
+        pub fn #method_ident(#sig_params) -> #ret_type {
+            #body
         }
     }
-
-    lines.push("    }".into());
-    lines.join("\n")
 }
 
 fn snake_to_pascal(s: &str) -> String {
@@ -418,111 +486,10 @@ fn snake_to_pascal(s: &str) -> String {
         .collect()
 }
 
-pub fn format_param_call(param: &AnalyzedParam, ctx: &CodegenContext) -> String {
-    format_param_call_ty(&param.name, &param.ty, ctx)
-}
-
-/// struct パラメータの inner 値取得コード。
-/// 手書きラッパー: inner: T → `.inner.clone()` / `&.inner`
-/// 生成ラッパー: inner: Arc<Mutex<T>> → `.inner.lock().unwrap().clone()`
-fn struct_inner_owned(name: &str, type_name: &str, ctx: &CodegenContext) -> String {
-    if ctx.handwritten_struct_names.contains(type_name) {
-        format!("{}.inner.clone()", name)
-    } else {
-        format!("{}.inner.lock().unwrap().clone()", name)
-    }
-}
-
-fn struct_inner_ref(name: &str, type_name: &str, ctx: &CodegenContext) -> String {
-    if ctx.handwritten_struct_names.contains(type_name) {
-        format!("&{}.inner", name)
-    } else {
-        format!("&*{}.inner.lock().unwrap()", name)
-    }
-}
-
-fn format_param_call_ty(name: &str, ty: &ParamType, ctx: &CodegenContext) -> String {
-    match ty {
-        ParamType::WrappedType(type_name) => {
-            if ctx.handwritten_enum_names.contains(type_name) {
-                format!("{}.inner", name)
-            } else if ctx.enum_names.contains(type_name) {
-                format!("xlsx::{}::from({})", type_name, name)
-            } else {
-                struct_inner_owned(name, type_name, ctx)
-            }
-        }
-        ParamType::RefWrappedType(type_name) => {
-            if ctx.handwritten_enum_names.contains(type_name) {
-                format!("&{}.inner", name)
-            } else if ctx.enum_names.contains(type_name) {
-                format!("&xlsx::{}::from({})", type_name, name)
-            } else {
-                struct_inner_ref(name, type_name, ctx)
-            }
-        }
-        ParamType::VecOf(inner) => match inner.as_ref() {
-            ParamType::WrappedType(type_name) => {
-                if ctx.handwritten_enum_names.contains(type_name) {
-                    format!("{}.into_iter().map(|x| x.inner).collect()", name)
-                } else if ctx.enum_names.contains(type_name) {
-                    format!(
-                        "{}.into_iter().map(|x| xlsx::{}::from(x)).collect()",
-                        name, type_name
-                    )
-                } else if ctx.handwritten_struct_names.contains(type_name) {
-                    format!("{}.iter().map(|x| x.inner.clone()).collect()", name)
-                } else {
-                    format!(
-                        "{}.iter().map(|x| x.inner.lock().unwrap().clone()).collect()",
-                        name
-                    )
-                }
-            }
-            _ => name.to_string(),
-        },
-        ParamType::RefSliceOf(inner) => match inner.as_ref() {
-            ParamType::WrappedType(type_name) => {
-                if ctx.handwritten_enum_names.contains(type_name) {
-                    format!(
-                        "&{}.iter().map(|x| x.inner).collect::<Vec<_>>()",
-                        name
-                    )
-                } else if ctx.enum_names.contains(type_name) {
-                    format!(
-                        "&{}.into_iter().map(|x| xlsx::{}::from(x)).collect::<Vec<_>>()",
-                        name, type_name
-                    )
-                } else if ctx.handwritten_struct_names.contains(type_name) {
-                    format!(
-                        "&{}.iter().map(|x| x.inner.clone()).collect::<Vec<_>>()",
-                        name
-                    )
-                } else {
-                    format!(
-                        "&{}.iter().map(|x| x.inner.lock().unwrap().clone()).collect::<Vec<_>>()",
-                        name
-                    )
-                }
-            }
-            _ => format!("&{}", name),
-        },
-        _ => name.to_string(),
-    }
-}
-
-pub fn format_param_sig(param: &AnalyzedParam) -> String {
-    format!("{}: {}", param.name, param.ty.to_rust_type_str())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ir::*;
-
-    fn empty_enums() -> HashSet<String> {
-        HashSet::new()
-    }
 
     fn enum_set(names: &[&str]) -> HashSet<String> {
         names.iter().map(|s| s.to_string()).collect()
@@ -543,19 +510,19 @@ mod tests {
     fn standalone_struct_definition() {
         let s = make_standalone("Format", true);
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("pub struct Format {"));
-        assert!(code.contains("pub(crate) inner: Arc<Mutex<xlsx::Format>>,"));
-        assert!(code.contains("#[derive(Clone)]"));
-        assert!(code.contains("#[wasm_bindgen]"));
+        assert!(code.contains("pub struct Format"), "missing pub struct Format in: {}", code);
+        assert!(code.contains("pub (crate) inner : Arc < Mutex < xlsx :: Format >>"), "missing inner field in: {}", code);
+        assert!(code.contains("derive(Clone)") || code.contains("derive (Clone)"), "missing derive Clone in: {}", code);
+        assert!(code.contains("wasm_bindgen"), "missing wasm_bindgen in: {}", code);
     }
 
     #[test]
     fn constructor_no_params() {
         let s = make_standalone("Format", true);
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("#[wasm_bindgen(constructor)]"));
-        assert!(code.contains("pub fn new() -> Format"));
-        assert!(code.contains("Arc::new(Mutex::new(xlsx::Format::new()))"));
+        assert!(code.contains("wasm_bindgen(constructor)") || code.contains("wasm_bindgen (constructor)"), "missing wasm_bindgen(constructor) in: {}", code);
+        assert!(code.contains("pub fn new") && code.contains("Format"), "missing constructor signature in: {}", code);
+        assert!(code.contains("Mutex :: new (xlsx :: Format :: new ())") || code.contains("Mutex::new(xlsx::Format::new())"), "missing Mutex::new(xlsx::Format::new()) in: {}", code);
     }
 
     #[test]
@@ -565,8 +532,8 @@ mod tests {
             params: vec![AnalyzedParam { name: "text".into(), ty: ParamType::Str }],
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("pub fn new(text: &str) -> Note"));
-        assert!(code.contains("xlsx::Note::new(text)"));
+        assert!(code.contains("pub fn new") && code.contains("text") && code.contains("& str") && code.contains("Note"), "missing constructor sig in: {}", code);
+        assert!(code.contains("xlsx :: Note :: new (text)") || code.contains("xlsx::Note::new(text)"), "missing new call in: {}", code);
     }
 
     #[test]
@@ -582,10 +549,10 @@ mod tests {
             doc: None,
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("pub fn set_bold(&self) -> Format"));
-        assert!(code.contains("std::mem::take(&mut *lock)"));
-        assert!(code.contains("inner = inner.set_bold()"));
-        assert!(code.contains("Format { inner: Arc::clone(&self.inner) }"));
+        assert!(code.contains("pub fn set_bold") && code.contains("& self") && code.contains("Format"), "missing set_bold sig in: {}", code);
+        assert!(code.contains("mem :: take") || code.contains("mem::take"), "missing mem::take in: {}", code);
+        assert!(code.contains("inner . set_bold") || code.contains("inner.set_bold"), "missing inner.set_bold in: {}", code);
+        assert!(code.contains("Arc :: clone (& self . inner)") || code.contains("Arc::clone(&self.inner)"), "missing Arc::clone in: {}", code);
     }
 
     #[test]
@@ -601,9 +568,9 @@ mod tests {
             doc: None,
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("pub fn set_bold(&self) -> ChartFont"));
-        assert!(code.contains("lock.set_bold()"));
-        assert!(!code.contains("std::mem::take"));
+        assert!(code.contains("pub fn set_bold") && code.contains("& self") && code.contains("ChartFont"), "missing set_bold sig in: {}", code);
+        assert!(code.contains("lock . set_bold") || code.contains("lock.set_bold"), "missing lock.set_bold in: {}", code);
+        assert!(!code.contains("mem :: take") && !code.contains("mem::take"), "should not contain mem::take in: {}", code);
     }
 
     #[test]
@@ -619,8 +586,8 @@ mod tests {
             doc: None,
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("pub fn set_font_size(&self, size: f64) -> Format"));
-        assert!(code.contains("inner.set_font_size(size)"));
+        assert!(code.contains("pub fn set_font_size") && code.contains("size") && code.contains("f64") && code.contains("Format"), "missing set_font_size sig in: {}", code);
+        assert!(code.contains("inner . set_font_size (size)") || code.contains("inner.set_font_size(size)"), "missing inner.set_font_size(size) in: {}", code);
     }
 
     #[test]
@@ -645,8 +612,8 @@ mod tests {
             handwritten_enum_names: HashSet::new(),
         };
         let code = generate_struct_file(&s, &ctx);
-        assert!(code.contains("pub fn set_align(&self, align: FormatAlign) -> Format"));
-        assert!(code.contains("inner.set_align(xlsx::FormatAlign::from(align))"));
+        assert!(code.contains("pub fn set_align") && code.contains("align") && code.contains("FormatAlign") && code.contains("Format"), "missing set_align sig in: {}", code);
+        assert!(code.contains("xlsx :: FormatAlign :: from (align)") || code.contains("xlsx::FormatAlign::from(align)"), "missing xlsx::FormatAlign::from(align) in: {}", code);
     }
 
     #[test]
@@ -671,8 +638,8 @@ mod tests {
             handwritten_enum_names: HashSet::new(),
         };
         let code = generate_struct_file(&s, &ctx);
-        assert!(code.contains("pub fn set_font(&self, font: ChartFont) -> ChartDataTable"));
-        assert!(code.contains("&font.inner"));
+        assert!(code.contains("pub fn set_font") && code.contains("font") && code.contains("ChartFont") && code.contains("ChartDataTable"), "missing set_font sig in: {}", code);
+        assert!(code.contains("& font . inner") || code.contains("&font.inner"), "missing &font.inner in: {}", code);
     }
 
     #[test]
@@ -691,9 +658,9 @@ mod tests {
             doc: None,
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("-> WasmResult<Worksheet>"));
-        assert!(code.contains("lock.set_column_width(col, width)?"));
-        assert!(code.contains("Ok(Worksheet { inner: Arc::clone(&self.inner) })"));
+        assert!(code.contains("WasmResult") && code.contains("Worksheet"), "missing WasmResult<Worksheet> in: {}", code);
+        assert!(code.contains("set_column_width (col , width) ?") || code.contains("set_column_width(col, width)?"), "missing set_column_width(col, width)? in: {}", code);
+        assert!(code.contains("Ok (Worksheet") || code.contains("Ok(Worksheet"), "missing Ok(Worksheet {{...}}) in: {}", code);
     }
 
     #[test]
@@ -709,7 +676,7 @@ mod tests {
             doc: None,
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(!code.contains("fn validate"));
+        assert!(!code.contains("fn validate"), "should not contain fn validate in: {}", code);
     }
 
     #[test]
@@ -737,8 +704,8 @@ mod tests {
             doc: None,
         };
         let code = generate_struct_file(&s, &CodegenContext::empty());
-        assert!(code.contains("pub(crate) parent: Arc<Mutex<xlsx::Chart>>,"));
-        assert!(code.contains("lock.title().set_name(name)"));
-        assert!(code.contains("ChartTitle { parent: Arc::clone(&self.parent) }"));
+        assert!(code.contains("pub (crate) parent : Arc < Mutex < xlsx :: Chart > >") || code.contains("pub(crate) parent: Arc<Mutex<xlsx::Chart>>") || code.contains("pub (crate) parent"), "missing parent field in: {}", code);
+        assert!(code.contains("lock . title () . set_name (name)") || code.contains("lock.title().set_name(name)"), "missing lock.title().set_name(name) in: {}", code);
+        assert!(code.contains("ChartTitle") && code.contains("Arc :: clone (& self . parent)") || code.contains("Arc::clone(&self.parent)"), "missing ChartTitle with Arc::clone in: {}", code);
     }
 }

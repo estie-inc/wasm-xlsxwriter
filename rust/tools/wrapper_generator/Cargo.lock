@@ -545,6 +545,8 @@ dependencies = [
  "clap",
  "crate-inspector",
  "pretty_assertions",
+ "proc-macro2",
+ "quote",
  "rustdoc-types",
  "serde",
  "toml 0.8.23",

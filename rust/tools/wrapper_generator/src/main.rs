@@ -1,6 +1,7 @@
 mod analyze;
 mod codegen;
 mod codegen_enum;
+mod codegen_tokens;
 mod ir;
 mod overrides;
 mod utils;
