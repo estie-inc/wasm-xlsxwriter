@@ -1,0 +1,38 @@
+# wrapper_generator overrides
+# メソッド単位で自動生成の挙動を上書きする。
+# 全637メソッド中 ~21 件 (3%) のみ。
+
+# ========================================
+# skip: WASM で不要 / 不可能なメソッド
+# ========================================
+[skip]
+"Workbook::save" = "File I/O、WASM不可"
+"Workbook::save_to_buffer" = "save_to_buffer_sync として別途実装済"
+"Workbook::save_to_writer" = "File I/O、WASM不可"
+"Workbook::worksheets" = "&[Worksheet] 返却不可"
+"Workbook::worksheets_mut" = "&mut [Worksheet] 返却不可"
+"Chart::add_series" = "&mut ChartSeries 返却不可、push_series で代替"
+"Chart::validate" = "内部検証用"
+
+# ========================================
+# custom: 自動生成せず手書き実装を使うメソッド
+# ========================================
+[custom]
+"Worksheet::write" = "ExcelData polymorphism"
+"Worksheet::write_with_format" = "ExcelData polymorphism"
+"Worksheet::write_row" = "JsExcelDataArray"
+"Worksheet::write_row_with_format" = "JsExcelDataArray"
+"Worksheet::write_column" = "JsExcelDataArray"
+"Worksheet::write_column_with_format" = "JsExcelDataArray"
+"Worksheet::write_row_matrix" = "JsExcelDataMatrix"
+"Worksheet::write_column_matrix" = "JsExcelDataMatrix"
+"Workbook::add_worksheet" = "index tracking"
+"Workbook::push_worksheet" = "index tracking"
+"Workbook::save_to_buffer_sync" = "WASM 専用 API"
+"Worksheet::add_conditional_format" = "trait object 不可、カスタム実装"
+
+# ========================================
+# rename: JS 側の名前を上書き
+# ========================================
+[rename]
+"*.deep_clone" = "clone"
