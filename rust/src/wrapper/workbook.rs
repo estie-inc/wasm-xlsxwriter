@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::XlsxError,
-    wrapper::{doc_properties::DocProperties, format::Format, worksheet::Worksheet},
+    wrapper::{format::Format, worksheet::Worksheet, DocProperties},
 };
 
 use super::WasmResult;
@@ -282,7 +282,7 @@ impl Workbook {
     #[wasm_bindgen(js_name = "setProperties", skip_jsdoc)]
     pub fn set_properties(&self, properties: &DocProperties) {
         let mut workbook = self.inner.lock().unwrap();
-        workbook.set_properties(&properties.lock());
+        workbook.set_properties(&properties.inner.lock().unwrap());
     }
 
     /// Set the default cell format for the workbook.

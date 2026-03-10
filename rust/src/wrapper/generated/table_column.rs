@@ -98,7 +98,7 @@ impl TableColumn {
     pub fn set_formula(&self, formula: Formula) -> TableColumn {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
-        inner = inner.set_formula(formula.inner.clone());
+        inner = inner.set_formula(formula.inner.lock().unwrap().clone());
         *lock = inner;
         TableColumn {
             inner: Arc::clone(&self.inner),

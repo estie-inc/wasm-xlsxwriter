@@ -17,6 +17,8 @@ struct RawOverrides {
     #[serde(default)]
     custom: HashMap<String, String>,
     #[serde(default)]
+    consume_self_default: HashMap<String, String>,
+    #[serde(default)]
     rename: HashMap<String, String>,
 }
 
@@ -24,6 +26,8 @@ struct RawOverrides {
 pub struct Overrides {
     /// Map of `"Struct::method"` to MethodOverride (wildcards are normalized to `"*::method"`)
     entries: HashMap<String, MethodOverride>,
+    /// Map of struct name to dummy constructor expression for ConsumeSelf methods
+    consume_self_defaults: HashMap<String, String>,
 }
 
 pub fn load_overrides(path: &Path) -> anyhow::Result<Overrides> {
@@ -52,7 +56,10 @@ impl Overrides {
             entries.insert(normalize_key(&key), MethodOverride::Rename(new_name));
         }
 
-        Self { entries }
+        Self {
+            entries,
+            consume_self_defaults: raw.consume_self_default,
+        }
     }
 
     /// Return the override for the given struct::method.
@@ -65,6 +72,11 @@ impl Overrides {
             .get(&exact_key)
             .or_else(|| self.entries.get(&wildcard_key))
             .cloned()
+    }
+
+    /// Return the consume_self_default expression for the given struct, if any.
+    pub fn get_consume_self_default(&self, struct_name: &str) -> Option<&str> {
+        self.consume_self_defaults.get(struct_name).map(|s| s.as_str())
     }
 
     /// Apply overrides to a list of methods.

@@ -8,9 +8,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 use super::datetime::ExcelDateTime;
-use super::formula::Formula;
 use super::rich_string::RichString;
-use super::url::Url;
+use super::{Formula, Url};
 
 fn is_jsdate(obj: &JsValue) -> bool {
     obj.is_instance_of::<Date>()

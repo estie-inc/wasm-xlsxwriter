@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::wrapper::format::Format;
 
-use super::formula::Formula;
+use super::Formula;
 
 /// The `Table` struct represents a worksheet Table.
 ///
@@ -204,7 +204,7 @@ impl TableColumn {
     #[wasm_bindgen(js_name = "setFormula", skip_jsdoc)]
     pub fn set_formula(&self, formula: &Formula) -> TableColumn {
         TableColumn {
-            inner: self.clone().inner.set_formula(&*formula.lock()),
+            inner: self.clone().inner.set_formula(&*formula.inner.lock().unwrap()),
         }
     }
 
@@ -550,7 +550,7 @@ impl TableFunction {
     #[wasm_bindgen]
     pub fn custom(formula: &Formula) -> TableFunction {
         TableFunction {
-            inner: xlsx::TableFunction::Custom(formula.lock().clone()),
+            inner: xlsx::TableFunction::Custom(formula.inner.lock().unwrap().clone()),
         }
     }
 }

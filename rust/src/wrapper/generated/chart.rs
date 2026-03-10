@@ -1,6 +1,7 @@
 use crate::wrapper::ChartDataTable;
 use crate::wrapper::ChartSeries;
 use crate::wrapper::ChartType;
+use crate::wrapper::ObjectMovement;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -411,6 +412,29 @@ impl Chart {
     pub fn set_decorative(&self, enable: bool) -> Chart {
         let mut lock = self.inner.lock().unwrap();
         lock.set_decorative(enable);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the object movement options for a chart.
+    ///
+    /// Set the option to define how an chart will behave in Excel if the cells
+    /// under the chart are moved, deleted, or have their size changed. In Excel
+    /// the options are:
+    ///
+    /// 1. Move and size with cells. Default for charts.
+    /// 2. Move but don't size with cells.
+    /// 3. Don't move or size with cells.
+    ///
+    /// These values are defined in the {@link ObjectMovement} enum.
+    ///
+    /// # Parameters
+    ///
+    /// `option` - A {@link ObjectMovement} enum value.
+    #[wasm_bindgen(js_name = "setObjectMovement", skip_jsdoc)]
+    pub fn set_object_movement(&self, option: ObjectMovement) -> Chart {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_object_movement(xlsx::ObjectMovement::from(option));
         Chart {
             inner: Arc::clone(&self.inner),
         }

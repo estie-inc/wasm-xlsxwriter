@@ -36,9 +36,28 @@ pub struct Formula {
 #[wasm_bindgen]
 impl Formula {
     #[wasm_bindgen(constructor)]
-    pub fn new(formula: impl AsRef) -> Formula {
+    pub fn new(formula: &str) -> Formula {
         Formula {
             inner: Arc::new(Mutex::new(xlsx::Formula::new(formula))),
+        }
+    }
+    /// Specify the result of a formula.
+    ///
+    /// As explained above in the section on [Formula
+    /// Results](#formula-results) it is occasionally necessary to specify the
+    /// result of a formula. This can be done using the `set_result()` method.
+    ///
+    /// # Parameters
+    ///
+    /// `result` - The formula result, as a string or string like type.
+    #[wasm_bindgen(js_name = "setResult", skip_jsdoc)]
+    pub fn set_result(&self, result: &str) -> Formula {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Formula::new(""));
+        inner = inner.set_result(result);
+        *lock = inner;
+        Formula {
+            inner: Arc::clone(&self.inner),
         }
     }
 }

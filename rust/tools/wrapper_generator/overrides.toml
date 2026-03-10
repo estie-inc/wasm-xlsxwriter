@@ -32,6 +32,15 @@
 "Worksheet::add_conditional_format" = "trait object not possible, custom implementation"
 
 # ========================================
+# consume_self_default: dummy constructor expression for types without Default
+# that have ConsumeSelf methods (e.g. `fn set_foo(self, ...) -> Self`)
+# ========================================
+[consume_self_default]
+"Note" = 'xlsx::Note::new("")'
+"Formula" = 'xlsx::Formula::new("")'
+"Url" = 'xlsx::Url::new("")'
+
+# ========================================
 # rename: override names on the JS side
 # ========================================
 [rename]

@@ -186,7 +186,7 @@ impl Workbook {
     #[wasm_bindgen(js_name = "setProperties", skip_jsdoc)]
     pub fn set_properties(&self, properties: DocProperties) -> Workbook {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_properties(&properties.inner);
+        lock.set_properties(&*properties.inner.lock().unwrap());
         Workbook {
             inner: Arc::clone(&self.inner),
         }

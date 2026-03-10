@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::*;
 
-use super::{color::Color, format::Format, object_movement::ObjectMovement};
+use super::{color::Color, format::Format, ObjectMovement};
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct Note {

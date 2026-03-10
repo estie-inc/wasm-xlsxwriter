@@ -129,6 +129,9 @@ fn load_and_analyze(
     let ov = overrides::load_overrides(overrides_path)?;
     for s in &mut analyzed.structs {
         ov.apply_to_methods(&s.name, &mut s.methods);
+        if let Some(expr) = ov.get_consume_self_default(&s.name) {
+            s.consume_self_default = Some(expr.to_string());
+        }
     }
 
     Ok(analyzed)

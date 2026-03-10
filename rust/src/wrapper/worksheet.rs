@@ -6,15 +6,14 @@ use wasm_bindgen::prelude::*;
 use crate::error::XlsxError;
 use crate::wrapper::{
     chart::Chart, datetime::ExcelDateTime, excel_data::ExcelData, format::Format,
-    header_image_position::HeaderImagePosition, image::Image, table::Table, utils, WasmResult,
+    image::Image, table::Table, utils, HeaderImagePosition, WasmResult,
 };
 
 use super::{
     excel_data::{JsExcelData, JsExcelDataArray, JsExcelDataMatrix},
-    formula::Formula,
     note::Note,
     rich_string::RichString,
-    url::Url,
+    Formula, Url,
 };
 
 /// The `Worksheet` struct represents an Excel worksheet. It handles operations
@@ -773,7 +772,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.write_formula(row, col, &*formula.lock())?;
+        let _ = sheet.write_formula(row, col, &*formula.inner.lock().unwrap())?;
         Ok(self.clone())
     }
 
@@ -787,7 +786,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.write_formula_with_format(row, col, &*formula.lock(), &format.lock())?;
+        let _ = sheet.write_formula_with_format(row, col, &*formula.inner.lock().unwrap(), &format.lock())?;
         Ok(self.clone())
     }
 
@@ -800,7 +799,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.write_url(row, col, &*link.lock())?;
+        let _ = sheet.write_url(row, col, &*link.inner.lock().unwrap())?;
         Ok(self.clone())
     }
 
@@ -814,7 +813,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.write_url_with_format(row, col, &*link.lock(), &format.lock())?;
+        let _ = sheet.write_url_with_format(row, col, &*link.inner.lock().unwrap(), &format.lock())?;
         Ok(self.clone())
     }
 
@@ -828,7 +827,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.write_url_with_text(row, col, &*link.lock(), text)?;
+        let _ = sheet.write_url_with_text(row, col, &*link.inner.lock().unwrap(), text)?;
         Ok(self.clone())
     }
 
@@ -847,7 +846,7 @@ impl Worksheet {
         let _ = sheet.write_url_with_options(
             row,
             col,
-            &*link.lock(),
+            &*link.inner.lock().unwrap(),
             text,
             tip,
             format.map(|f| f.lock().clone()).as_ref(),
@@ -988,7 +987,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &*formula.lock(),
+            &*formula.inner.lock().unwrap(),
         )?;
         Ok(self.clone())
     }
@@ -1010,7 +1009,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &*formula.lock(),
+            &*formula.inner.lock().unwrap(),
             &format.lock(),
         )?;
         Ok(self.clone())
@@ -1032,7 +1031,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &*formula.lock(),
+            &*formula.inner.lock().unwrap(),
         )?;
         Ok(self.clone())
     }
@@ -1054,7 +1053,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &*formula.lock(),
+            &*formula.inner.lock().unwrap(),
             &format.lock(),
         )?;
         Ok(self.clone())
@@ -1076,7 +1075,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &*formula.lock(),
+            &*formula.inner.lock().unwrap(),
         )?;
         Ok(self.clone())
     }
@@ -1098,7 +1097,7 @@ impl Worksheet {
             first_col,
             last_row,
             last_col,
-            &*formula.lock(),
+            &*formula.inner.lock().unwrap(),
             &format.lock(),
         )?;
         Ok(self.clone())

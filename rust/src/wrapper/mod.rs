@@ -1,18 +1,13 @@
 mod chart;
 mod color;
 mod datetime;
-mod doc_properties;
 mod excel_data;
 mod format;
-mod formula;
 pub mod generated;
-mod header_image_position;
 mod image;
 mod note;
-mod object_movement;
 mod rich_string;
 mod table;
-mod url;
 mod utils;
 mod workbook;
 mod worksheet;
@@ -52,19 +47,14 @@ pub(crate) use chart::{
 };
 pub(crate) use color::Color;
 pub(crate) use datetime::ExcelDateTime;
-pub(crate) use doc_properties::DocProperties;
 pub(crate) use format::{
     FontScheme, Format, FormatAlign, FormatBorder, FormatDiagonalBorder, FormatPattern,
     FormatScript, FormatUnderline,
 };
-pub(crate) use formula::Formula;
 pub(crate) use generated::*;
-pub(crate) use header_image_position::HeaderImagePosition;
 pub(crate) use image::Image;
 pub(crate) use note::Note;
-pub(crate) use object_movement::ObjectMovement;
 pub(crate) use table::{Table, TableColumn, TableStyle};
-pub(crate) use url::Url;
 pub(crate) use workbook::Workbook;
 pub(crate) use worksheet::Worksheet;
 

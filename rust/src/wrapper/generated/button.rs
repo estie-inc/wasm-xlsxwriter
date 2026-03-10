@@ -1,3 +1,4 @@
+use crate::wrapper::ObjectMovement;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -122,6 +123,37 @@ impl Button {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_alt_text(alt_text);
+        *lock = inner;
+        Button {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the object movement options for a worksheet button.
+    ///
+    /// Set the option to define how a button will behave in Excel if the cells
+    /// under the button are moved, deleted, or have their size changed. In
+    /// Excel the options are:
+    ///
+    /// 1. Move and size with cells.
+    /// 2. Move but don't size with cells.
+    /// 3. Don't move or size with cells.
+    ///
+    /// These values are defined in the {@link ObjectMovement} enum.
+    ///
+    /// The {@link ObjectMovement} enum also provides an additional option to "Move
+    /// and size with cells - after the button is inserted" to allow buttons to
+    /// be hidden in rows or columns. In Excel this equates to option 1 above
+    /// but the internal button position calculations are handled differently.
+    ///
+    /// # Parameters
+    ///
+    /// - `option`: A button/object positioning behavior defined by the
+    ///   {@link ObjectMovement} enum.
+    #[wasm_bindgen(js_name = "setObjectMovement", skip_jsdoc)]
+    pub fn set_object_movement(&self, option: ObjectMovement) -> Button {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_object_movement(xlsx::ObjectMovement::from(option));
         *lock = inner;
         Button {
             inner: Arc::clone(&self.inner),

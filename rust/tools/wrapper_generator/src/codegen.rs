@@ -148,7 +148,7 @@ fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> Strin
         .filter(|m| method_types_available(m, &ctx.available_types))
         .map(|m| {
             let doc = format_doc_lines(&m.doc);
-            let tokens = generate_method(m, name, s.has_default, ctx);
+            let tokens = generate_method(m, name, s.has_default, s.consume_self_default.as_deref(), ctx);
             format!("{}{}", doc, tokens)
         })
         .collect();
@@ -185,6 +185,7 @@ fn generate_method(
     m: &AnalyzedMethod,
     struct_name: &str,
     has_default: bool,
+    consume_self_default: Option<&str>,
     ctx: &CodegenContext,
 ) -> TokenStream {
     let struct_ident = format_ident!("{}", struct_name);
@@ -247,7 +248,6 @@ fn generate_method(
             }
         }
         (ReturnKind::SelfType, ReceiverKind::ConsumeSelf) => {
-            let xlsx_ident = format_ident!("{}", struct_name);
             if has_default {
                 quote! {
                     let mut lock = self.inner.lock().unwrap();
@@ -256,13 +256,19 @@ fn generate_method(
                     *lock = inner;
                     #struct_ident { inner: Arc::clone(&self.inner) }
                 }
-            } else {
+            } else if let Some(default_expr) = consume_self_default {
+                let default_tokens: TokenStream = default_expr
+                    .parse()
+                    .expect("consume_self_default expression should be valid tokens");
                 quote! {
                     let mut lock = self.inner.lock().unwrap();
-                    let old = std::mem::replace(&mut *lock, xlsx::#xlsx_ident::default());
-                    *lock = old.#method_ident(#(#params_call),*);
+                    let mut inner = std::mem::replace(&mut *lock, #default_tokens);
+                    inner = inner.#method_ident(#(#params_call),*);
+                    *lock = inner;
                     #struct_ident { inner: Arc::clone(&self.inner) }
                 }
+            } else {
+                unreachable!("ConsumeSelf + SelfType without Default or consume_self_default should be filtered by generatable_methods()")
             }
         }
         (ReturnKind::SelfType, ReceiverKind::MutSelf) => {
@@ -516,6 +522,7 @@ mod tests {
             name: name.into(),
             role: StructRole::Standalone,
             has_default,
+            consume_self_default: None,
             constructor: Some(AnalyzedConstructor { params: vec![] }),
             methods: vec![],
             doc: None,
@@ -753,6 +760,7 @@ mod tests {
                 }],
             },
             has_default: false,
+            consume_self_default: None,
             constructor: None,
             methods: vec![AnalyzedMethod {
                 name: "set_name".into(),
@@ -790,6 +798,7 @@ mod tests {
                 }],
             },
             has_default: false,
+            consume_self_default: None,
             constructor: None,
             methods: vec![AnalyzedMethod {
                 name: "set_name".into(),

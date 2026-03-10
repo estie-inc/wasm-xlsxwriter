@@ -19,6 +19,8 @@ pub struct AnalyzedStruct {
     pub name: String,
     pub role: StructRole,
     pub has_default: bool,
+    /// Custom expression for `mem::replace` on types without Default that have ConsumeSelf methods
+    pub consume_self_default: Option<String>,
     pub constructor: Option<AnalyzedConstructor>,
     pub methods: Vec<AnalyzedMethod>,
     pub doc: Option<String>,
@@ -197,14 +199,14 @@ impl AnalyzedStruct {
     /// Returns only methods that can be auto-generated (excludes those with Unknown type
     /// parameters, and also excludes ConsumeSelf patterns that cannot be safely generated)
     pub fn generatable_methods(&self) -> impl Iterator<Item = &AnalyzedMethod> {
-        let has_default = self.has_default;
+        let can_consume_self = self.has_default || self.consume_self_default.is_some();
         self.auto_methods()
             .filter(|m| m.params.iter().all(|p| !p.ty.has_unknown()))
             .filter(move |m| {
                 if matches!(m.receiver, ReceiverKind::ConsumeSelf) {
-                    // ConsumeSelf + SelfType can be handled via mem::take (requires Default)
+                    // ConsumeSelf + SelfType can be handled via mem::take (Default) or mem::replace (custom default)
                     if matches!(m.returns, ReturnKind::SelfType) {
-                        return has_default;
+                        return can_consume_self;
                     }
                     // ConsumeSelf + other return types: no safe generation pattern exists
                     return false;
@@ -290,6 +292,7 @@ mod tests {
             name: "Format".into(),
             role: StructRole::Standalone,
             has_default: true,
+            consume_self_default: None,
             constructor: None,
             methods: vec![],
             doc: None,
@@ -315,6 +318,7 @@ mod tests {
                 ],
             },
             has_default: false,
+            consume_self_default: None,
             constructor: None,
             methods: vec![],
             doc: None,
@@ -328,6 +332,7 @@ mod tests {
             name: "Format".into(),
             role: StructRole::Standalone,
             has_default: true,
+            consume_self_default: None,
             constructor: None,
             methods: vec![
                 AnalyzedMethod {

@@ -79,4 +79,38 @@ impl Url {
             inner: Arc::new(Mutex::new(xlsx::Url::new(link))),
         }
     }
+    /// Set the alternative text for the URL.
+    ///
+    /// Set an alternative, user friendly, text for the URL.
+    ///
+    /// # Parameters
+    ///
+    /// `text` - The alternative text, as a string or string like type.
+    #[wasm_bindgen(js_name = "setText", skip_jsdoc)]
+    pub fn set_text(&self, text: &str) -> Url {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
+        inner = inner.set_text(text);
+        *lock = inner;
+        Url {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the screen tip for the URL.
+    ///
+    /// Set a screen tip when the user does a mouseover of the URL.
+    ///
+    /// # Parameters
+    ///
+    /// `tip` - The URL tip, as a string or string like type.
+    #[wasm_bindgen(js_name = "setTip", skip_jsdoc)]
+    pub fn set_tip(&self, tip: &str) -> Url {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Url::new(""));
+        inner = inner.set_tip(tip);
+        *lock = inner;
+        Url {
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }

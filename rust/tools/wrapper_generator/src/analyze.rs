@@ -152,6 +152,7 @@ fn analyze_struct(
         name,
         role,
         has_default,
+        consume_self_default: None,
         constructor,
         methods,
         doc,
@@ -365,6 +366,9 @@ pub(crate) fn resolve_param_type(
             // `impl Into<T>` -> resolve to T
             if let Some(inner_type) = extract_into_inner_from_bounds(bounds) {
                 resolve_param_type(inner_type, generics)
+            } else if has_asref_str_bound(bounds) {
+                // `impl AsRef<str>` -> &str
+                ParamType::Str
             } else {
                 ParamType::Unknown(type_to_string(ty))
             }
@@ -381,6 +385,23 @@ pub(crate) fn resolve_param_type(
 
         other => ParamType::Unknown(type_to_string(other)),
     }
+}
+
+/// Check if bounds contain `AsRef<str>`.
+fn has_asref_str_bound(bounds: &[GenericBound]) -> bool {
+    for bound in bounds {
+        if let GenericBound::TraitBound { trait_: path, .. } = bound {
+            let short = path_to_short_name(&path.path);
+            if short == "AsRef" {
+                if let Some(inner) = extract_first_type_arg(path) {
+                    if matches!(inner, rustdoc_types::Type::Primitive(s) if s == "str") {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 /// Extract T from a bounds list containing `Into<T>`.

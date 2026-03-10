@@ -1,4 +1,5 @@
 use crate::wrapper::Format;
+use crate::wrapper::HeaderImagePosition;
 use crate::wrapper::Image;
 use crate::wrapper::ProtectionOptions;
 use crate::wrapper::WasmResult;
@@ -992,6 +993,74 @@ impl Worksheet {
         Worksheet {
             parent: Arc::clone(&self.parent),
         }
+    }
+    /// Insert an image in a worksheet header.
+    ///
+    /// Insert an image in a worksheet header in one of the 3 sections supported
+    /// by Excel: Left, Center and Right. This needs to be preceded by a call to
+    /// {@link Worksheet#setHeader} where a corresponding `&[Picture]` element
+    /// is added to the header formatting string such as `"&L&[Picture]"`.
+    ///
+    /// # Parameters
+    ///
+    /// - `position`: The image position as defined by the
+    ///   {@link HeaderImagePosition} enum.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#ParameterError} - Parameter error if there isn't a
+    ///   corresponding `&[Picture]`/`&[G]` variable in the header string.
+    #[wasm_bindgen(js_name = "setHeaderImage", skip_jsdoc)]
+    pub fn set_header_image(
+        &self,
+        image: Image,
+        position: HeaderImagePosition,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_header_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_header_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
+        }?;
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+        })
+    }
+    /// Insert an image in a worksheet footer.
+    ///
+    /// See the documentation for {@link Worksheet#setHeaderImage} for more
+    /// details.
+    ///
+    /// # Parameters
+    ///
+    /// - `position`: The image position as defined by the
+    ///   {@link HeaderImagePosition} enum.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#ParameterError} - Parameter error if there isn't a
+    ///   corresponding `&[Picture]`/`&[G]` variable in the header string.
+    #[wasm_bindgen(js_name = "setFooterImage", skip_jsdoc)]
+    pub fn set_footer_image(
+        &self,
+        image: Image,
+        position: HeaderImagePosition,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_footer_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_footer_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
+        }?;
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+        })
     }
     /// Set the page setup option to scale the header/footer with the document.
     ///
