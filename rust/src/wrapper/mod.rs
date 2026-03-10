@@ -5,6 +5,7 @@ mod doc_properties;
 mod excel_data;
 mod format;
 mod formula;
+pub mod generated;
 mod header_image_position;
 mod image;
 mod note;
@@ -20,7 +21,52 @@ use crate::error::XlsxError;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 
-type WasmResult<T> = std::result::Result<T, XlsxError>;
+pub(crate) type WasmResult<T> = std::result::Result<T, XlsxError>;
+
+// Re-export all types so generated code can use `crate::wrapper::TypeName`
+pub(crate) use chart::{
+    chart_axis::ChartAxis,
+    chart_data_label::ChartDataLabel,
+    chart_data_label_position::ChartDataLabelPosition,
+    chart_empty_cells::ChartEmptyCells,
+    chart_font::ChartFont,
+    chart_format::ChartFormat,
+    chart_gradient_fill::ChartGradientFill,
+    chart_gradient_fill_type::ChartGradientFillType,
+    chart_gradient_stop::ChartGradientStop,
+    chart_layout::ChartLayout,
+    chart_legend::ChartLegend,
+    chart_legend_position::ChartLegendPosition,
+    chart_line::{ChartLine, ChartLineDashType},
+    chart_marker::ChartMarker,
+    chart_marker_type::ChartMarkerType,
+    chart_pattern_fill::ChartPatternFill,
+    chart_pattern_fill_type::ChartPatternFillType,
+    chart_point::ChartPoint,
+    chart_range::ChartRange,
+    chart_series::ChartSeries,
+    chart_solid_fill::ChartSolidFill,
+    chart_title::ChartTitle,
+    chart_type::ChartType,
+    Chart,
+};
+pub(crate) use color::Color;
+pub(crate) use datetime::ExcelDateTime;
+pub(crate) use doc_properties::DocProperties;
+pub(crate) use format::{
+    FontScheme, Format, FormatAlign, FormatBorder, FormatDiagonalBorder, FormatPattern,
+    FormatScript, FormatUnderline,
+};
+pub(crate) use formula::Formula;
+pub(crate) use generated::*;
+pub(crate) use header_image_position::HeaderImagePosition;
+pub(crate) use image::Image;
+pub(crate) use note::Note;
+pub(crate) use object_movement::ObjectMovement;
+pub(crate) use table::{Table, TableColumn, TableStyle};
+pub(crate) use url::Url;
+pub(crate) use workbook::Workbook;
+pub(crate) use worksheet::Worksheet;
 
 // This runs once when the wasm module is instantiated
 // https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-rust-exports/start.html
