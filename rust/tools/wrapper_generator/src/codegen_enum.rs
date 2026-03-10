@@ -3,6 +3,7 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use crate::codegen_tokens::format_doc_lines;
 use crate::ir::{AnalyzedEnum, AnalyzedVariant, VariantKind};
 
 pub fn generate_enum_file(e: &AnalyzedEnum) -> String {
@@ -88,8 +89,7 @@ pub fn generate_enum_file(e: &AnalyzedEnum) -> String {
         use tsify::Tsify;
     };
 
-    // Enum doc comment as raw /// lines
-    let enum_doc = format_doc_comments(&e.doc);
+    let enum_doc = format_doc_lines(&e.doc);
 
     let enum_attrs = quote! {
         #core_derives
@@ -126,19 +126,6 @@ fn find_default_variant_idx(e: &AnalyzedEnum) -> Option<usize> {
         .iter()
         .position(|v| v.name == "None" || v.name == "Default");
     Some(preferred.unwrap_or(0))
-}
-
-fn format_doc_comments(doc: &Option<String>) -> String {
-    match doc {
-        Some(text) => {
-            let mut out = String::new();
-            for line in text.lines() {
-                out.push_str(&format!("/// {}\n", line));
-            }
-            out
-        }
-        None => String::new(),
-    }
 }
 
 fn generate_match_arm_tokens(

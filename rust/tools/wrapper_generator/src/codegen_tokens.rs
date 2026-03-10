@@ -1,6 +1,7 @@
-/// Shared token helpers for quote!-based code generation.
+/// Shared helpers for code generation.
 ///
-/// Centralizes ParamType to TokenStream conversion, used by both codegen and codegen_enum.
+/// Centralizes ParamType to TokenStream conversion and doc comment formatting,
+/// used by both codegen and codegen_enum.
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -129,6 +130,25 @@ fn vec_of_wrapped_tokens(
         quote! { #name_ident.iter().map(|x| x.inner.clone()).collect() }
     } else {
         quote! { #name_ident.iter().map(|x| x.inner.lock().unwrap().clone()).collect() }
+    }
+}
+
+/// Formats an `Option<String>` doc comment as `/// ` prefixed lines.
+/// Empty lines become bare `///`.
+pub fn format_doc_lines(doc: &Option<String>) -> String {
+    match doc {
+        Some(text) if !text.is_empty() => {
+            let mut out = String::new();
+            for line in text.lines() {
+                if line.is_empty() {
+                    out.push_str("///\n");
+                } else {
+                    out.push_str(&format!("/// {}\n", line));
+                }
+            }
+            out
+        }
+        _ => String::new(),
     }
 }
 

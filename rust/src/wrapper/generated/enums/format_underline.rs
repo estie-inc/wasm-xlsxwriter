@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `FormatUnderline` enum defines the font underline type in a Format.
+/// The `FormatUnderline` enum defines the font underline type in a {@link Format}.
 ///
 /// The difference between a normal underline and an "accounting" underline is
 /// that a normal underline only underlines the text/number in a cell whereas an

@@ -2,12 +2,12 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartEmptyCells` enum defines the Chart empty cell options.
+/// The `ChartEmptyCells` enum defines the {@link Chart} empty cell options.
 ///
 /// This enum defines the Excel chart options for handling empty cell in the
 /// chart data ranges.
 ///
-/// These options can be set using the Chart.showEmptyCellsAs() method.
+/// These options can be set using the {@link Chart#showEmptyCellsAs} method.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChartEmptyCells {

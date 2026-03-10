@@ -2,11 +2,11 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartAxisLabelPosition` enum defines the Chart axis label
+/// The `ChartAxisLabelPosition` enum defines the {@link Chart} axis label
 /// positions.
 ///
 /// This property is used in conjunction with
-/// ChartAxis.setLabelPosition().
+/// {@link ChartAxis#setLabelPosition}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChartAxisLabelPosition {

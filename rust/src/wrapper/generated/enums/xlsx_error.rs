@@ -42,7 +42,7 @@ pub enum XlsxError {
     /// pseudo-URI `internal:`.
     UnknownUrlType(String),
     /// Unknown image type. The supported image formats are PNG, JPG, GIF and
-    /// BMP. See Image(crate::Image) for details.
+    /// BMP. See {@link Image} for details.
     UnknownImageType,
     /// Image has zero width or height, or the dimensions couldn't be read.
     ImageDimensionError,
@@ -53,7 +53,7 @@ pub enum XlsxError {
     /// or a sparkline is configured incorrectly.
     SparklineError(String),
     /// A general error when one of the parameters supplied to a
-    /// ExcelDateTime(crate::ExcelDateTime) method is outside Excel's
+    /// {@link ExcelDateTime} method is outside Excel's
     /// allowable ranges.
     ///
     /// Excel restricts dates to the range 1899-12-31 to 9999-12-31. For hours,
@@ -63,25 +63,11 @@ pub enum XlsxError {
     /// resolution.
     DateTimeRangeError(String),
     /// A parsing error when trying to convert a string into an
-    /// ExcelDateTime(crate::ExcelDateTime).
+    /// {@link ExcelDateTime}.
     ///
     /// The allowable date/time formats supported by
-    /// ExcelDateTime.parseFromStr()(crate::ExcelDateTime::parse_from_str)
+    /// {@link ExcelDateTime#parseFromStr}
     /// are:
-    ///
-    /// ```text
-    /// Dates:
-    ///     yyyy-mm-dd
-    ///
-    /// Times:
-    ///     hh:mm
-    ///     hh:mm:ss
-    ///     hh:mm:ss.sss
-    ///
-    /// DateTimes:
-    ///     yyyy-mm-ddThh:mm:ss
-    ///     yyyy-mm-dd hh:mm:ss
-    /// ```
     ///
     /// The time part of `DateTimes` can contain optional or fractional seconds
     /// like the time examples. Timezone information is not supported by Excel
@@ -123,13 +109,13 @@ pub enum XlsxError {
     /// A customizable error that can be used by third parties to raise errors
     /// or as a conversion target for other error types.
     CustomError(String),
-    /// Wrapper for a variety of std.io::Error errors such as file
+    /// Wrapper for a variety of {@link std#io::Error} errors such as file
     /// permissions when writing the xlsx file to disk. This can be caused by a
     /// non-existent parent directory or, commonly on Windows, if the file is
     /// already open in Excel.
     IoError(Error),
-    /// Wrapper for a variety of zip.result::ZipError errors from
-    /// zip.ZipWriter. These relate to errors arising from creating
+    /// Wrapper for a variety of {@link zip#result::ZipError} errors from
+    /// {@link zip#ZipWriter}. These relate to errors arising from creating
     /// the xlsx file zip container.
     ZipError(ZipError),
 }

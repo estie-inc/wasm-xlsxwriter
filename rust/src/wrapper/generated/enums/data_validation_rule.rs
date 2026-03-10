@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `DataValidationRule` enum defines the data validation rule for
-/// DataValidation.
+/// {@link DataValidation}.
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum DataValidationRule {

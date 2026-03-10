@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `FontScheme` enum defines the font scheme properties of a Format.
+/// The `FontScheme` enum defines the font scheme properties of a {@link Format}.
 /// These relate to whether the font is part of the theme or is a custom font.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

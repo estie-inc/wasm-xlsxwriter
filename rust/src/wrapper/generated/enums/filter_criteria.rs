@@ -5,8 +5,8 @@ use tsify::Tsify;
 /// The `FilterCriteria` enum defines logical filter criteria used in an
 /// autofilter.
 ///
-/// These filter criteria are used with the FilterCondition
-/// add_custom_filter()(FilterCondition::add_custom_filter) method.
+/// These filter criteria are used with the {@link FilterCondition}
+/// {@link add_custom_filter}(FilterCondition::add_custom_filter) method.
 ///
 /// Currently only Excel's string and number filter operations are supported.
 /// The numeric style criteria such as `>=` can also be applied to strings (like

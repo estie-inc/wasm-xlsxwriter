@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ConditionalFormatTopRule` enum defines the conditional format rule for
-/// ConditionalFormatCell.
+/// {@link ConditionalFormatCell}.
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionalFormatTopRule {

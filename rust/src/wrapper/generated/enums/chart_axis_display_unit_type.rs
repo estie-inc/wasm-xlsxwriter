@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartAxisDisplayUnitType` enum defines the Chart axis date display
+/// The `ChartAxisDisplayUnitType` enum defines the {@link Chart} axis date display
 /// unit types.
 ///
 /// Define the display unit type for chart axes such as "Thousands" or

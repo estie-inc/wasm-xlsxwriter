@@ -21,17 +21,113 @@ pub fn to_camel_case(snake: &str) -> String {
 
 /// Transforms upstream rustdoc comments for wasm-bindgen JSDoc.
 ///
+/// - Strips fenced code blocks and `<img>` tags
 /// - Strips everything from `# Example` or `# Examples` section (inclusive)
-/// - Converts `[`Format::set_bold()`]` → `Format.setBold()`
-/// - Converts `[`StructName`]` → `StructName`
+/// - Converts `[`Format::set_bold()`]` → `{@link Format#setBold}`
+/// - Converts `[`StructName`]` → `{@link StructName}`
+/// - Rust-internal types (`Into`, `Clone`, etc.) are shown as plain text
+/// - Strips "or a type that can convert [`Into`]" boilerplate
+/// - Collapses excessive blank lines
 pub fn process_doc_comment(doc: &str) -> String {
     if doc.is_empty() {
         return String::new();
     }
 
-    let truncated = truncate_at_examples_section(doc);
+    let no_code = strip_code_blocks(doc);
+    let no_img = strip_img_tags(&no_code);
+    let truncated = truncate_at_examples_section(&no_img);
+    // convert_rust_refs handles both [`ref`] and trailing (crate::...) patterns;
+    // strip_crate_links catches remaining [text](crate::...) markdown links
     let converted = convert_rust_refs(truncated);
-    converted
+    let no_crate = strip_crate_links(&converted);
+    let cleaned = strip_into_boilerplate(&no_crate);
+    collapse_blank_lines(&cleaned)
+}
+
+/// Like `process_doc_comment`, but also truncates at the first `#` section header.
+/// Intended for struct/enum-level docs where long tutorials should be omitted.
+pub fn process_struct_doc_comment(doc: &str) -> String {
+    if doc.is_empty() {
+        return String::new();
+    }
+
+    let no_code = strip_code_blocks(doc);
+    let no_img = strip_img_tags(&no_code);
+    let truncated = truncate_at_first_section_header(&no_img);
+    let converted = convert_rust_refs(truncated);
+    let no_crate = strip_crate_links(&converted);
+    let cleaned = strip_into_boilerplate(&no_crate);
+    collapse_blank_lines(&cleaned)
+}
+
+fn strip_code_blocks(doc: &str) -> String {
+    let mut result = String::new();
+    let mut in_code_block = false;
+
+    for line in doc.lines() {
+        if line.trim_start().starts_with("```") {
+            in_code_block = !in_code_block;
+            continue;
+        }
+        if !in_code_block {
+            result.push_str(line);
+            result.push('\n');
+        }
+    }
+
+    // Remove orphaned code-intro lines (e.g., "created with the following code:")
+    let cleaned: Vec<&str> = result
+        .lines()
+        .filter(|line| {
+            let lower = line.to_lowercase();
+            let is_code_intro = lower.contains("following code")
+                || lower.contains("code below")
+                || lower.contains("code to generate");
+            !is_code_intro
+        })
+        .collect();
+
+    cleaned.join("\n")
+}
+
+fn strip_img_tags(doc: &str) -> String {
+    doc.lines()
+        .filter(|line| !line.trim().starts_with("<img"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Collapses consecutive blank lines into at most one.
+fn collapse_blank_lines(doc: &str) -> String {
+    let mut result = String::new();
+    let mut prev_blank = false;
+
+    for line in doc.lines() {
+        if line.trim().is_empty() {
+            if !prev_blank {
+                result.push('\n');
+            }
+            prev_blank = true;
+        } else {
+            prev_blank = false;
+            result.push_str(line);
+            result.push('\n');
+        }
+    }
+
+    result.trim_end().to_string()
+}
+
+/// Truncates at the first `# ` section header (any header).
+fn truncate_at_first_section_header(doc: &str) -> &str {
+    for (i, line) in doc.lines().enumerate() {
+        if i > 0 && line.starts_with("# ") {
+            // Find the byte offset of this line in the string
+            let byte_offset: usize = doc.lines().take(i).map(|l| l.len() + 1).sum();
+            return doc[..byte_offset].trim_end();
+        }
+    }
+    doc.trim_end()
 }
 
 fn truncate_at_examples_section(doc: &str) -> &str {
@@ -88,6 +184,50 @@ fn convert_rust_refs(doc: &str) -> String {
         let inner = &after_open[..close];
         result.push_str(&convert_single_ref(inner));
         remaining = &after_open[close + 2..];
+
+        // Strip trailing Rust rustdoc link targets:
+        // `(crate::...)` inline links or `[ref_name]` reference-style links
+        if remaining.starts_with('(') {
+            if let Some(paren_close) = remaining.find(')') {
+                let link_target = &remaining[1..paren_close];
+                if link_target.starts_with("crate::") {
+                    remaining = &remaining[paren_close + 1..];
+                }
+            }
+        } else if remaining.starts_with('[') {
+            if let Some(bracket_close) = remaining.find(']') {
+                remaining = &remaining[bracket_close + 1..];
+            }
+        }
+    }
+
+    result.push_str(remaining);
+    result
+}
+
+/// Strips `[text](crate::...)` Rust-internal markdown links, keeping only the text.
+fn strip_crate_links(doc: &str) -> String {
+    let mut result = String::with_capacity(doc.len());
+    let mut remaining = doc;
+
+    while let Some(open) = remaining.find("](crate::") {
+        // Find the matching `[` for the display text
+        let bracket_open = remaining[..open].rfind('[');
+        if let Some(bo) = bracket_open {
+            result.push_str(&remaining[..bo]);
+            let display_text = &remaining[bo + 1..open];
+            result.push_str(display_text);
+            // Skip past the `](crate::...)`
+            let after_paren = &remaining[open + 2..];
+            if let Some(paren_close) = after_paren.find(')') {
+                remaining = &after_paren[paren_close + 1..];
+            } else {
+                remaining = after_paren;
+            }
+        } else {
+            result.push_str(&remaining[..open + 1]);
+            remaining = &remaining[open + 1..];
+        }
     }
 
     result.push_str(remaining);
@@ -96,11 +236,11 @@ fn convert_rust_refs(doc: &str) -> String {
 
 /// Converts a single reference inner text (without the surrounding [`...`]).
 ///
-/// `Format::set_bold()` → `Format.setBold()`
-/// `StructName` → `StructName`
+/// `Format::set_bold()` → `{@link Format#setBold}`
+/// `StructName` → `{@link StructName}`
+/// Rust-internal types are returned as plain code text.
 fn convert_single_ref(inner: &str) -> String {
-    // Strip trailing `()` if present, remember it for later.
-    let (base, trailing_parens) = if inner.ends_with("()") {
+    let (base, _trailing_parens) = if inner.ends_with("()") {
         (&inner[..inner.len() - 2], true)
     } else {
         (inner, false)
@@ -110,20 +250,79 @@ fn convert_single_ref(inner: &str) -> String {
     if let Some(sep) = base.find("::") {
         let struct_name = &base[..sep];
         let method_name = &base[sep + 2..];
-        let js_method = to_camel_case(method_name);
-        if trailing_parens {
-            return format!("{}.{}()", struct_name, js_method);
-        } else {
-            return format!("{}.{}", struct_name, js_method);
+
+        if is_rust_internal_type(struct_name) {
+            return format!("`{}`", inner);
         }
+
+        let js_method = to_camel_case(method_name);
+        return format!("{{@link {}#{}}}", struct_name, js_method);
     }
 
-    // Plain struct/type reference — return as-is (no conversion needed for PascalCase).
-    if trailing_parens {
-        format!("{}()", base)
-    } else {
-        base.to_string()
+    if is_rust_internal_type(base) {
+        return format!("`{}`", inner);
     }
+
+    format!("{{@link {}}}", base)
+}
+
+/// Rust-internal types that should not be wrapped in `{@link}` in JSDoc.
+fn is_rust_internal_type(name: &str) -> bool {
+    matches!(
+        name,
+        "Into"
+            | "AsRef"
+            | "From"
+            | "Clone"
+            | "Debug"
+            | "Display"
+            | "Default"
+            | "String"
+            | "Vec"
+            | "Option"
+            | "Result"
+            | "Box"
+            | "Arc"
+            | "Mutex"
+            | "Iterator"
+            | "IntoIterator"
+            | "Send"
+            | "Sync"
+            | "Sized"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "i8"
+            | "i16"
+            | "i32"
+            | "i64"
+            | "f32"
+            | "f64"
+            | "bool"
+            | "str"
+            | "usize"
+            | "isize"
+    )
+}
+
+/// Strips sentences about Rust's `Into<T>` trait, which are irrelevant to JS users.
+fn strip_into_boilerplate(doc: &str) -> String {
+    let mut lines: Vec<&str> = doc.lines().collect();
+
+    // Remove lines that are entirely about Into<T> conversion boilerplate
+    lines.retain(|line| {
+        let lower = line.to_lowercase();
+        // "color can be a ... that converts Into" / "or a type that implements Into"
+        let is_into_boilerplate = (lower.contains("that convert")
+            || lower.contains("that implements"))
+            && (lower.contains("`into`") || lower.contains("into<"));
+        !is_into_boilerplate
+    });
+
+    let result = lines.join("\n");
+    // Trim trailing empty lines
+    result.trim_end().to_string()
 }
 
 /// Converts PascalCase struct name to snake_case for filenames.
@@ -240,13 +439,19 @@ mod tests {
     #[test]
     fn doc_comment_converts_method_ref() {
         let doc = "See [`Format::set_bold()`] for details.";
-        assert_eq!(process_doc_comment(doc), "See Format.setBold() for details.");
+        assert_eq!(
+            process_doc_comment(doc),
+            "See {@link Format#setBold} for details."
+        );
     }
 
     #[test]
     fn doc_comment_converts_struct_ref() {
         let doc = "Returns a [`Format`] object.";
-        assert_eq!(process_doc_comment(doc), "Returns a Format object.");
+        assert_eq!(
+            process_doc_comment(doc),
+            "Returns a {@link Format} object."
+        );
     }
 
     #[test]
@@ -254,7 +459,7 @@ mod tests {
         let doc = "Use [`Format::set_bold()`] or [`Format::set_italic()`].";
         assert_eq!(
             process_doc_comment(doc),
-            "Use Format.setBold() or Format.setItalic()."
+            "Use {@link Format#setBold} or {@link Format#setItalic}."
         );
     }
 
@@ -263,13 +468,12 @@ mod tests {
         let doc = "Use [`Format::set_bold()`] for bold.\n\n# Examples\n\n```rust\nlet f = Format::new();\n```";
         assert_eq!(
             process_doc_comment(doc),
-            "Use Format.setBold() for bold."
+            "Use {@link Format#setBold} for bold."
         );
     }
 
     #[test]
     fn doc_comment_does_not_strip_mid_line_example() {
-        // "# Example" appearing in the middle of a line should not trigger truncation.
         let doc = "This is not a # Example section header.";
         assert_eq!(
             process_doc_comment(doc),
@@ -280,7 +484,73 @@ mod tests {
     #[test]
     fn doc_comment_alt_text_ref() {
         let doc = "See [`Format::set_alt_text()`].";
-        assert_eq!(process_doc_comment(doc), "See Format.setAltText().");
+        assert_eq!(process_doc_comment(doc), "See {@link Format#setAltText}.");
+    }
+
+    #[test]
+    fn doc_comment_rust_internal_type_not_linked() {
+        // Rust-internal types become `code`, not {@link}
+        let doc = "See [`Into`] and [`Vec`] for details.";
+        let result = process_doc_comment(doc);
+        assert!(result.contains("`Into`"), "Into should be plain code: {}", result);
+        assert!(result.contains("`Vec`"), "Vec should be plain code: {}", result);
+        assert!(!result.contains("{@link"), "No {{@link}} for Rust types: {}", result);
+    }
+
+    #[test]
+    fn doc_comment_mixed_rust_and_wrapper_types() {
+        let doc = "Use a [`Color`] value. See also [`Default`].";
+        let result = process_doc_comment(doc);
+        assert!(result.contains("{@link Color}"), "Color should be linked: {}", result);
+        assert!(result.contains("`Default`"), "Default should be plain code: {}", result);
+    }
+
+    #[test]
+    fn doc_comment_strips_into_boilerplate() {
+        let doc = "Set the font color.\n\n`color` can be a type that converts [`Into`] a Color.";
+        assert_eq!(process_doc_comment(doc), "Set the font color.");
+    }
+
+    #[test]
+    fn doc_comment_strips_code_blocks() {
+        let doc = "Set the bold property.\n\n```rust\nlet f = Format::new().set_bold();\n```\n\nMore text.";
+        assert_eq!(
+            process_doc_comment(doc),
+            "Set the bold property.\n\nMore text."
+        );
+    }
+
+    #[test]
+    fn doc_comment_strips_img_tags() {
+        let doc = "Set the bold property.\n\n<img src=\"https://example.com/image.png\">\n\nMore text.";
+        assert_eq!(
+            process_doc_comment(doc),
+            "Set the bold property.\n\nMore text."
+        );
+    }
+
+    #[test]
+    fn doc_comment_strips_code_intro_line() {
+        let doc = "Description.\n\nThe output was created with the following code:\n\n```rust\ncode();\n```";
+        assert_eq!(process_doc_comment(doc), "Description.");
+    }
+
+    #[test]
+    fn struct_doc_truncates_at_first_header() {
+        let doc = "A brief description.\n\nMore detail.\n\n# Contents\n\n- item 1\n\n# Section\n\nLong tutorial.";
+        assert_eq!(
+            process_struct_doc_comment(doc),
+            "A brief description.\n\nMore detail."
+        );
+    }
+
+    #[test]
+    fn struct_doc_no_header_keeps_all() {
+        let doc = "Just a description with no headers.";
+        assert_eq!(
+            process_struct_doc_comment(doc),
+            "Just a description with no headers."
+        );
     }
 
     // ── to_snake_case_filename ─────────────────────────────────────────────────

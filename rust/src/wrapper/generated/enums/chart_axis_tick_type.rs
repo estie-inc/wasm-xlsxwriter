@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartAxisTickType` enum defines the Chart axis tick types.
+/// The `ChartAxisTickType` enum defines the {@link Chart} axis tick types.
 ///
 /// Excel supports 4 types of tick position:
 ///
@@ -11,8 +11,8 @@ use tsify::Tsify;
 /// - Outside only
 /// - Cross - inside and outside
 ///
-/// Used in conjunction with ChartAxis.setMajorTickType() and
-/// ChartAxis.setMinorTickType().
+/// Used in conjunction with {@link ChartAxis#setMajorTickType} and
+/// {@link ChartAxis#setMinorTickType}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChartAxisTickType {

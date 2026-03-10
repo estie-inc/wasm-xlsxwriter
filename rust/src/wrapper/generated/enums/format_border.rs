@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `FormatBorder` enum defines the Excel border types that can be added to
-/// a Format pattern.
+/// a {@link Format} pattern.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum FormatBorder {

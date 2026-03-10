@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::codegen_tokens::{param_call_tokens, param_sig_tokens};
+use crate::codegen_tokens::{format_doc_lines, param_call_tokens, param_sig_tokens};
 use crate::ir::{
     Accessor, AnalyzedMethod, AnalyzedStruct, ParamType, ReceiverKind, ReturnKind, StructRole,
 };
@@ -119,7 +119,7 @@ fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> Strin
 
     let xlsx_name = format_ident!("{}", name);
 
-    let ctor_tokens = if let Some(ctor) = &s.constructor {
+    let ctor_string = if let Some(ctor) = &s.constructor {
         let params_sig: Vec<TokenStream> = ctor
             .params
             .iter()
@@ -138,15 +138,22 @@ fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> Strin
                 }
             }
         }
+        .to_string()
     } else {
-        quote! {}
+        String::new()
     };
 
-    let method_tokens: Vec<TokenStream> = s
+    let method_strings: Vec<String> = s
         .generatable_methods()
         .filter(|m| method_types_available(m, &ctx.available_types))
-        .map(|m| generate_method(m, name, s.has_default, ctx))
+        .map(|m| {
+            let doc = format_doc_lines(&m.doc);
+            let tokens = generate_method(m, name, s.has_default, ctx);
+            format!("{}{}", doc, tokens)
+        })
         .collect();
+
+    let struct_doc = format_doc_lines(&s.doc);
 
     let struct_def = quote! {
         #[derive(Clone)]
@@ -156,15 +163,22 @@ fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> Strin
         }
     };
 
-    let impl_block = quote! {
-        #[wasm_bindgen]
-        impl #name_ident {
-            #ctor_tokens
-            #(#method_tokens)*
-        }
+    let struct_def_str = format!("{}{}", struct_doc, struct_def);
+
+    let methods_body = if ctor_string.is_empty() {
+        method_strings.join("\n")
+    } else {
+        let mut parts = vec![ctor_string];
+        parts.extend(method_strings);
+        parts.join("\n")
     };
 
-    format!("{}\n\n{}\n\n{}\n", imports, struct_def, impl_block)
+    let impl_block_str = format!(
+        "#[wasm_bindgen]\nimpl {} {{\n{}\n}}",
+        name_ident, methods_body
+    );
+
+    format!("{}\n\n{}\n\n{}\n", imports, struct_def_str, impl_block_str)
 }
 
 fn generate_method(
@@ -318,33 +332,35 @@ fn generate_proxy_struct(
         quote! {}
     };
 
-    let method_tokens: Vec<TokenStream> = s
+    let method_strings: Vec<String> = s
         .generatable_methods()
         .filter(|m| method_types_available(m, &ctx.available_types))
-        .map(|m| generate_proxy_method(m, name, parent_name, accessors, multi_accessor, ctx))
+        .map(|m| {
+            let doc = format_doc_lines(&m.doc);
+            let tokens =
+                generate_proxy_method(m, name, parent_name, accessors, multi_accessor, ctx);
+            format!("{}{}", doc, tokens)
+        })
         .collect();
 
-    sections.push(
-        quote! {
-            #[derive(Clone)]
-            #[wasm_bindgen]
-            pub struct #name_ident {
-                pub(crate) parent: Arc<Mutex<xlsx::#parent_ident>>,
-                #accessor_field
-            }
-        }
-        .to_string(),
-    );
+    let struct_doc = format_doc_lines(&s.doc);
 
-    sections.push(
-        quote! {
-            #[wasm_bindgen]
-            impl #name_ident {
-                #(#method_tokens)*
-            }
+    let struct_def = quote! {
+        #[derive(Clone)]
+        #[wasm_bindgen]
+        pub struct #name_ident {
+            pub(crate) parent: Arc<Mutex<xlsx::#parent_ident>>,
+            #accessor_field
         }
-        .to_string(),
-    );
+    };
+
+    sections.push(format!("{}{}", struct_doc, struct_def));
+
+    let methods_body = method_strings.join("\n");
+    sections.push(format!(
+        "#[wasm_bindgen]\nimpl {} {{\n{}\n}}",
+        name_ident, methods_body
+    ));
 
     sections.join("\n\n")
 }
@@ -677,6 +693,89 @@ mod tests {
         });
         let code = generate_struct_file(&s, &CodegenContext::empty());
         assert!(!code.contains("fn validate"), "should not contain fn validate in: {}", code);
+    }
+
+    #[test]
+    fn standalone_struct_with_doc_comment() {
+        let mut s = make_standalone("Format", true);
+        s.doc = Some("The Format struct for cell formatting.".into());
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(
+            code.contains("/// The Format struct for cell formatting."),
+            "missing struct doc in: {}",
+            code
+        );
+        // Doc comment should appear before the struct definition
+        let doc_pos = code.find("/// The Format struct").unwrap();
+        let struct_pos = code.find("pub struct Format").unwrap();
+        assert!(doc_pos < struct_pos, "doc should be before struct def");
+    }
+
+    #[test]
+    fn method_with_doc_comment() {
+        let mut s = make_standalone("Format", true);
+        s.methods.push(AnalyzedMethod {
+            name: "set_bold".into(),
+            js_name: "setBold".into(),
+            receiver: ReceiverKind::ConsumeSelf,
+            params: vec![],
+            returns: ReturnKind::SelfType,
+            override_: MethodOverride::Auto,
+            doc: Some("Set the bold property for the format.".into()),
+        });
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(
+            code.contains("/// Set the bold property for the format."),
+            "missing method doc in: {}",
+            code
+        );
+        let doc_pos = code.find("/// Set the bold property").unwrap();
+        let method_pos = code.find("pub fn set_bold").unwrap();
+        assert!(doc_pos < method_pos, "doc should be before method");
+    }
+
+    #[test]
+    fn method_without_doc_no_empty_comment() {
+        let s = make_standalone("Format", true);
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(!code.contains("///"), "no doc comments expected: {}", code);
+    }
+
+    #[test]
+    fn proxy_struct_with_doc_comment() {
+        let s = AnalyzedStruct {
+            name: "ChartTitle".into(),
+            role: StructRole::Proxy {
+                parent_name: "Chart".into(),
+                accessors: vec![Accessor {
+                    parent_method: "title".into(),
+                    js_name: "title".into(),
+                }],
+            },
+            has_default: false,
+            constructor: None,
+            methods: vec![AnalyzedMethod {
+                name: "set_name".into(),
+                js_name: "setName".into(),
+                receiver: ReceiverKind::MutSelf,
+                params: vec![AnalyzedParam { name: "name".into(), ty: ParamType::Str }],
+                returns: ReturnKind::SelfType,
+                override_: MethodOverride::Auto,
+                doc: Some("Set the title name.".into()),
+            }],
+            doc: Some("Represents a chart title.".into()),
+        };
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(
+            code.contains("/// Represents a chart title."),
+            "missing struct doc in: {}",
+            code
+        );
+        assert!(
+            code.contains("/// Set the title name."),
+            "missing method doc in: {}",
+            code
+        );
     }
 
     #[test]

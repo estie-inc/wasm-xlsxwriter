@@ -13,7 +13,6 @@ use tsify::Tsify;
 /// 3. Theme colors from the standard palette of 60 colors like `Color::Theme(9,
 ///    4)`. The theme colors are shown in the image below.
 ///
-///    <img
 ///    src="https://rustxlsxwriter.github.io/images/theme_color_palette.png">
 ///
 ///    The syntax for theme colors in `Color` is `Theme(color, shade)` where

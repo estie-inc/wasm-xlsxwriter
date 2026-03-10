@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartAxisDateUnitType` enum defines the Chart axis date unit types.
+/// The `ChartAxisDateUnitType` enum defines the {@link Chart} axis date unit types.
 ///
 /// Define the unit type for the major or minor unit in a Chart Date axis.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]

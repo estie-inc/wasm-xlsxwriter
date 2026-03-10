@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartAxisLabelAlignment` enum defines the ChartAxis crossing point for
+/// The `ChartAxisLabelAlignment` enum defines the {@link ChartAxis} crossing point for
 /// the opposite axis.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

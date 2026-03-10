@@ -2,7 +2,7 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartDataLabelPosition` enum defines the Chart data label positions.
+/// The `ChartDataLabelPosition` enum defines the {@link Chart} data label positions.
 ///
 /// In Excel the available data label positions vary for different chart
 /// types. The available, and default, positions are:

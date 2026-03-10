@@ -2,9 +2,9 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `FormatDiagonalBorder` enum defines Format diagonal border types.
+/// The `FormatDiagonalBorder` enum defines {@link Format} diagonal border types.
 ///
-/// This is used with the Format.setBorderDiagonal() method.
+/// This is used with the {@link Format#setBorderDiagonal} method.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum FormatDiagonalBorder {

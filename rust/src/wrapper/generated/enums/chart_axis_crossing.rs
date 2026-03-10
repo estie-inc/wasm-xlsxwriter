@@ -2,11 +2,11 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartAxisCrossing` enum defines the ChartAxis crossing point for
+/// The `ChartAxisCrossing` enum defines the {@link ChartAxis} crossing point for
 /// the opposite axis.
 ///
 /// By default Excel sets chart axes to cross at 0. If required you can use
-/// ChartAxis.setCrossing() and ChartAxisCrossing to define another
+/// {@link ChartAxis#setCrossing} and {@link ChartAxisCrossing} to define another
 /// point where the opposite axis will cross the current axis.
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -25,16 +25,16 @@ pub enum ChartAxisCrossing {
     /// the category number as `CategoryNumber(3)` the Y-axis will cross at
     /// "East".
     ///
-    /// See [Chart Value and Category
-    /// Axes](crate::chart#chart-value-and-category-axes) for an
+    /// See Chart Value and Category
+    /// Axes for an
     /// explanation of the difference between Value and Category axes in Excel.
     CategoryNumber(u32),
     /// The axis crossing is at a value.
     ///
     /// This is for Value and Date style axes only.
     ///
-    /// See [Chart Value and Category
-    /// Axes](crate::chart#chart-value-and-category-axes) for an
+    /// See Chart Value and Category
+    /// Axes for an
     /// explanation of the difference between Value and Category axes in Excel.
     AxisValue(f64),
 }

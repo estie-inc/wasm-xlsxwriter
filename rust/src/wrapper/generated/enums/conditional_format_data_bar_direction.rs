@@ -3,14 +3,10 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ConditionalFormatDataBarDirection` enum defines the conditional format
-/// directions for ConditionalFormatDataBar. This is used to set the data
+/// directions for {@link ConditionalFormatDataBar}. This is used to set the data
 /// bar conditional format direction to "Right to left", "Left to right" or
 /// "Context" (the default) in conjunction with
-/// ConditionalFormatDataBar.setDirection().
-///
-/// # Parameters
-///
-/// - `direction`: A ConditionalFormatDataBarDirection enum value.
+/// {@link ConditionalFormatDataBar#setDirection}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionalFormatDataBarDirection {

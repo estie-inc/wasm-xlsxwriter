@@ -2,32 +2,22 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ShapeTextDirection` enum defines the text direction for Shape text.
+/// The `ShapeTextDirection` enum defines the text direction for {@link Shape} text.
 ///
-/// See ShapeText.setDirection().
+/// See {@link ShapeText#setDirection}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ShapeTextDirection {
     /// Text is horizontal. This is the Excel default.
-    ///
-    /// <img src="https://rustxlsxwriter.github.io/images/shape_text_direction_horizontal.png">
     #[default]
     Horizontal,
     /// Text is rotated 270 degrees.
-    ///
-    /// <img src="https://rustxlsxwriter.github.io/images/shape_text_direction_rotate_270.png">
     Rotate270,
     /// Text is rotated 90 degrees.
-    ///
-    /// <img src="https://rustxlsxwriter.github.io/images/shape_text_direction_rotate_90.png">
     Rotate90,
     /// Text direction is rotated 90 degrees but the characters aren't rotated. Suitable for East Asian text.
-    ///
-    /// <img src="https://rustxlsxwriter.github.io/images/shape_text_direction_rotate_90_east_asian.png">
     Rotate90EastAsian,
     /// Text is stacked vertically.
-    ///
-    /// <img src="https://rustxlsxwriter.github.io/images/shape_text_direction_stacked.png">
     Stacked,
 }
 

@@ -3,14 +3,12 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ChartTrendlineType` enum defines the trendline types of a
-/// ChartSeries.
+/// {@link ChartSeries}.
 ///
 /// The following are the trendline types supported by Excel.
 ///
-/// <img src="https://rustxlsxwriter.github.io/images/trendline_types.png">
-///
 /// The trendline type is used in conjunction with the
-/// ChartTrendline.setType() method and a ChartSeries.
+/// {@link ChartTrendline#setType} method and a {@link ChartSeries}.
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChartTrendlineType {

@@ -8,10 +8,8 @@ use tsify::Tsify;
 /// Dark categories. You can set one of these styles using a `TableStyle` enum
 /// value.
 ///
-/// <img src="https://rustxlsxwriter.github.io/images/table_styles.png">
-///
-/// The style is set via the Table.setStyle() method. The default table
-/// style in Excel is equivalent to TableStyle.Medium9.
+/// The style is set via the {@link Table#setStyle} method. The default table
+/// style in Excel is equivalent to {@link TableStyle#Medium9}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum TableStyle {

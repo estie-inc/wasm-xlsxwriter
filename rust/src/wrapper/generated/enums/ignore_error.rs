@@ -7,14 +7,12 @@ use tsify::Tsify;
 ///
 /// The equivalent options in Excel are:
 ///
-/// <img src="https://rustxlsxwriter.github.io/images/ignore_errors_dialog.png">
-///
 /// Note, some of the items shown in the above dialog such as "Misleading Number
 /// Formats" aren't saved in the output file by Excel and can't be turned off
 /// permanently.
 ///
-/// The enum values are used with the Worksheet.ignoreError() and
-/// Worksheet.ignoreErrorRange() methods.
+/// The enum values are used with the {@link Worksheet#ignoreError} and
+/// {@link Worksheet#ignoreErrorRange} methods.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum IgnoreError {

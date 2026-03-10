@@ -7,7 +7,7 @@ use crate::ir::{
     AnalyzedStruct, AnalyzedVariant, Accessor, MethodOverride, ParamType, ReceiverKind, ReturnKind,
     StructRole, VariantKind,
 };
-use crate::utils::{process_doc_comment, to_camel_case};
+use crate::utils::{process_doc_comment, process_struct_doc_comment, to_camel_case};
 use crate_inspector::{CrateItem, EnumItem, FunctionItem, StructItem};
 use rustdoc_types::{GenericArg, GenericArgs, GenericBound, GenericParamDefKind, WherePredicate};
 
@@ -128,7 +128,7 @@ fn analyze_struct(
         .item()
         .docs
         .as_deref()
-        .map(process_doc_comment)
+        .map(process_struct_doc_comment)
         .filter(|s| !s.is_empty());
 
     let mut constructor: Option<AnalyzedConstructor> = None;
@@ -458,7 +458,7 @@ fn analyze_enum(enum_item: &EnumItem<'_>) -> AnalyzedEnum {
         .item()
         .docs
         .as_deref()
-        .map(process_doc_comment)
+        .map(process_struct_doc_comment)
         .filter(|s| !s.is_empty());
 
     let variants = enum_item

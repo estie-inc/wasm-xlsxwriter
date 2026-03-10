@@ -3,12 +3,11 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ChartErrorBarsType` enum defines the type of a chart series
-/// ChartErrorBars.
+/// {@link ChartErrorBars}.
 ///
 /// The following enum values represent the error bar types that are available
 /// in Excel.
 ///
-/// <img
 /// src="https://rustxlsxwriter.github.io/images/chart_error_bars_types.png">
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -29,7 +28,7 @@ pub enum ChartErrorBarsType {
     /// values like `Sheet1!$B$1:$B$3` (single value) or `Sheet1!$B$1:$B$5` (a
     /// range to match the number of point in the series). Single values are
     /// repeated for each point in the chart, like `FixedValue`. The `plus` and
-    /// `minus` values must be set separately using ChartRange instances.
+    /// `minus` values must be set separately using {@link ChartRange} instances.
     Custom(ChartRange, ChartRange),
 }
 

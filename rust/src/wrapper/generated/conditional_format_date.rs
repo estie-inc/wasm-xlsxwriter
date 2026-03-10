@@ -3,6 +3,17 @@ use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 
+/// The `ConditionalFormatDate` struct represents a Dates Occurring style
+/// conditional format.
+///
+/// `ConditionalFormatDate` is used to represent a Dates Occurring style
+/// conditional format in Excel. This is used to identify dates in ranges like
+/// "Last Week" or "Last Month".
+///
+/// src="https://rustxlsxwriter.github.io/images/conditional_format_date_intro.png">
+///
+/// For more information see Working with Conditional
+/// Formats.
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct ConditionalFormatDate {

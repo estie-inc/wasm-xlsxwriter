@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ConditionalFormatDateRule` enum defines the conditional format
-/// criteria for ConditionalFormatDate.
+/// criteria for {@link ConditionalFormatDate}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionalFormatDateRule {

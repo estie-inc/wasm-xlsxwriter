@@ -2,13 +2,11 @@ use rust_xlsxwriter as xlsx;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-/// The `ChartLegendPosition` enum defines the Chart legend positions.
+/// The `ChartLegendPosition` enum defines the {@link Chart} legend positions.
 ///
 /// Excel allows the following positions of the chart legend:
 ///
-/// <img src="https://rustxlsxwriter.github.io/images/legend_position.png">
-///
-/// These positions can be set using the ChartLegend.setPosition() method
+/// These positions can be set using the {@link ChartLegend#setPosition} method
 /// and the `ChartLegendPosition` enum values.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

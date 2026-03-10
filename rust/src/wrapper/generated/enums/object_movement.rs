@@ -6,13 +6,11 @@ use tsify::Tsify;
 /// images and charts.
 ///
 /// This enum defines the way control a worksheet object such as [Image],
-/// Chart(crate::Chart), Note(crate::Note), Shape(crate::Shape) or
-/// Button(crate::Button) moves when the cells underneath it are moved,
+/// {@link Chart}, {@link Note}, {@link Shape} or
+/// {@link Button} moves when the cells underneath it are moved,
 /// resized or deleted. This equates to the following Excel options:
 ///
-/// <img src="https://rustxlsxwriter.github.io/images/object_movement.png">
-///
-/// Used with Image.setObjectMovement().
+/// Used with {@link Image#setObjectMovement}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ObjectMovement {

@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ConditionalFormatType` enum defines the conditional format type
-/// for ConditionalFormat2ColorScale, ConditionalFormat3ColorScale and
-/// ConditionalFormatDataBar.
+/// for {@link ConditionalFormat2ColorScale}, {@link ConditionalFormat3ColorScale} and
+/// {@link ConditionalFormatDataBar}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionalFormatType {

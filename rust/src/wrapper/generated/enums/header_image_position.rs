@@ -5,8 +5,8 @@ use tsify::Tsify;
 /// The `HeaderImagePosition` enum defines the image position in a header or footer.
 ///
 /// Used with the
-/// Worksheet.setHeaderImage()(crate::Worksheet::set_header_image) and
-/// Worksheet.setFooterImage()(crate::Worksheet::set_footer_image)
+/// {@link Worksheet#setHeaderImage} and
+/// {@link Worksheet#setFooterImage}
 /// methods.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

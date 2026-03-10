@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `FormatPattern` enum defines the Excel pattern types that can be added to
-/// a Format.
+/// a {@link Format}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum FormatPattern {

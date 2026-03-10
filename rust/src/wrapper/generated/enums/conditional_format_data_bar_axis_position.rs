@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ConditionalFormatDataBarAxisPosition` enum defines the conditional
-/// format axis positions for ConditionalFormatDataBar.
+/// format axis positions for {@link ConditionalFormatDataBar}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionalFormatDataBarAxisPosition {

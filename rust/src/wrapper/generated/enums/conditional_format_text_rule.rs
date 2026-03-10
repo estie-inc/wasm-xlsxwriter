@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ConditionalFormatTextRule` enum defines the conditional format
-/// criteria for ConditionalFormatText.
+/// criteria for {@link ConditionalFormatText}.
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ConditionalFormatTextRule {

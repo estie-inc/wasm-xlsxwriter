@@ -3,9 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `ChartErrorBarsDirection` enum defines the error bar direction for a
-/// chart series ChartErrorBars.
-///
-/// <img src="https://rustxlsxwriter.github.io/images/chart_error_bars_directions.png">
+/// chart series {@link ChartErrorBars}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChartErrorBarsDirection {

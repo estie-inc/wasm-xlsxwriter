@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 /// The `FormatAlign` enum defines the vertical and horizontal alignment properties
-/// of a Format.
+/// of a {@link Format}.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Tsify, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum FormatAlign {
