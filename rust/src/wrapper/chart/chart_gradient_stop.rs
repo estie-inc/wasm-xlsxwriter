@@ -1,7 +1,7 @@
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::color::Color;
+use crate::wrapper::Color;
 
 #[wasm_bindgen]
 pub struct ChartGradientStop {
@@ -11,9 +11,9 @@ pub struct ChartGradientStop {
 #[wasm_bindgen]
 impl ChartGradientStop {
     #[wasm_bindgen(constructor)]
-    pub fn new(color: &Color, position: u8) -> ChartGradientStop {
+    pub fn new(color: Color, position: u8) -> ChartGradientStop {
         ChartGradientStop {
-            inner: xlsx::ChartGradientStop::new(color.inner, position),
+            inner: xlsx::ChartGradientStop::new(xlsx::Color::from(color), position),
         }
     }
 }

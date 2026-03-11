@@ -1,6 +1,6 @@
 use rust_xlsxwriter::{self as xlsx};
 use wasm_bindgen::prelude::wasm_bindgen;
-use crate::wrapper::color::Color;
+use crate::wrapper::Color;
 
 /// The `ChartLine` struct represents a chart line/border.
 ///
@@ -37,8 +37,8 @@ impl ChartLine {
     }
 
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(&mut self, color: &Color) -> ChartLine {
-        self.inner.set_color(color.inner);
+    pub fn set_color(&mut self, color: Color) -> ChartLine {
+        self.inner.set_color(xlsx::Color::from(color));
         self.clone()
     }
 

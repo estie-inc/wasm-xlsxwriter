@@ -30,7 +30,7 @@ impl ShapeGradientStop {
     pub fn new(color: Color, position: u8) -> ShapeGradientStop {
         ShapeGradientStop {
             inner: Arc::new(Mutex::new(xlsx::ShapeGradientStop::new(
-                color.inner,
+                xlsx::Color::from(color),
                 position,
             ))),
         }

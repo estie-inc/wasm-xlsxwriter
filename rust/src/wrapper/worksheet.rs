@@ -11,9 +11,8 @@ use crate::wrapper::{
 
 use super::{
     excel_data::{JsExcelData, JsExcelDataArray, JsExcelDataMatrix},
-    note::Note,
     rich_string::RichString,
-    Formula, Url,
+    Formula, Note, Url,
 };
 
 /// The `Worksheet` struct represents an Excel worksheet. It handles operations
@@ -1705,7 +1704,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.insert_note(row, col, &*note.lock())?;
+        let _ = sheet.insert_note(row, col, &*note.inner.lock().unwrap())?;
         Ok(self.clone())
     }
 

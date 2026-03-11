@@ -1,4 +1,4 @@
-import { Color, Format, HeaderImagePosition, Image, Workbook } from "../web";
+import { Format, Image, Workbook } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
@@ -16,7 +16,7 @@ describe("xlsx-wasm test", () => {
     // Act
     const worksheet = workbook.addWorksheet();
 
-    const purple = Color.purple();
+    const purple = "Purple";
     const format = new Format().setFontColor(purple);
     worksheet.writeWithFormat(0, 0, "Hello, World!", format);
 
@@ -33,9 +33,9 @@ describe("xlsx-wasm test", () => {
     worksheet.setPrintCenterVertically(true);
     worksheet.setPrintHeadings(true);
     worksheet.setHeader("&C&[Picture]");
-    worksheet.setHeaderImage(image, HeaderImagePosition.Center);
+    worksheet.setHeaderImage(image, "Center");
     worksheet.setFooter("&C&[Picture]&RPage &[Page] of &[Pages]");
-    worksheet.setFooterImage(image, HeaderImagePosition.Center);
+    worksheet.setFooterImage(image, "Center");
     worksheet.setRepeatColumns(0, 1);
     worksheet.setRepeatRows(0, 1);
 

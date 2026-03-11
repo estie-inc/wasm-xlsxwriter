@@ -1,11 +1,9 @@
 mod chart;
-mod color;
 mod datetime;
 mod excel_data;
 mod format;
 pub mod generated;
 mod image;
-mod note;
 mod rich_string;
 mod table;
 mod utils;
@@ -45,7 +43,6 @@ pub(crate) use chart::{
     chart_type::ChartType,
     Chart,
 };
-pub(crate) use color::Color;
 pub(crate) use datetime::ExcelDateTime;
 pub(crate) use format::{
     FontScheme, Format, FormatAlign, FormatBorder, FormatDiagonalBorder, FormatPattern,
@@ -53,7 +50,6 @@ pub(crate) use format::{
 };
 pub(crate) use generated::*;
 pub(crate) use image::Image;
-pub(crate) use note::Note;
 pub(crate) use table::{Table, TableColumn, TableStyle};
 pub(crate) use workbook::Workbook;
 pub(crate) use worksheet::Worksheet;

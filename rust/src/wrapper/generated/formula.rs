@@ -60,4 +60,23 @@ impl Formula {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Escape table functions in the formula.
+    ///
+    /// This method is used to escape table functions in a formula. This mainly
+    /// involves converting Excel 2010 `@` table references to the older 2007
+    /// format `[#This Row],`. This is required by Excel for backward
+    /// compatibility.
+    ///
+    /// This function is public but hidden since it is mainly only required by
+    /// `polars_excel_writer` or other third party wrappers.
+    #[wasm_bindgen(js_name = "escapeTableFunctions", skip_jsdoc)]
+    pub fn escape_table_functions(&self) -> Formula {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Formula::new(""));
+        inner = inner.escape_table_functions();
+        *lock = inner;
+        Formula {
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }

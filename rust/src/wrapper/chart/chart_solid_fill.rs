@@ -1,7 +1,7 @@
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::color::Color;
+use crate::wrapper::Color;
 
 /// The `ChartSolidFill` struct represents a solid fill for chart elements.
 ///
@@ -31,8 +31,8 @@ impl ChartSolidFill {
     /// @param {Color} color - The color property.
     /// @return {ChartSolidFill} - The ChartSolidFill instance.
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(&mut self, color: &Color) -> ChartSolidFill {
-        self.inner.set_color(color.inner);
+    pub fn set_color(&mut self, color: Color) -> ChartSolidFill {
+        self.inner.set_color(xlsx::Color::from(color));
         self.clone()
     }
 

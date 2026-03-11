@@ -1,6 +1,36 @@
 # wrapper_generator overrides
 # Override auto-generation behavior on a per-method basis.
-# Only ~21 out of 637 total methods (3%).
+
+# ========================================
+# skip_structs: internal types not part of the public API
+# (exposed by --document-hidden-items but not useful for WASM wrappers)
+# ========================================
+[skip_structs]
+"App" = "internal XML writer"
+"ContentTypes" = "internal XML writer"
+"Core" = "internal XML writer"
+"Custom" = "internal XML writer"
+"Drawing" = "internal XML writer"
+"FeaturePropertyBag" = "internal XML writer"
+"Metadata" = "internal XML writer"
+"Packager" = "internal file packager"
+"Relationship" = "internal XML writer"
+"RichValue" = "internal XML writer"
+"RichValueRel" = "internal XML writer"
+"RichValueStructure" = "internal XML writer"
+"RichValueTypes" = "internal XML writer"
+"SharedStrings" = "internal XML writer"
+"SharedStringsTable" = "internal XML writer"
+"Styles" = "internal XML writer"
+"Theme" = "internal XML writer"
+"Vml" = "internal XML writer"
+"VmlInfo" = "internal type"
+
+# ========================================
+# skip_enums: internal enums not part of the public API
+# ========================================
+[skip_enums]
+"XlsxError" = "separately defined in the WASM wrapper"
 
 # ========================================
 # skip: methods unnecessary or impossible in WASM
@@ -13,6 +43,19 @@
 "Workbook::worksheets_mut" = "cannot return &mut [Worksheet]"
 "Chart::add_series" = "cannot return &mut ChartSeries, use push_series instead"
 "Chart::validate" = "for internal validation only"
+# Methods returning internal types (VmlInfo, RowNum, ColNum, etc.)
+"*.vml_info" = "returns internal VmlInfo type"
+"*.vml_name" = "returns internal VML name"
+"*.vml_position" = "returns internal VML position"
+"Note::row" = "returns internal RowNum type alias"
+"Note::col" = "returns internal ColNum type alias"
+"ChartRange::key" = "returns internal tuple type"
+"Table::first_data_row" = "returns internal RowNum type alias"
+"Table::last_data_row" = "returns internal RowNum type alias"
+"Worksheet::get_min_row" = "returns internal RowNum type alias"
+"Worksheet::get_min_col" = "returns internal ColNum type alias"
+# Internal validation helpers
+"*.is_valid" = "internal validation only"
 
 # ========================================
 # custom: methods using hand-written implementations instead of auto-generation

@@ -1,3 +1,4 @@
+use crate::wrapper::Color;
 use crate::wrapper::Format;
 use crate::wrapper::HeaderImagePosition;
 use crate::wrapper::Image;
@@ -96,12 +97,12 @@ impl Worksheet {
     pub fn insert_background_image(&self, image: Image) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().insert_background_image(&image.inner)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().insert_background_image(&image.inner)
-            }
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .insert_background_image(&*image.inner.lock().unwrap()),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .insert_background_image(&*image.inner.lock().unwrap()),
         }
         Worksheet {
             parent: Arc::clone(&self.parent),
@@ -328,14 +329,16 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .set_default_format(&format.inner, row_height, col_width)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .set_default_format(&format.inner, row_height, col_width)
-            }
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_default_format(
+                &*format.inner.lock().unwrap(),
+                row_height,
+                col_width,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_default_format(
+                &*format.inner.lock().unwrap(),
+                row_height,
+                col_width,
+            ),
         }?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
@@ -627,6 +630,31 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_first_tab(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_first_tab(enable),
+        }
+        Worksheet {
+            parent: Arc::clone(&self.parent),
+        }
+    }
+    /// Set the color of the worksheet tab.
+    ///
+    /// The `set_tab_color()` method can be used to change the color of the
+    /// worksheet tab. This is useful for highlighting the important tab in a
+    /// group of worksheets.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The tab color property defined by a {@link Color} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setTabColor", skip_jsdoc)]
+    pub fn set_tab_color(&self, color: Color) -> Worksheet {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_tab_color(xlsx::Color::from(color))
+            }
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_tab_color(xlsx::Color::from(color)),
         }
         Worksheet {
             parent: Arc::clone(&self.parent),
@@ -1018,12 +1046,14 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_header_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_header_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_header_image(
+                &*image.inner.lock().unwrap(),
+                xlsx::HeaderImagePosition::from(position),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_header_image(
+                &*image.inner.lock().unwrap(),
+                xlsx::HeaderImagePosition::from(position),
+            ),
         }?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
@@ -1051,12 +1081,14 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_footer_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_footer_image(&image.inner, xlsx::HeaderImagePosition::from(position)),
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_footer_image(
+                &*image.inner.lock().unwrap(),
+                xlsx::HeaderImagePosition::from(position),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_footer_image(
+                &*image.inner.lock().unwrap(),
+                xlsx::HeaderImagePosition::from(position),
+            ),
         }?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
@@ -1492,6 +1524,33 @@ impl Worksheet {
             parent: Arc::clone(&self.parent),
         }
     }
+    /// Autofit the worksheet columns up to a maximum width.
+    ///
+    /// The {@link Worksheet#autofit} method above simulates Excel's column
+    /// autofit. One undesirable side-effect of this is that Excel autofits very
+    /// long strings up to limit of 255 characters/1790 pixels. This is often
+    /// too wide to display on a single screen at normal zoom. As such the
+    /// `autofit_to_max_width()` method is provided to enable a smaller upper
+    /// limit for autofitting long strings. A value of 300 pixels is recommended
+    /// as a good compromise between column width and readability.
+    ///
+    /// # Parameters
+    ///
+    /// - `max_width`: The maximum column width, in pixels, to use for
+    ///   autofitting.
+    #[wasm_bindgen(js_name = "autofitToMaxWidth", skip_jsdoc)]
+    pub fn autofit_to_max_width(&self, max_width: u32) -> Worksheet {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().autofit_to_max_width(max_width),
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().autofit_to_max_width(max_width)
+            }
+        }
+        Worksheet {
+            parent: Arc::clone(&self.parent),
+        }
+    }
     /// Set the worksheet name used in VBA macros.
     ///
     /// This method can be used to set the VBA name for the worksheet. This is
@@ -1612,6 +1671,31 @@ impl Worksheet {
         }
         Worksheet {
             parent: Arc::clone(&self.parent),
+        }
+    }
+    /// Get the local instance DXF id for a format.
+    ///
+    /// Get the local instance DXF id for a format. These indexes will be
+    /// replaced by global/workbook indices before the worksheet is saved. DXF
+    /// indexed are used for Tables and Conditional Formats.
+    ///
+    /// This method is public but hidden to allow test cases to mirror the
+    /// creation order for DXF ids which is usually the reverse of the order of
+    /// the XF instance ids.
+    ///
+    /// # Parameters
+    ///
+    /// `format` - The {@link Format} instance to register.
+    #[wasm_bindgen(js_name = "formatDxfIndex", skip_jsdoc)]
+    pub fn format_dxf_index(&self, format: Format) -> u32 {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .format_dxf_index(&*format.inner.lock().unwrap()),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .format_dxf_index(&*format.inner.lock().unwrap()),
         }
     }
 }

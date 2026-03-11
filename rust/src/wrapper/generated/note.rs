@@ -1,3 +1,5 @@
+use crate::wrapper::Color;
+use crate::wrapper::Format;
 use crate::wrapper::ObjectMovement;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
@@ -160,6 +162,27 @@ impl Note {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the background color for the note.
+    ///
+    /// The default background color for a Note is `#FFFFE1`. If required this
+    /// method can be used to set it to a different RGB color.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The background color property defined by a
+    ///   {@link Color} enum value or a type that can convert `Into`
+    ///   a {@link Color}. Only the `Color::Name` and `Color::RGB()` variants are
+    ///   supported. Theme style colors aren't support by Excel for Notes.
+    #[wasm_bindgen(js_name = "setBackgroundColor", skip_jsdoc)]
+    pub fn set_background_color(&self, color: Color) -> Note {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Note::new(""));
+        inner = inner.set_background_color(xlsx::Color::from(color));
+        *lock = inner;
+        Note {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the font name for the note.
     ///
     /// Set the font for a cell note. Excel can only display fonts that are
@@ -193,6 +216,44 @@ impl Note {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::replace(&mut *lock, xlsx::Note::new(""));
         inner = inner.set_font_size(font_size);
+        *lock = inner;
+        Note {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the font family for the note.
+    ///
+    /// Set the font family. This is usually an integer in the range 1-4. This
+    /// function is implemented for completeness but is rarely used in practice.
+    ///
+    /// # Parameters
+    ///
+    /// - `font_family`: The font family for the note.
+    #[wasm_bindgen(js_name = "setFontFamily", skip_jsdoc)]
+    pub fn set_font_family(&self, font_family: u8) -> Note {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Note::new(""));
+        inner = inner.set_font_family(font_family);
+        *lock = inner;
+        Note {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the {@link Format} of the note.
+    ///
+    /// Set the font or background properties of a note using a {@link Format}
+    /// object. Only the font name, size and background color are supported.
+    ///
+    /// This API is currently experimental and may go away in the future.
+    ///
+    /// # Parameters
+    ///
+    /// - `format`: The {@link Format} property for the note.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: Format) -> Note {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::Note::new(""));
+        inner = inner.set_format(format.inner.lock().unwrap().clone());
         *lock = inner;
         Note {
             inner: Arc::clone(&self.inner),

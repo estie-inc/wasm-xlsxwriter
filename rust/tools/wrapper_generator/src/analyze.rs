@@ -8,7 +8,7 @@ use crate::ir::{
     StructRole, VariantKind,
 };
 use crate::utils::{process_doc_comment, process_struct_doc_comment, to_camel_case};
-use crate_inspector::{CrateItem, EnumItem, FunctionItem, StructItem};
+use crate_inspector::{CrateItem, EnumItem, FunctionItem, HasName, StructItem};
 use rustdoc_types::{GenericArg, GenericArgs, GenericBound, GenericParamDefKind, WherePredicate};
 
 /// Information about a child type accessed from a parent.
@@ -33,7 +33,7 @@ fn build_parent_child_graph(
 
         for impl_item in struct_item.associated_impls() {
             for func in impl_item.functions() {
-                if !func.is_method() {
+                if !func.is_method() || !func.is_public() {
                     continue;
                 }
                 let Some(output) = func.output() else {
@@ -136,6 +136,10 @@ fn analyze_struct(
 
     for impl_item in struct_item.associated_impls() {
         for func in impl_item.functions() {
+            // Skip non-public methods (pub(crate) etc. exposed by --document-hidden-items)
+            if !func.is_public() {
+                continue;
+            }
             let func_name = func.name();
 
             if func_name == "new" && !func.is_method() {

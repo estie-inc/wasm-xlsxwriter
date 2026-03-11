@@ -1,3 +1,4 @@
+use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -41,6 +42,20 @@ impl ChartFont {
     pub fn set_italic(&self) -> ChartFont {
         let mut lock = self.inner.lock().unwrap();
         lock.set_italic();
+        ChartFont {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the color property for the font of a chart element.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The font color property defined by a {@link Color} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setColor", skip_jsdoc)]
+    pub fn set_color(&self, color: Color) -> ChartFont {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_color(xlsx::Color::from(color));
         ChartFont {
             inner: Arc::clone(&self.inner),
         }
@@ -170,6 +185,22 @@ impl ChartFont {
     pub fn set_character_set(&self, character_set: u8) -> ChartFont {
         let mut lock = self.inner.lock().unwrap();
         lock.set_character_set(character_set);
+        ChartFont {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the default bold property for the font.
+    ///
+    /// The is mainly only required for testing to ensure strict compliance with
+    /// Excel's output.
+    ///
+    /// # Parameters
+    ///
+    /// - `enable`: Turn the property on/off. It is off by default.
+    #[wasm_bindgen(js_name = "setDefaultBold", skip_jsdoc)]
+    pub fn set_default_bold(&self, enable: bool) -> ChartFont {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_default_bold(enable);
         ChartFont {
             inner: Arc::clone(&self.inner),
         }

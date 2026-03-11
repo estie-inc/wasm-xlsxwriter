@@ -1,4 +1,4 @@
-import { Color, Format, Note, Workbook, ObjectMovement } from "../web";
+import { Format, Note, Workbook } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 
@@ -17,14 +17,14 @@ describe("xlsx-wasm test", () => {
       .addAuthorPrefix(false)
       .setWidth(200)
       .setHeight(100)
-      .setBackgroundColor(Color.purple())
+      .setBackgroundColor("Purple")
       .setFontName("Meiryo UI")
       .setFontSize(20)
       .setAltText("Alt text")
-      .setObjectMovement(ObjectMovement.DontMoveOrSizeWithCells);
+      .setObjectMovement("DontMoveOrSizeWithCells");
     note1.resetText("This is other note");
     const format = new Format()
-      .setBackgroundColor(Color.green())
+      .setBackgroundColor("Green")
       .setFontName("Meiryo UI")
       .setFontSize(11);
     const note2 = new Note("This is a note")
@@ -33,7 +33,7 @@ describe("xlsx-wasm test", () => {
       .setHeight(100)
       .setFormat(format)
       .setVisible(true)
-      .setObjectMovement(ObjectMovement.MoveAndSizeWithCells);
+      .setObjectMovement("MoveAndSizeWithCells");
 
     worksheet.insertNote(0, 0, note1);
     worksheet.insertNote(0, 1, note2);

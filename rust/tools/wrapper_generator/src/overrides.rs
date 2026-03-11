@@ -1,6 +1,6 @@
 // Parse overrides.toml and apply per-method overrides
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use anyhow::Context;
@@ -20,6 +20,10 @@ struct RawOverrides {
     consume_self_default: HashMap<String, String>,
     #[serde(default)]
     rename: HashMap<String, String>,
+    #[serde(default)]
+    skip_structs: HashMap<String, String>,
+    #[serde(default)]
+    skip_enums: HashMap<String, String>,
 }
 
 /// Parsed result of overrides.toml. Holds per-method override information.
@@ -28,6 +32,10 @@ pub struct Overrides {
     entries: HashMap<String, MethodOverride>,
     /// Map of struct name to dummy constructor expression for ConsumeSelf methods
     consume_self_defaults: HashMap<String, String>,
+    /// Struct names to skip entirely during generation
+    skip_structs: HashSet<String>,
+    /// Enum names to skip entirely during generation
+    skip_enums: HashSet<String>,
 }
 
 pub fn load_overrides(path: &Path) -> anyhow::Result<Overrides> {
@@ -59,6 +67,8 @@ impl Overrides {
         Self {
             entries,
             consume_self_defaults: raw.consume_self_default,
+            skip_structs: raw.skip_structs.into_keys().collect(),
+            skip_enums: raw.skip_enums.into_keys().collect(),
         }
     }
 
@@ -77,6 +87,14 @@ impl Overrides {
     /// Return the consume_self_default expression for the given struct, if any.
     pub fn get_consume_self_default(&self, struct_name: &str) -> Option<&str> {
         self.consume_self_defaults.get(struct_name).map(|s| s.as_str())
+    }
+
+    pub fn should_skip_struct(&self, name: &str) -> bool {
+        self.skip_structs.contains(name)
+    }
+
+    pub fn should_skip_enum(&self, name: &str) -> bool {
+        self.skip_enums.contains(name)
     }
 
     /// Apply overrides to a list of methods.

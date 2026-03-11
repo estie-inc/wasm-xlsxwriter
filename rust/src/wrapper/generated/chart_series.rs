@@ -3,6 +3,7 @@ use crate::wrapper::ChartErrorBars;
 use crate::wrapper::ChartMarker;
 use crate::wrapper::ChartPoint;
 use crate::wrapper::ChartTrendline;
+use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -118,6 +119,37 @@ impl ChartSeries {
         let mut lock = self.parent.lock().unwrap();
         lock.add_series()
             .set_points(&points.iter().map(|x| x.inner.clone()).collect::<Vec<_>>());
+        ChartSeries {
+            parent: Arc::clone(&self.parent),
+        }
+    }
+    /// Set the colors for points in a chart series.
+    ///
+    /// As explained above, in the section on {@link ChartSeries#setPoints}, the
+    /// most common use case for point formatting is to set the formatting of
+    /// individual segments of Pie charts, or in particular to set the colors of
+    /// pie segments. For this simple use case the {@link ChartSeries#setPoints}
+    /// method can be overly verbose.
+    ///
+    /// As a syntactic shortcut the `set_point_colors()` method allows you to
+    /// set the colors of chart points with a simpler interface.
+    ///
+    /// Compare the example below with the previous more general example which
+    /// both produce the same result.
+    ///
+    /// # Parameters
+    ///
+    /// `colors`: a slice of {@link Color} enum values or types that will convert
+    /// into {@link Color}.
+    #[wasm_bindgen(js_name = "setPointColors", skip_jsdoc)]
+    pub fn set_point_colors(&self, colors: Vec<Color>) -> ChartSeries {
+        let mut lock = self.parent.lock().unwrap();
+        lock.add_series().set_point_colors(
+            &colors
+                .into_iter()
+                .map(|x| xlsx::Color::from(x))
+                .collect::<Vec<_>>(),
+        );
         ChartSeries {
             parent: Arc::clone(&self.parent),
         }
@@ -263,6 +295,28 @@ impl ChartSeries {
     pub fn set_invert_if_negative(&self) -> ChartSeries {
         let mut lock = self.parent.lock().unwrap();
         lock.add_series().set_invert_if_negative();
+        ChartSeries {
+            parent: Arc::clone(&self.parent),
+        }
+    }
+    /// Set the inverted color for negative values in a column/bar chart series.
+    ///
+    /// Bar and Column charts in Excel offer a series property called "Invert if
+    /// negative" (see {@link ChartSeries#setInvertIfNegative} above).
+    ///
+    /// The negative values are usually shown as a white solid fill with a black
+    /// border but the `set_invert_if_negative_color()` method can be use to set
+    /// a user defined color. This also requires that you set a
+    /// {@link ChartSolidFill} for the series.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The inverse color property defined by a {@link Color} enum value.
+    #[wasm_bindgen(js_name = "setInvertIfNegativeColor", skip_jsdoc)]
+    pub fn set_invert_if_negative_color(&self, color: Color) -> ChartSeries {
+        let mut lock = self.parent.lock().unwrap();
+        lock.add_series()
+            .set_invert_if_negative_color(xlsx::Color::from(color));
         ChartSeries {
             parent: Arc::clone(&self.parent),
         }

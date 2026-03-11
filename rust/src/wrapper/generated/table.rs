@@ -40,4 +40,22 @@ impl Table {
             inner: Arc::new(Mutex::new(xlsx::Table::new())),
         }
     }
+    /// Check if the table has a header row.
+    ///
+    /// This method is mainly used by polars_excel_writer and hidden from the
+    /// general documentation.
+    #[wasm_bindgen(js_name = "hasHeaderRow", skip_jsdoc)]
+    pub fn has_header_row(&self) -> bool {
+        let lock = self.inner.lock().unwrap();
+        lock.has_header_row()
+    }
+    /// Check if the table has a totals row.
+    ///
+    /// This method is mainly used by polars_excel_writer and hidden from the
+    /// general documentation.
+    #[wasm_bindgen(js_name = "hasTotalRow", skip_jsdoc)]
+    pub fn has_total_row(&self) -> bool {
+        let lock = self.inner.lock().unwrap();
+        lock.has_total_row()
+    }
 }

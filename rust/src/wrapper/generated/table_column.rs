@@ -122,7 +122,7 @@ impl TableColumn {
     pub fn set_format(&self, format: Format) -> TableColumn {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
-        inner = inner.set_format(format.inner.clone());
+        inner = inner.set_format(format.inner.lock().unwrap().clone());
         *lock = inner;
         TableColumn {
             inner: Arc::clone(&self.inner),
@@ -140,7 +140,7 @@ impl TableColumn {
     pub fn set_header_format(&self, format: Format) -> TableColumn {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
-        inner = inner.set_header_format(format.inner.clone());
+        inner = inner.set_header_format(format.inner.lock().unwrap().clone());
         *lock = inner;
         TableColumn {
             inner: Arc::clone(&self.inner),

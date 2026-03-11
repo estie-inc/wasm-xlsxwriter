@@ -1,3 +1,4 @@
+use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -44,6 +45,22 @@ impl ShapeFont {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_italic();
+        *lock = inner;
+        ShapeFont {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the color property for the font of a shape element.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The font color property defined by a {@link Color} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setColor", skip_jsdoc)]
+    pub fn set_color(&self, color: Color) -> ShapeFont {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_color(xlsx::Color::from(color));
         *lock = inner;
         ShapeFont {
             inner: Arc::clone(&self.inner),

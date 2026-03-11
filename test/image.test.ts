@@ -1,4 +1,4 @@
-import { Workbook, Image, ObjectMovement } from "../web";
+import { Workbook, Image } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
@@ -16,7 +16,7 @@ describe("xlsx-wasm test", () => {
     // Act
     const worksheet = workbook.addWorksheet();
     image.setAltText("rust logo");
-    image.setObjectMovement(ObjectMovement.MoveAndSizeWithCells);
+    image.setObjectMovement("MoveAndSizeWithCells");
     worksheet.insertImage(0, 0, image);
 
     // Assert

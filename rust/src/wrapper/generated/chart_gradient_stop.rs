@@ -30,7 +30,7 @@ impl ChartGradientStop {
     pub fn new(color: Color, position: u8) -> ChartGradientStop {
         ChartGradientStop {
             inner: Arc::new(Mutex::new(xlsx::ChartGradientStop::new(
-                color.inner,
+                xlsx::Color::from(color),
                 position,
             ))),
         }

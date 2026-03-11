@@ -247,7 +247,7 @@ impl Workbook {
         col_width: u32,
     ) -> WasmResult<Workbook> {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_default_format(&format.inner, row_height, col_width)?;
+        lock.set_default_format(&*format.inner.lock().unwrap(), row_height, col_width)?;
         Ok(Workbook {
             inner: Arc::clone(&self.inner),
         })
@@ -375,5 +375,34 @@ impl Workbook {
         Workbook {
             inner: Arc::clone(&self.inner),
         }
+    }
+    /// Set the order/index for the format.
+    ///
+    /// This is currently only used in testing to ensure the same format order
+    /// as target Excel files. It can also be used in multi-threaded constant
+    /// memory programs to pre-compute the format index so that all uses of the
+    /// format only involve a `RwLock` `read()` and not a `write()`.
+    ///
+    /// # Parameters
+    ///
+    /// `format` - The {@link Format} instance to register.
+    #[wasm_bindgen(js_name = "registerFormat", skip_jsdoc)]
+    pub fn register_format(&self, format: Format) -> () {
+        let mut lock = self.inner.lock().unwrap();
+        lock.register_format(&*format.inner.lock().unwrap());
+    }
+    /// Set the order/index for shared string table strings.
+    ///
+    /// This is currently only used in testing to ensure the same string order
+    /// as target Excel files.
+    ///
+    /// # Parameters
+    ///
+    /// `string` - The string to add to the shared string table.
+    /// `index` - The index in the shared string table.
+    #[wasm_bindgen(js_name = "populateStringTable", skip_jsdoc)]
+    pub fn populate_string_table(&self, string: &str, index: u32) -> () {
+        let mut lock = self.inner.lock().unwrap();
+        lock.populate_string_table(string, index);
     }
 }

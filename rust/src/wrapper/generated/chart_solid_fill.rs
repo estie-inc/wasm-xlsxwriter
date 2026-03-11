@@ -1,3 +1,4 @@
+use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -25,6 +26,20 @@ impl ChartSolidFill {
     pub fn new() -> ChartSolidFill {
         ChartSolidFill {
             inner: Arc::new(Mutex::new(xlsx::ChartSolidFill::new())),
+        }
+    }
+    /// Set the color of a solid fill.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The color property defined by a {@link Color} enum value or
+    ///   a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setColor", skip_jsdoc)]
+    pub fn set_color(&self, color: Color) -> ChartSolidFill {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_color(xlsx::Color::from(color));
+        ChartSolidFill {
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the transparency of a solid fill.

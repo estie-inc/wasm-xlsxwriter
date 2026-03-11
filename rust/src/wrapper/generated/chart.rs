@@ -53,7 +53,7 @@ impl Chart {
     #[wasm_bindgen(js_name = "pushSeries", skip_jsdoc)]
     pub fn push_series(&self, series: ChartSeries) -> Chart {
         let mut lock = self.inner.lock().unwrap();
-        lock.push_series(&series.inner);
+        lock.push_series(&*series.inner.lock().unwrap());
         Chart {
             inner: Arc::clone(&self.inner),
         }
@@ -160,7 +160,7 @@ impl Chart {
     #[wasm_bindgen(js_name = "combine", skip_jsdoc)]
     pub fn combine(&self, chart: Chart) -> Chart {
         let mut lock = self.inner.lock().unwrap();
-        lock.combine(&chart.inner);
+        lock.combine(&*chart.inner.lock().unwrap());
         Chart {
             inner: Arc::clone(&self.inner),
         }
@@ -456,5 +456,33 @@ impl Chart {
         Chart {
             inner: Arc::clone(&self.inner),
         }
+    }
+    /// Set default values for the primary chart axis ids.
+    ///
+    /// This is mainly used to ensure that the primary axis ids used in testing
+    /// match the semi-randomized values in the target Excel file.
+    ///
+    /// # Parameters
+    ///
+    /// - `axis_id1`: X-axis id.
+    /// - `axis_id2`: Y-axis id.
+    #[wasm_bindgen(js_name = "setAxisIds", skip_jsdoc)]
+    pub fn set_axis_ids(&self, axis_id1: u32, axis_id2: u32) -> () {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_axis_ids(axis_id1, axis_id2);
+    }
+    /// Set default values for the secondary chart axis ids.
+    ///
+    /// This is mainly used to ensure that the secondary axis ids used in
+    /// testing match the semi-randomized values in the target Excel file.
+    ///
+    /// # Parameters
+    ///
+    /// - `axis_id1`: X-axis id.
+    /// - `axis_id2`: Y-axis id.
+    #[wasm_bindgen(js_name = "setAxis2Ids", skip_jsdoc)]
+    pub fn set_axis2_ids(&self, axis_id1: u32, axis_id2: u32) -> () {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_axis2_ids(axis_id1, axis_id2);
     }
 }

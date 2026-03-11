@@ -1,3 +1,4 @@
+use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -31,6 +32,20 @@ impl ChartLine {
     pub fn new() -> ChartLine {
         ChartLine {
             inner: Arc::new(Mutex::new(xlsx::ChartLine::new())),
+        }
+    }
+    /// Set the color of a line/border.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The color property defined by a {@link Color} enum value or
+    ///   a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setColor", skip_jsdoc)]
+    pub fn set_color(&self, color: Color) -> ChartLine {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_color(xlsx::Color::from(color));
+        ChartLine {
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the width of the line or border.

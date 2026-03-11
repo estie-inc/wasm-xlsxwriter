@@ -38,9 +38,17 @@ enum Command {
         #[arg(long, default_value = "overrides.toml")]
         overrides: PathBuf,
 
-        /// Path to the upstream rust_xlsxwriter Cargo.toml
+        /// Path to the upstream rust_xlsxwriter Cargo.toml (auto-resolved via cargo metadata if omitted)
         #[arg(long)]
-        manifest: PathBuf,
+        manifest: Option<PathBuf>,
+
+        /// Workspace Cargo.toml used to auto-resolve the upstream crate (default: ../../Cargo.toml)
+        #[arg(long, default_value = "../../Cargo.toml")]
+        workspace_manifest: PathBuf,
+
+        /// Name of the upstream crate to wrap (default: rust_xlsxwriter)
+        #[arg(long, default_value = "rust_xlsxwriter")]
+        upstream_crate: String,
 
         /// Directory of existing wrappers (types found here are excluded from mod.rs)
         #[arg(long)]
@@ -52,9 +60,17 @@ enum Command {
         #[arg(long, default_value = "overrides.toml")]
         overrides: PathBuf,
 
-        /// Path to the upstream rust_xlsxwriter Cargo.toml
+        /// Path to the upstream rust_xlsxwriter Cargo.toml (auto-resolved via cargo metadata if omitted)
         #[arg(long)]
-        manifest: PathBuf,
+        manifest: Option<PathBuf>,
+
+        /// Workspace Cargo.toml used to auto-resolve the upstream crate (default: ../../Cargo.toml)
+        #[arg(long, default_value = "../../Cargo.toml")]
+        workspace_manifest: PathBuf,
+
+        /// Name of the upstream crate to wrap (default: rust_xlsxwriter)
+        #[arg(long, default_value = "rust_xlsxwriter")]
+        upstream_crate: String,
     },
     /// Show differences between generated code and existing handwritten code
     Diff {
@@ -66,9 +82,17 @@ enum Command {
         #[arg(long, default_value = "overrides.toml")]
         overrides: PathBuf,
 
-        /// Path to the upstream rust_xlsxwriter Cargo.toml
+        /// Path to the upstream rust_xlsxwriter Cargo.toml (auto-resolved via cargo metadata if omitted)
         #[arg(long)]
-        manifest: PathBuf,
+        manifest: Option<PathBuf>,
+
+        /// Workspace Cargo.toml used to auto-resolve the upstream crate (default: ../../Cargo.toml)
+        #[arg(long, default_value = "../../Cargo.toml")]
+        workspace_manifest: PathBuf,
+
+        /// Name of the upstream crate to wrap (default: rust_xlsxwriter)
+        #[arg(long, default_value = "rust_xlsxwriter")]
+        upstream_crate: String,
 
         /// Directory of existing wrappers
         #[arg(long, default_value = "../../src/wrapper")]
@@ -84,49 +108,90 @@ fn main() -> Result<()> {
             output_dir,
             overrides,
             manifest,
+            workspace_manifest,
+            upstream_crate,
             existing_dir,
-        } => cmd_generate(
-            &manifest,
-            &overrides,
-            &output_dir,
-            filter.as_deref(),
-            existing_dir.as_deref(),
-        ),
+        } => {
+            let manifest = resolve_manifest(manifest, &workspace_manifest, &upstream_crate)?;
+            cmd_generate(
+                &manifest,
+                &overrides,
+                &output_dir,
+                filter.as_deref(),
+                existing_dir.as_deref(),
+            )
+        }
         Command::Verify {
             overrides,
             manifest,
-        } => cmd_verify(&manifest, &overrides),
+            workspace_manifest,
+            upstream_crate,
+        } => {
+            let manifest = resolve_manifest(manifest, &workspace_manifest, &upstream_crate)?;
+            cmd_verify(&manifest, &overrides)
+        }
         Command::Diff {
             struct_name,
             overrides,
             manifest,
+            workspace_manifest,
+            upstream_crate,
             existing_dir,
-        } => cmd_diff(
-            &manifest,
-            &overrides,
-            &existing_dir,
-            struct_name.as_deref(),
-        ),
+        } => {
+            let manifest = resolve_manifest(manifest, &workspace_manifest, &upstream_crate)?;
+            cmd_diff(
+                &manifest,
+                &overrides,
+                &existing_dir,
+                struct_name.as_deref(),
+            )
+        }
+    }
+}
+
+/// If --manifest is provided, use it directly. Otherwise, auto-resolve via cargo metadata.
+fn resolve_manifest(
+    explicit: Option<PathBuf>,
+    workspace_manifest: &Path,
+    upstream_crate: &str,
+) -> Result<PathBuf> {
+    match explicit {
+        Some(path) => Ok(path),
+        None => {
+            eprintln!(
+                "Auto-resolving upstream crate '{}' via cargo metadata...",
+                upstream_crate
+            );
+            resolve_upstream_manifest(workspace_manifest, upstream_crate)
+        }
     }
 }
 
 fn load_and_analyze(
     manifest: &Path,
     overrides_path: &Path,
-) -> Result<ir::AnalyzedCrate> {
+) -> Result<(ir::AnalyzedCrate, overrides::Overrides)> {
     eprintln!(
         "Loading upstream crate from: {}",
         manifest.display()
     );
 
+    // Include #[doc(hidden)] items so we can wrap experimental/internal methods like Note::set_format
+    std::env::set_var("RUSTDOCFLAGS", "--document-hidden-items");
     let krate = crate_inspector::CrateBuilder::default()
         .manifest_path(manifest)
+        .document_private_items(true)
         .build()
         .context("Failed to generate rustdoc-json for the upstream crate")?;
 
     let mut analyzed = analyze::analyze_crate(&krate);
 
     let ov = overrides::load_overrides(overrides_path)?;
+
+    // Filter out structs/enums listed in skip_structs/skip_enums
+    analyzed.structs.retain(|s| !ov.should_skip_struct(&s.name));
+    analyzed.enums.retain(|e| !ov.should_skip_enum(&e.name));
+
     for s in &mut analyzed.structs {
         ov.apply_to_methods(&s.name, &mut s.methods);
         if let Some(expr) = ov.get_consume_self_default(&s.name) {
@@ -134,7 +199,42 @@ fn load_and_analyze(
         }
     }
 
-    Ok(analyzed)
+    Ok((analyzed, ov))
+}
+
+/// Resolve the manifest path for an upstream dependency using cargo metadata.
+fn resolve_upstream_manifest(workspace_manifest: &Path, crate_name: &str) -> Result<PathBuf> {
+    let output = std::process::Command::new("cargo")
+        .args(["metadata", "--format-version=1", "--manifest-path"])
+        .arg(workspace_manifest)
+        .output()
+        .context("Failed to run cargo metadata")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("cargo metadata failed: {}", stderr);
+    }
+
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .context("Failed to parse cargo metadata output")?;
+
+    let packages = metadata["packages"]
+        .as_array()
+        .context("No packages in metadata")?;
+
+    for pkg in packages {
+        if pkg["name"].as_str() == Some(crate_name) {
+            if let Some(path) = pkg["manifest_path"].as_str() {
+                return Ok(PathBuf::from(path));
+            }
+        }
+    }
+
+    anyhow::bail!(
+        "Crate '{}' not found in dependencies of {}",
+        crate_name,
+        workspace_manifest.display()
+    )
 }
 
 // ── generate ────────────────────────────────────────────────────────────────
@@ -146,14 +246,18 @@ fn cmd_generate(
     filter: Option<&str>,
     existing_dir: Option<&Path>,
 ) -> Result<()> {
-    let analyzed = load_and_analyze(manifest, overrides_path)?;
+    let (analyzed, _ov) = load_and_analyze(manifest, overrides_path)?;
     let filter_set: Option<Vec<&str>> =
         filter.map(|f| f.split(',').map(str::trim).collect());
 
     // Collect type names from the existing directory (excluded from mod.rs to avoid duplicates)
-    let existing_types = existing_dir
-        .map(|dir| collect_existing_type_names(dir))
-        .unwrap_or_default();
+    let existing = existing_dir
+        .map(|dir| collect_existing_types(dir))
+        .unwrap_or_else(|| ExistingTypes {
+            all: Default::default(),
+            arc_mutex_structs: Default::default(),
+        });
+    let existing_types = &existing.all;
 
     if !existing_types.is_empty() {
         eprintln!(
@@ -218,9 +322,11 @@ fn cmd_generate(
     let codegen_ctx = codegen::CodegenContext {
         enum_names: crate_enum_names.clone(),
         available_types,
+        // Only include hand-written structs that use direct `inner: xlsx::T` (not Arc<Mutex>)
         handwritten_struct_names: existing_types
             .iter()
             .filter(|name| crate_struct_names.contains(*name))
+            .filter(|name| !existing.arc_mutex_structs.contains(*name))
             .cloned()
             .collect(),
         handwritten_enum_names: existing_types
@@ -265,25 +371,51 @@ fn cmd_generate(
     Ok(())
 }
 
+/// Scan results from existing wrapper directory.
+struct ExistingTypes {
+    /// All type names found (struct and enum)
+    all: std::collections::HashSet<String>,
+    /// Struct names that use `Arc<Mutex<>>` pattern (same as generated structs)
+    arc_mutex_structs: std::collections::HashSet<String>,
+}
+
 /// Recursively scan .rs files in the existing wrapper directory and
 /// collect type names from `pub struct TypeName` / `pub enum TypeName` declarations.
-fn collect_existing_type_names(dir: &Path) -> std::collections::HashSet<String> {
+/// Also detect whether structs use `Arc<Mutex<>>` for their inner field.
+fn collect_existing_types(dir: &Path) -> ExistingTypes {
     use std::collections::HashSet;
-    let mut names = HashSet::new();
+    let mut all = HashSet::new();
+    let mut arc_mutex_structs = HashSet::new();
 
     if let Ok(entries) = walkdir(dir) {
         for path in entries {
             if path.extension().is_some_and(|ext| ext == "rs") {
                 if let Ok(content) = std::fs::read_to_string(&path) {
+                    let mut current_struct: Option<String> = None;
                     for line in content.lines() {
                         let trimmed = line.trim();
-                        for prefix in ["pub struct ", "pub enum "] {
-                            if let Some(rest) = trimmed.strip_prefix(prefix) {
-                                let type_name: String =
-                                    rest.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
-                                if !type_name.is_empty() {
-                                    names.insert(type_name);
-                                }
+
+                        if let Some(rest) = trimmed.strip_prefix("pub struct ") {
+                            let type_name: String =
+                                rest.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+                            if !type_name.is_empty() {
+                                all.insert(type_name.clone());
+                                current_struct = Some(type_name);
+                            }
+                        } else if let Some(rest) = trimmed.strip_prefix("pub enum ") {
+                            let type_name: String =
+                                rest.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+                            if !type_name.is_empty() {
+                                all.insert(type_name);
+                            }
+                            current_struct = None;
+                        } else if let Some(ref name) = current_struct {
+                            // Detect Arc<Mutex<>> pattern in inner field
+                            if trimmed.contains("Arc<Mutex<") && trimmed.contains("inner") {
+                                arc_mutex_structs.insert(name.clone());
+                                current_struct = None;
+                            } else if trimmed == "}" {
+                                current_struct = None;
                             }
                         }
                     }
@@ -292,7 +424,7 @@ fn collect_existing_type_names(dir: &Path) -> std::collections::HashSet<String> 
         }
     }
 
-    names
+    ExistingTypes { all, arc_mutex_structs }
 }
 
 /// Simple recursive directory traversal (excludes generated/)
@@ -420,7 +552,7 @@ fn run_rustfmt(struct_dir: &Path, enums_dir: &Path) {
 // ── verify ──────────────────────────────────────────────────────────────────
 
 fn cmd_verify(manifest: &Path, overrides_path: &Path) -> Result<()> {
-    let analyzed = load_and_analyze(manifest, overrides_path)?;
+    let (analyzed, _ov) = load_and_analyze(manifest, overrides_path)?;
 
     println!("=== Wrapper Generator: Verify ===\n");
     println!(
@@ -525,7 +657,7 @@ fn cmd_diff(
     existing_dir: &Path,
     struct_filter: Option<&str>,
 ) -> Result<()> {
-    let analyzed = load_and_analyze(manifest, overrides_path)?;
+    let (analyzed, _ov) = load_and_analyze(manifest, overrides_path)?;
 
     println!("=== Wrapper Generator: Diff ===\n");
     println!(

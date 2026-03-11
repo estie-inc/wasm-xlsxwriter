@@ -1,3 +1,4 @@
+use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -38,7 +39,7 @@ impl Format {
     #[wasm_bindgen(js_name = "merge", skip_jsdoc)]
     pub fn merge(&self, other: Format) -> Format {
         let lock = self.inner.lock().unwrap();
-        lock.merge(&other.inner);
+        lock.merge(&*other.inner.lock().unwrap());
         Format {
             inner: Arc::clone(&self.inner),
         }
@@ -163,6 +164,26 @@ impl Format {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_italic();
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the color property for the Format font.
+    ///
+    /// The `set_font_color()` method is used to set the font color in a cell.
+    /// To set the color of a cell background use the `set_bg_color()` and
+    /// `set_pattern()` methods.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The font color property defined by a {@link Color} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setFontColor", skip_jsdoc)]
+    pub fn set_font_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_font_color(xlsx::Color::from(color));
         *lock = inner;
         Format {
             inner: Arc::clone(&self.inner),
@@ -349,6 +370,161 @@ impl Format {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_shrink();
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the Format pattern background color property.
+    ///
+    /// The `set_background_color` method can be used to set the background
+    /// color of a pattern. Patterns are defined via the {@link Format#setPattern}
+    /// method. If a pattern hasn't been defined then a solid fill pattern is
+    /// used as the default.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The background color property defined by a {@link Color} enum
+    ///   value or a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBackgroundColor", skip_jsdoc)]
+    pub fn set_background_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_background_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the Format pattern foreground color property.
+    ///
+    /// The `set_foreground_color` method can be used to set the
+    /// foreground/pattern color of a pattern. Patterns are defined via the
+    /// {@link Format#setPattern} method.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The foreground color property defined by a {@link Color} enum
+    ///   value or a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setForegroundColor", skip_jsdoc)]
+    pub fn set_foreground_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_foreground_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the Format border color property.
+    ///
+    /// Set the cell border color. Individual border elements can be configured
+    /// using the following methods with the same parameters:
+    ///
+    /// - {@link Format#setBorderTopColor}
+    /// - {@link Format#setBorderLeftColor}
+    /// - {@link Format#setBorderRightColor}
+    /// - {@link Format#setBorderBottomColor}
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The border color as defined by a {@link Color} enum value or
+    ///   a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBorderColor", skip_jsdoc)]
+    pub fn set_border_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell top border color.
+    ///
+    /// See {@link Format#setBorderColor} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The border color as defined by a {@link Color} enum value or a
+    ///   type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBorderTopColor", skip_jsdoc)]
+    pub fn set_border_top_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_top_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell bottom border color.
+    ///
+    /// See {@link Format#setBorderColor} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The border color as defined by a {@link Color} enum value or a
+    ///   type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBorderBottomColor", skip_jsdoc)]
+    pub fn set_border_bottom_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_bottom_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell left border color.
+    ///
+    /// See {@link Format#setBorderColor} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The border color as defined by a {@link Color} enum value or a
+    ///   type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBorderLeftColor", skip_jsdoc)]
+    pub fn set_border_left_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_left_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell right border color.
+    ///
+    /// See {@link Format#setBorderColor} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The border color as defined by a {@link Color} enum value or a
+    ///   type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBorderRightColor", skip_jsdoc)]
+    pub fn set_border_right_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_right_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell diagonal border color.
+    ///
+    /// See {@link Format#setBorderDiagonal} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The border color as defined by a {@link Color} enum value or a
+    ///   type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBorderDiagonalColor", skip_jsdoc)]
+    pub fn set_border_diagonal_color(&self, color: Color) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_diagonal_color(xlsx::Color::from(color));
         *lock = inner;
         Format {
             inner: Arc::clone(&self.inner),

@@ -1,7 +1,7 @@
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::color::Color;
+use crate::wrapper::Color;
 
 /// The `ChartFont` struct represents a chart font.
 ///
@@ -52,8 +52,8 @@ impl ChartFont {
     /// @param {Color} color - The font color property.
     /// @return {ChartFont} - The ChartFont instance.
     #[wasm_bindgen(js_name = "setColor")]
-    pub fn set_color(&mut self, color: &Color) -> ChartFont {
-        self.inner.set_color(color.inner);
+    pub fn set_color(&mut self, color: Color) -> ChartFont {
+        self.inner.set_color(xlsx::Color::from(color));
         self.clone()
     }
 

@@ -1,5 +1,4 @@
 import {
-  Color,
   ExcelDateTime,
   Format,
   FormatAlign,
@@ -108,7 +107,7 @@ describe("xlsx-wasm test", () => {
     worksheet.writeStringWithFormat(0, 0, "AAA", format1);
 
     const format2 = new Format()
-      .setBorderColor(Color.rgb(0x00ff00))
+      .setBorderColor({ RGB: 0x00ff00 })
       .setBorderBottom(FormatBorder.Dashed);
     worksheet.writeStringWithFormat(0, 1, "BBB", format2);
 
@@ -119,7 +118,7 @@ describe("xlsx-wasm test", () => {
 
     const format4 = new Format()
       .setBorderDiagonal(FormatBorder.Dotted)
-      .setBorderDiagonalColor(Color.rgb(0xff0000));
+      .setBorderDiagonalColor({ RGB: 0xff0000 });
     worksheet.writeStringWithFormat(0, 3, "DDD", format4);
 
     const format5 = new Format()
@@ -141,11 +140,11 @@ describe("xlsx-wasm test", () => {
     const worksheet = workbook.addWorksheet();
 
     // Act
-    const black = Color.black();
-    const purple = Color.purple();
-    const blue = Color.rgb(0x0000ff);
-    const red = Color.parse("#FF0000");
-    const yellow = Color.yellow();
+    const black = "Black";
+    const purple = "Purple";
+    const blue = { RGB: 0x0000ff };
+    const red = { RGB: 0xff0000 };
+    const yellow = "Yellow";
 
     worksheet.writeStringWithFormat(
       0,
@@ -239,7 +238,7 @@ describe("xlsx-wasm test", () => {
     const worksheet = workbook.addWorksheet();
     const baseFormat = new Format().setBold();
     const format1 = baseFormat.clone().setItalic();
-    const format2 = baseFormat.clone().setFontColor(Color.red());
+    const format2 = baseFormat.clone().setFontColor("Red");
 
     worksheet.writeStringWithFormat(0, 0, "bold", baseFormat);
     worksheet.writeStringWithFormat(0, 1, "bold italic", format1);
