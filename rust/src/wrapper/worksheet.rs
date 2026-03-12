@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 use crate::error::XlsxError;
 use crate::wrapper::{
     datetime::ExcelDateTime, excel_data::ExcelData,
-    image::Image, table::Table, utils, Chart, Format, HeaderImagePosition, WasmResult,
+    utils, Chart, Format, HeaderImagePosition, Image, Table, WasmResult,
 };
 
 use super::{
@@ -1113,7 +1113,7 @@ impl Worksheet {
     ) -> WasmResult<Worksheet> {
         let mut book = self.workbook.lock().unwrap();
         let sheet = book.worksheet_from_index(self.index).unwrap();
-        let _ = sheet.add_table(first_row, first_col, last_row, last_col, &table.inner);
+        let _ = sheet.add_table(first_row, first_col, last_row, last_col, &table.inner.lock().unwrap());
         Ok(self.clone())
     }
 

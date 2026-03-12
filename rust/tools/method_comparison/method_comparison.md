@@ -1,13 +1,13 @@
 # Method Comparison Report: rustxlsxwriter to wasm-xlsxwriter Migration
 
 ## Summary
-  - ✅ Fully Migrated Structs: 46
-  - ⚠️ Partially Migrated Structs: 14
+  - ✅ Fully Migrated Structs: 47
+  - ⚠️ Partially Migrated Structs: 13
   - ❌ Not Migrated Structs: 2
   - ✅ Migrated Enums: 47
   - ❌ Not Migrated Enums: 5
-  - ✅ Total Migrated Methods: 512
-  - ❌ Total Not Migrated Methods: 125
+  - ✅ Total Migrated Methods: 520
+  - ❌ Total Not Migrated Methods: 117
   - ✅ Total Migrated Functions: 69
   - ❌ Total Not Migrated Functions: 8
 ## Details of Structs
@@ -55,6 +55,7 @@
   ### ✅ ShapeSolidFill
   ### ✅ ShapeText
   ### ✅ Sparkline
+  ### ✅ Table
   ### ✅ TableColumn
   ### ✅ Url
   ### ⚠️ Chart
@@ -158,29 +159,14 @@
       - add_list_filter
   ### ⚠️ Image
     Summary
-      - Migrated methods: 8
-      - Not migrated methods: 5
+      - Migrated methods: 12
+      - Not migrated methods: 1
       - Migrated functions: 1
       - Not migrated functions: 1
     ❌ Methods Not Yet Migrated
-      - height
-      - height_dpi
       - set_url
-      - width
-      - width_dpi
     ❌ Functions Not Yet Migrated
       - new_from_buffer
-  ### ⚠️ Table
-    Summary
-      - Migrated methods: 8
-      - Not migrated methods: 4
-      - Migrated functions: 1
-      - Not migrated functions: 0
-    ❌ Methods Not Yet Migrated
-      - set_alt_text
-      - set_alt_text_title
-      - set_autofilter
-      - set_last_column
   ### ⚠️ Workbook
     Summary
       - Migrated methods: 7

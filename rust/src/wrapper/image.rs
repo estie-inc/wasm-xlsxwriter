@@ -1,15 +1,16 @@
+// Companion file for Image: custom constructor and convenience helpers.
+// The struct definition and auto-generated methods are in generated/image.rs.
+
 use std::sync::{Arc, Mutex};
 
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::WasmResult;
-use crate::wrapper::ObjectMovement;
+use crate::wrapper::{Image, ObjectMovement, WasmResult};
 
-/// Since the xlsx::Image does not have a default value, we use the smallest PNG image data as a dummy data.
+/// Since xlsx::Image has no default value, we use the smallest valid PNG as a placeholder.
+/// https://evanhahn.com/worlds-smallest-png/
 fn new_dummy_image() -> xlsx::Image {
-    // Smallest PNG in bytes.
-    // https://evanhahn.com/worlds-smallest-png/
     const SMALLEST_PNG_DATA: [u8; 67] = [
         0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44,
         0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x37,
@@ -20,14 +21,8 @@ fn new_dummy_image() -> xlsx::Image {
     xlsx::Image::new_from_buffer(&SMALLEST_PNG_DATA).unwrap()
 }
 
-/// The `Image` struct is used to create an object to represent an image that
-/// can be inserted into a worksheet.
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Image {
-    pub(crate) inner: Arc<Mutex<xlsx::Image>>,
-}
-
+// xlsx::Image methods consume self and return Self, so we use mem::replace to work
+// around the Arc<Mutex<>> wrapper that prevents moving out of a shared reference.
 macro_rules! impl_method {
     ($self:ident.$method:ident($($arg:expr),*)) => {
         let mut lock = $self.inner.lock().unwrap();

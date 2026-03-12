@@ -442,6 +442,9 @@ pub(crate) fn resolve_param_type(
                     }
                 }
                 "String" => ParamType::Str,
+                // Type aliases for primitive types used in rust_xlsxwriter
+                "RowNum" => ParamType::U32,
+                "ColNum" => ParamType::U16,
                 other => ParamType::WrappedType(other.to_string()),
             }
         }

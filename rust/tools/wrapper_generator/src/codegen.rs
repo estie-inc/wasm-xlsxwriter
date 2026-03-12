@@ -20,6 +20,8 @@ pub struct CodegenContext {
     pub handwritten_struct_names: HashSet<String>,
     /// Handwritten wrapper enum names (inner: xlsx::T pattern; generated enums use From conversion)
     pub handwritten_enum_names: HashSet<String>,
+    /// Struct names whose auto-generated constructor should be suppressed (companion provides it)
+    pub skip_constructors: HashSet<String>,
 }
 
 impl CodegenContext {
@@ -30,6 +32,7 @@ impl CodegenContext {
             available_types: HashSet::new(),
             handwritten_struct_names: HashSet::new(),
             handwritten_enum_names: HashSet::new(),
+            skip_constructors: HashSet::new(),
         }
     }
 }
@@ -122,25 +125,29 @@ fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> Strin
     let xlsx_name = format_ident!("{}", name);
 
     let ctor_string = if let Some(ctor) = &s.constructor {
-        let params_sig: Vec<TokenStream> = ctor
-            .params
-            .iter()
-            .map(|p| param_sig_tokens(&p.name, &p.ty))
-            .collect();
-        let params_call: Vec<TokenStream> = ctor
-            .params
-            .iter()
-            .map(|p| param_call_tokens(&p.name, &p.ty, ctx))
-            .collect();
-        quote! {
-            #[wasm_bindgen(constructor)]
-            pub fn new(#(#params_sig),*) -> #name_ident {
-                #name_ident {
-                    inner: Arc::new(Mutex::new(xlsx::#xlsx_name::new(#(#params_call),*))),
+        if ctx.skip_constructors.contains(name) {
+            String::new()
+        } else {
+            let params_sig: Vec<TokenStream> = ctor
+                .params
+                .iter()
+                .map(|p| param_sig_tokens(&p.name, &p.ty))
+                .collect();
+            let params_call: Vec<TokenStream> = ctor
+                .params
+                .iter()
+                .map(|p| param_call_tokens(&p.name, &p.ty, ctx))
+                .collect();
+            quote! {
+                #[wasm_bindgen(constructor)]
+                pub fn new(#(#params_sig),*) -> #name_ident {
+                    #name_ident {
+                        inner: Arc::new(Mutex::new(xlsx::#xlsx_name::new(#(#params_call),*))),
+                    }
                 }
             }
+            .to_string()
         }
-        .to_string()
     } else {
         String::new()
     };
@@ -669,6 +676,7 @@ mod tests {
             available_types: enum_set(&["FormatAlign"]),
             handwritten_struct_names: HashSet::new(),
             handwritten_enum_names: HashSet::new(),
+            skip_constructors: HashSet::new(),
         };
         let code = generate_struct_file(&s, &ctx);
         assert!(code.contains("pub fn set_align") && code.contains("align") && code.contains("FormatAlign") && code.contains("Format"), "missing set_align sig in: {}", code);
@@ -695,6 +703,7 @@ mod tests {
             available_types: enum_set(&["ChartFont"]),
             handwritten_struct_names: enum_set(&["ChartFont"]),
             handwritten_enum_names: HashSet::new(),
+            skip_constructors: HashSet::new(),
         };
         let code = generate_struct_file(&s, &ctx);
         assert!(code.contains("pub fn set_font") && code.contains("font") && code.contains("ChartFont") && code.contains("ChartDataTable"), "missing set_font sig in: {}", code);

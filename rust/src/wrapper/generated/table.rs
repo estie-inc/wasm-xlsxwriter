@@ -218,7 +218,12 @@ impl Table {
     pub fn set_columns(&self, columns: Vec<TableColumn>) -> Table {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::replace(&mut *lock, xlsx::Table::new());
-        inner = inner.set_columns(&columns.iter().map(|x| x.inner.clone()).collect::<Vec<_>>());
+        inner = inner.set_columns(
+            &columns
+                .iter()
+                .map(|x| x.inner.lock().unwrap().clone())
+                .collect::<Vec<_>>(),
+        );
         *lock = inner;
         Table {
             inner: Arc::clone(&self.inner),

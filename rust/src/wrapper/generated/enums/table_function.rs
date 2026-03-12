@@ -28,8 +28,8 @@ pub enum TableFunction {
     StdDev,
     /// Use the var function as the table total.
     Var,
-    /// Use a custom/user specified function or formula.
-    Custom(Formula),
+    /// Use a custom/user specified function or formula as a string.
+    Custom(String),
 }
 
 impl From<TableFunction> for xlsx::TableFunction {
@@ -44,7 +44,9 @@ impl From<TableFunction> for xlsx::TableFunction {
             TableFunction::Sum => xlsx::TableFunction::Sum,
             TableFunction::StdDev => xlsx::TableFunction::StdDev,
             TableFunction::Var => xlsx::TableFunction::Var,
-            TableFunction::Custom(v0) => xlsx::TableFunction::Custom(v0),
+            TableFunction::Custom(formula) => {
+                xlsx::TableFunction::Custom(xlsx::Formula::new(formula))
+            }
         }
     }
 }

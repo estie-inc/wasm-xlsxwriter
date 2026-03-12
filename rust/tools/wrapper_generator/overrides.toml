@@ -7,6 +7,8 @@
 [skip_enums]
 # XlsxError is separately defined in the WASM wrapper with custom error handling
 "XlsxError" = "separately defined in the WASM wrapper"
+# Custom(Formula) variant uses Arc<Mutex> struct — hand-written with Custom(String) instead
+"TableFunction" = "Custom variant uses Formula struct, hand-written with String"
 
 # ========================================
 # skip: methods unnecessary or impossible in WASM
@@ -82,3 +84,10 @@
 "ChartSeries::set_name::name" = "Str"
 "ChartTitle::set_name::name" = "Str"
 "ChartAxis::set_name::name" = "Str"
+
+# ========================================
+# skip_constructors: suppress auto-generated new() for types whose companion provides a custom constructor
+# ========================================
+[skip_constructors]
+# Image::new takes impl AsRef<Path> (not WASM-compatible); companion provides new(Vec<u8>) via new_from_buffer
+"Image" = "companion provides new(Vec<u8>) via xlsx::Image::new_from_buffer"

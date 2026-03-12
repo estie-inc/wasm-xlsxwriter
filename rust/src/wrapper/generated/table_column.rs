@@ -1,5 +1,6 @@
 use crate::wrapper::Format;
 use crate::wrapper::Formula;
+use crate::wrapper::TableFunction;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -57,6 +58,41 @@ impl TableColumn {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_header(caption);
+        *lock = inner;
+        TableColumn {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the total function for the total row of a table column.
+    ///
+    /// Set the `SUBTOTAL()` function for the "totals" row of a table column.
+    ///
+    /// The standard Excel subtotal functions are available via the
+    /// {@link TableFunction} enum values. The Excel functions are:
+    ///
+    /// - Average
+    /// - Count
+    /// - Count Numbers
+    /// - Maximum
+    /// - Minimum
+    /// - Sum
+    /// - Standard Deviation
+    /// - Variance
+    /// - Custom - User-defined function or formula
+    ///
+    /// Note, overwriting the total row cells with `worksheet.write()` calls
+    /// will cause Excel to warn that the table is corrupt when loading the
+    /// file.
+    ///
+    /// # Parameters
+    ///
+    /// - `function`: A {@link TableFunction} enum value equivalent to one of the
+    ///   available Excel `SUBTOTAL()` options.
+    #[wasm_bindgen(js_name = "setTotalFunction", skip_jsdoc)]
+    pub fn set_total_function(&self, function: TableFunction) -> TableColumn {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_total_function(xlsx::TableFunction::from(function));
         *lock = inner;
         TableColumn {
             inner: Arc::clone(&self.inner),

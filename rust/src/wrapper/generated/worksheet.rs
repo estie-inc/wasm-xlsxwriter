@@ -1,8 +1,20 @@
+use crate::wrapper::Button;
+use crate::wrapper::Chart;
 use crate::wrapper::Color;
+use crate::wrapper::DataValidation;
+use crate::wrapper::ExcelDateTime;
+use crate::wrapper::FilterCondition;
 use crate::wrapper::Format;
+use crate::wrapper::Formula;
 use crate::wrapper::HeaderImagePosition;
+use crate::wrapper::IgnoreError;
 use crate::wrapper::Image;
+use crate::wrapper::Note;
 use crate::wrapper::ProtectionOptions;
+use crate::wrapper::Shape;
+use crate::wrapper::Sparkline;
+use crate::wrapper::Table;
+use crate::wrapper::Url;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -76,6 +88,1721 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().name(),
         }
     }
+    /// Write an unformatted number to a cell.
+    ///
+    /// Write an unformatted number to a worksheet cell. To write a formatted
+    /// number see the {@link Worksheet#writeNumberWithFormat} method below.
+    ///
+    /// All numerical values in Excel are stored as [IEEE 754] Doubles which are
+    /// the equivalent of rust's `f64` type. This method will accept any rust
+    /// type that will convert `Into` a f64. These include i8, u8, i16, u16,
+    /// i32, u32 and f32 but not i64 or u64, see below.
+    ///
+    /// IEEE 754 Doubles and f64 have around 15 digits of precision. Anything
+    /// beyond that cannot be stored as a number by Excel without a loss of
+    /// precision and may need to be stored as a string instead.
+    ///
+    /// [IEEE 754]: https://en.wikipedia.org/wiki/IEEE_754
+    ///
+    /// For i64/u64 you can cast the numbers `as f64` which will allow you to
+    /// store the number with a loss of precision outside Excel's integer range
+    /// of +/- 999,999,999,999,999 (15 digits).
+    ///
+    /// Excel doesn't have handling for NaN or INF floating point numbers. These
+    /// will be stored as the strings "NAN", "INF", and "-INF" strings or the
+    /// values set with {@link Worksheet#setNanValue},
+    /// {@link Worksheet#setInfinityValue} or
+    /// {@link Worksheet#setNegInfinityValue}.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `number`: The number to write to the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeNumber", skip_jsdoc)]
+    pub fn write_number(&self, row: u32, col: u16, number: f64) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_number(row, col, number),
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().write_number(row, col, number)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted number to a worksheet cell.
+    ///
+    /// Write a number with formatting to a worksheet cell. The format is set
+    /// via a {@link Format} struct which can control the numerical formatting of
+    /// the number, for example as a currency or a percentage value, or the
+    /// visual format, such as bold and italic text.
+    ///
+    /// All numerical values in Excel are stored as [IEEE 754] Doubles which are
+    /// the equivalent of rust's `f64` type. This method will accept any rust
+    /// type that will convert `Into` a f64. These include i8, u8, i16, u16,
+    /// i32, u32 and f32 but not i64 or u64, see below.
+    ///
+    /// IEEE 754 Doubles and f64 have around 15 digits of precision. Anything
+    /// beyond that cannot be stored as a number by Excel without a loss of
+    /// precision and may need to be stored as a string instead.
+    ///
+    /// [IEEE 754]: https://en.wikipedia.org/wiki/IEEE_754
+    ///
+    /// For i64/u64 you can cast the numbers `as f64` which will allow you to
+    /// store the number with a loss of precision outside Excel's integer range
+    /// of +/- 999,999,999,999,999 (15 digits).
+    ///
+    /// Excel doesn't have handling for NaN or INF floating point numbers. These
+    /// will be stored as the strings "NAN", "INF", and "-INF" strings or the
+    /// values set with {@link Worksheet#setNanValue},
+    /// {@link Worksheet#setInfinityValue} or
+    /// {@link Worksheet#setNegInfinityValue}.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `number`: The number to write to the cell.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeNumberWithFormat", skip_jsdoc)]
+    pub fn write_number_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        number: f64,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_number_with_format(
+                row,
+                col,
+                number,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_number_with_format(
+                row,
+                col,
+                number,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write an unformatted string to a worksheet cell.
+    ///
+    /// Write an unformatted string to a worksheet cell. To write a formatted
+    /// string see the {@link Worksheet#writeStringWithFormat} method below.
+    ///
+    /// Excel only supports UTF-8 text in the xlsx file format. Any Rust UTF-8
+    /// encoded string can be written with this method. The maximum string size
+    /// supported by Excel is 32,767 characters.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `string`: The string to write to the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxStringLengthExceeded} - String exceeds Excel's limit
+    ///   of 32,767 characters.
+    #[wasm_bindgen(js_name = "writeString", skip_jsdoc)]
+    pub fn write_string(&self, row: u32, col: u16, string: &str) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_string(row, col, string),
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().write_string(row, col, string)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted string to a worksheet cell.
+    ///
+    /// Write a string with formatting to a worksheet cell. The format is set
+    /// via a {@link Format} struct which can control the font or color or
+    /// properties such as bold and italic.
+    ///
+    /// Excel only supports UTF-8 text in the xlsx file format. Any Rust UTF-8
+    /// encoded string can be written with this method. The maximum string
+    /// size supported by Excel is 32,767 characters.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `string`: The string to write to the cell.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxStringLengthExceeded} - String exceeds Excel's limit
+    ///   of 32,767 characters.
+    #[wasm_bindgen(js_name = "writeStringWithFormat", skip_jsdoc)]
+    pub fn write_string_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        string: &str,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_string_with_format(
+                row,
+                col,
+                string,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_string_with_format(
+                row,
+                col,
+                string,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write an unformatted formula to a worksheet cell.
+    ///
+    /// Write an unformatted Excel formula to a worksheet cell. See also the
+    /// documentation on working with formulas at {@link Formula}.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `formula`: The formula to write to the cell as a string or {@link Formula}.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeFormula", skip_jsdoc)]
+    pub fn write_formula(&self, row: u32, col: u16, formula: Formula) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .write_formula(row, col, formula.inner.lock().unwrap().clone())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .write_formula(row, col, formula.inner.lock().unwrap().clone())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted formula to a worksheet cell.
+    ///
+    /// Write a formula with formatting to a worksheet cell. The format is set
+    /// via a {@link Format} struct which can control the font or color or
+    /// properties such as bold and italic.
+    ///
+    /// See also the documentation on working with formulas at {@link Formula}.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `formula`: The formula to write to the cell as a string or {@link Formula}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeFormulaWithFormat", skip_jsdoc)]
+    pub fn write_formula_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        formula: Formula,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_formula_with_format(
+                row,
+                col,
+                formula.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_formula_with_format(
+                row,
+                col,
+                formula.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write an  array formula to a worksheet cell.
+    ///
+    /// The `write_array_formula()` method writes an array formula to a
+    /// cell range. In Excel an array formula is a formula that performs a
+    /// calculation on a range of values. It can return a single value or a
+    /// range/"array" of values.
+    ///
+    /// An array formula is displayed with a pair of curly brackets around the
+    /// formula like this: `{=SUM(A1:B1*A2:B2)}`. The `write_array()`
+    /// method doesn't require actually require these so you can omit them in
+    /// the formula, and the equal sign, if you wish like this:
+    /// `SUM(A1:B1*A2:B2)`.
+    ///
+    /// For array formulas that return a range of values you must specify the
+    /// range that the return values will be written to with the `first_` and
+    /// `last_` parameters. If the array formula returns a single value then the
+    /// first_ and last_ parameters should be the same, as shown in the example
+    /// below.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `formula`: The formula to write to the cell as a string or {@link Formula}.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row or column is larger
+    ///   than the last row or column.
+    #[wasm_bindgen(js_name = "writeArrayFormula", skip_jsdoc)]
+    pub fn write_array_formula(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        formula: Formula,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_array_formula(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.inner.lock().unwrap().clone(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_array_formula(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.inner.lock().unwrap().clone(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted array formula to a worksheet cell.
+    ///
+    /// Write an array formula with formatting to a worksheet cell. The format
+    /// is set via a {@link Format} struct which can control the font or color or
+    /// properties such as bold and italic.
+    ///
+    /// The `write_array()` method writes an array formula to a cell
+    /// range. In Excel an array formula is a formula that performs a
+    /// calculation on a range of values. It can return a single value or a
+    /// range/"array" of values.
+    ///
+    /// An array formula is displayed with a pair of curly brackets around the
+    /// formula like this: `{=SUM(A1:B1*A2:B2)}`. The `write_array()`
+    /// method doesn't require actually require these so you can omit them in
+    /// the formula, and the equal sign, if you wish like this:
+    /// `SUM(A1:B1*A2:B2)`.
+    ///
+    /// For array formulas that return a range of values you must specify the
+    /// range that the return values will be written to with the `first_` and
+    /// `last_` parameters. If the array formula returns a single value then the
+    /// first_ and last_ parameters should be the same, as shown in the example
+    /// below.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `formula`: The formula to write to the cell as a string or {@link Formula}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "writeArrayFormulaWithFormat", skip_jsdoc)]
+    pub fn write_array_formula_with_format(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        formula: Formula,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().write_array_formula_with_format(
+                    first_row,
+                    first_col,
+                    last_row,
+                    last_col,
+                    formula.inner.lock().unwrap().clone(),
+                    &*format.inner.lock().unwrap(),
+                )
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().write_array_formula_with_format(
+                    first_row,
+                    first_col,
+                    last_row,
+                    last_col,
+                    formula.inner.lock().unwrap().clone(),
+                    &*format.inner.lock().unwrap(),
+                )
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a dynamic array formula to a worksheet cell or range of cells.
+    ///
+    /// The `write_dynamic_array_formula()` function writes an Excel 365
+    /// dynamic array formula to a cell range. Some examples of functions that
+    /// return dynamic arrays are:
+    ///
+    /// - `FILTER()`
+    /// - `RANDARRAY()`
+    /// - `SEQUENCE()`
+    /// - `SORTBY()`
+    /// - `SORT()`
+    /// - `UNIQUE()`
+    /// - `XLOOKUP()`
+    /// - `XMATCH()`
+    ///
+    /// For more details see the `rust_xlsxwriter` documentation section on
+    /// [Dynamic Array support] and the [Dynamic array formulas] example.
+    ///
+    /// [Dynamic Array support]:
+    ///     https://rustxlsxwriter.github.io/formulas/dynamic_arrays.html
+    /// [Dynamic array formulas]:
+    ///     https://rustxlsxwriter.github.io/examples/dynamic_arrays.html
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `formula`: The formula to write to the cell as a string or {@link Formula}.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "writeDynamicArrayFormula", skip_jsdoc)]
+    pub fn write_dynamic_array_formula(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        formula: Formula,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_dynamic_array_formula(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.inner.lock().unwrap().clone(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_dynamic_array_formula(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.inner.lock().unwrap().clone(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted dynamic array formula to a worksheet cell or range of
+    /// cells.
+    ///
+    /// The `write_dynamic_array_formula_with_format()` function writes an Excel
+    /// 365 dynamic array formula to a cell range. Some examples of functions
+    /// that return dynamic arrays are:
+    ///
+    /// - `FILTER()`
+    /// - `RANDARRAY()`
+    /// - `SEQUENCE()`
+    /// - `SORTBY()`
+    /// - `SORT()`
+    /// - `UNIQUE()`
+    /// - `XLOOKUP()`
+    /// - `XMATCH()`
+    ///
+    /// The format is set via a {@link Format} struct which can control the font or
+    /// color or properties such as bold and italic.
+    ///
+    /// For array formulas that return a range of values you must specify the
+    /// range that the return values will be written to with the `first_` and
+    /// `last_` parameters. If the array formula returns a single value then the
+    /// first_ and last_ parameters should be the same, as shown in the example
+    /// below or use the {@link Worksheet#writeDynamicFormulaWithFormat}
+    /// method.
+    ///
+    /// For more details see the `rust_xlsxwriter` documentation section on
+    /// [Dynamic Array support] and the [Dynamic array formulas] example.
+    ///
+    /// [Dynamic Array support]:
+    ///     https://rustxlsxwriter.github.io/formulas/dynamic_arrays.html
+    /// [Dynamic array formulas]:
+    ///     https://rustxlsxwriter.github.io/examples/dynamic_arrays.html
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `formula`: The formula to write to the cell as a string or
+    ///   {@link Formula}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row or column is larger
+    ///   than the last row or column.
+    #[wasm_bindgen(js_name = "writeDynamicArrayFormulaWithFormat", skip_jsdoc)]
+    pub fn write_dynamic_array_formula_with_format(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        formula: Formula,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .write_dynamic_array_formula_with_format(
+                    first_row,
+                    first_col,
+                    last_row,
+                    last_col,
+                    formula.inner.lock().unwrap().clone(),
+                    &*format.inner.lock().unwrap(),
+                ),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .write_dynamic_array_formula_with_format(
+                    first_row,
+                    first_col,
+                    last_row,
+                    last_col,
+                    formula.inner.lock().unwrap().clone(),
+                    &*format.inner.lock().unwrap(),
+                ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a dynamic formula to a worksheet cell.
+    ///
+    /// The `write_dynamic_formula()` method is similar to the
+    /// {@link Worksheet#writeDynamicArrayFormula} method, shown above, except
+    /// that it writes a dynamic array formula to a single cell, rather than a
+    /// range. This is a syntactic shortcut since the array range isn't
+    /// generally known for a dynamic range and specifying the initial cell is
+    /// sufficient for Excel.
+    ///
+    /// For more details see the `rust_xlsxwriter` documentation section on
+    /// [Dynamic Array support] and the [Dynamic array formulas] example.
+    ///
+    /// [Dynamic Array support]:
+    ///     https://rustxlsxwriter.github.io/formulas/dynamic_arrays.html
+    /// [Dynamic array formulas]:
+    ///     https://rustxlsxwriter.github.io/examples/dynamic_arrays.html
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `formula`: The formula to write to the cell as a string or
+    ///   {@link Formula}.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeDynamicFormula", skip_jsdoc)]
+    pub fn write_dynamic_formula(
+        &self,
+        row: u32,
+        col: u16,
+        formula: Formula,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_dynamic_formula(
+                row,
+                col,
+                formula.inner.lock().unwrap().clone(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_dynamic_formula(
+                row,
+                col,
+                formula.inner.lock().unwrap().clone(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted dynamic formula to a worksheet cell.
+    ///
+    /// The `write_dynamic_formula_with_format()` method is similar to the
+    /// {@link Worksheet#writeDynamicArrayFormulaWithFormat} method, shown
+    /// above, except that it writes a dynamic array formula to a single cell,
+    /// rather than a range. This is a syntactic shortcut since the array range
+    /// isn't generally known for a dynamic range and specifying the initial
+    /// cell is sufficient for Excel.
+    ///
+    /// For more details see the `rust_xlsxwriter` documentation section on
+    /// [Dynamic Array support] and the [Dynamic array formulas] example.
+    ///
+    /// [Dynamic Array support]:
+    ///     https://rustxlsxwriter.github.io/formulas/dynamic_arrays.html
+    /// [Dynamic array formulas]:
+    ///     https://rustxlsxwriter.github.io/examples/dynamic_arrays.html
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `formula`: The formula to write to the cell as a string or
+    ///   {@link Formula}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeDynamicFormulaWithFormat", skip_jsdoc)]
+    pub fn write_dynamic_formula_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        formula: Formula,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().write_dynamic_formula_with_format(
+                    row,
+                    col,
+                    formula.inner.lock().unwrap().clone(),
+                    &*format.inner.lock().unwrap(),
+                )
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().write_dynamic_formula_with_format(
+                    row,
+                    col,
+                    formula.inner.lock().unwrap().clone(),
+                    &*format.inner.lock().unwrap(),
+                )
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a blank formatted worksheet cell.
+    ///
+    /// Write a blank cell with formatting to a worksheet cell. The format is
+    /// set via a {@link Format} struct.
+    ///
+    /// Excel differentiates between an “Empty” cell and a “Blank” cell. An
+    /// “Empty” cell is a cell which doesn’t contain data or formatting whilst a
+    /// “Blank” cell doesn’t contain data but does contain formatting. Excel
+    /// stores “Blank” cells but ignores “Empty” cells.
+    ///
+    /// The most common case for a formatted blank cell is to write a background
+    /// or a border, see the example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeBlank", skip_jsdoc)]
+    pub fn write_blank(&self, row: u32, col: u16, format: &Format) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .write_blank(row, col, &*format.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .write_blank(row, col, &*format.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a url/hyperlink to a worksheet cell.
+    ///
+    /// Write a url/hyperlink to a worksheet cell with the default Excel
+    /// "Hyperlink" cell style.
+    ///
+    /// There are 3 types of url/link supported by Excel:
+    ///
+    /// 1. Web based URIs like:
+    ///
+    ///    * `http://`, `https://`, `ftp://`, `ftps://` and `mailto:`.
+    ///
+    /// 2. Local file links using the `file://` URI.
+    ///
+    ///    * `file:///Book2.xlsx`
+    ///    * `file:///..\Sales\Book2.xlsx`
+    ///    * `file:///C:\Temp\Book1.xlsx`
+    ///    * `file:///Book2.xlsx#Sheet1!A1`
+    ///    * `file:///Book2.xlsx#'Sales Data'!A1:G5`
+    ///
+    ///    Most paths will be relative to the root folder, following the Windows
+    ///    convention, so most paths should start with `file:///`. For links to
+    ///    other Excel files the url string can include a sheet and cell
+    ///    reference after the `"#"` anchor, as shown in the last 2 examples
+    ///    above. When using Windows paths, like in the examples above, it is
+    ///    best to use a Rust raw string to avoid issues with the backslashes:
+    ///    `r"file:///C:\Temp\Book1.xlsx"`.
+    ///
+    /// 3. Internal links to a cell or range of cells in the workbook using the
+    ///    pseudo-uri `internal:`:
+    ///
+    ///    * `internal:Sheet2!A1`
+    ///    * `internal:Sheet2!A1:G5`
+    ///    * `internal:'Sales Data'!A1`
+    ///
+    ///    Worksheet references are typically of the form `Sheet1!A1` where a
+    ///    worksheet and target cell should be specified. You can also link to a
+    ///    worksheet range using the standard Excel range notation like
+    ///    `Sheet1!A1:B2`. Excel requires that worksheet names containing spaces
+    ///    or non alphanumeric characters are single quoted as follows `'Sales
+    ///    Data'!A1`.
+    ///
+    /// The function will escape the following characters in URLs as required by
+    /// Excel, ``\s " < > \ [ ] ` ^ { }``, unless the URL already contains `%xx`
+    /// style escapes. In which case it is assumed that the URL was escaped
+    /// correctly by the user and will by passed directly to Excel.
+    ///
+    /// Excel has a limit of around 2080 characters in the url string. Strings
+    /// beyond this limit will raise an error, see below.
+    ///
+    /// For other variants of this function see:
+    ///
+    /// - {@link Worksheet#writeUrlWithText} to add alternative text to the
+    ///   link.
+    /// - {@link Worksheet#writeUrlWithFormat} to add an alternative format to
+    ///   the link.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `string`: The url string to write to the cell.
+    /// - `link`: The url/hyperlink to write to the cell as a string or {@link Url}.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxUrlLengthExceeded} - URL string or anchor exceeds
+    ///   Excel's limit of 2080 characters.
+    /// - {@link XlsxError#UnknownUrlType} - The URL has an unknown URI type. See
+    ///   the supported types listed above.
+    /// - {@link XlsxError#ParameterError} - {@link Url} mouseover tool tip exceeds
+    ///   Excel's limit of 255 characters.
+    #[wasm_bindgen(js_name = "writeUrl", skip_jsdoc)]
+    pub fn write_url(&self, row: u32, col: u16, link: Url) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .write_url(row, col, link.inner.lock().unwrap().clone())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .write_url(row, col, link.inner.lock().unwrap().clone())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a url/hyperlink to a worksheet cell with an alternative text.
+    ///
+    /// Write a url/hyperlink to a worksheet cell with an alternative, user
+    /// friendly, text and the default Excel "Hyperlink" cell style.
+    ///
+    /// This method is similar to {@link Worksheet#writeUrl}  except that you
+    /// can specify an alternative string for the url. For example you could
+    /// have a cell contain the link [Learn Rust](https://www.rust-lang.org)
+    /// instead of the raw link <https://www.rust-lang.org>.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `link`: The url/hyperlink to write to the cell as a string or {@link Url}.
+    /// - `text`: The alternative string to write to the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxStringLengthExceeded} - Text string exceeds Excel's
+    ///   limit of 32,767 characters.
+    /// - {@link XlsxError#MaxUrlLengthExceeded} - URL string or anchor exceeds
+    ///   Excel's limit of 2080 characters.
+    /// - {@link XlsxError#UnknownUrlType} - The URL has an unknown URI type. See
+    ///   the supported types listed above.
+    /// - {@link XlsxError#ParameterError} - {@link Url} mouseover tool tip exceeds
+    ///   Excel's limit of 255 characters.
+    #[wasm_bindgen(js_name = "writeUrlWithText", skip_jsdoc)]
+    pub fn write_url_with_text(
+        &self,
+        row: u32,
+        col: u16,
+        link: Url,
+        text: &str,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_url_with_text(
+                row,
+                col,
+                link.inner.lock().unwrap().clone(),
+                text,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_url_with_text(
+                row,
+                col,
+                link.inner.lock().unwrap().clone(),
+                text,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a url/hyperlink to a worksheet cell with a user defined format
+    ///
+    /// Write a url/hyperlink to a worksheet cell with a user defined format
+    /// instead of the default Excel "Hyperlink" cell style.
+    ///
+    /// This method is similar to {@link Worksheet#writeUrl} except that you can
+    /// specify an alternative format for the url.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `link`: The url/hyperlink to write to the cell as a string or {@link Url}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxUrlLengthExceeded} - URL string or anchor exceeds
+    ///   Excel's limit of 2080 characters.
+    /// - {@link XlsxError#UnknownUrlType} - The URL has an unknown URI type. See
+    ///   the supported types listed above.
+    /// - {@link XlsxError#ParameterError} - {@link Url} mouseover tool tip exceeds
+    ///   Excel's limit of 255 characters.
+    #[wasm_bindgen(js_name = "writeUrlWithFormat", skip_jsdoc)]
+    pub fn write_url_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        link: Url,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_url_with_format(
+                row,
+                col,
+                link.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_url_with_format(
+                row,
+                col,
+                link.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    ///
+    /// Write a url/hyperlink to a worksheet cell with various options
+    ///
+    /// This method is similar to {@link Worksheet#writeUrl} and variant methods
+    /// except that you can also add a screen tip message, if required.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `link`: The url/hyperlink to write to the cell as a string or {@link Url}.
+    /// - `text`: The alternative string to write to the cell.
+    /// - `tip`: The screen tip string to display when the user hovers over the
+    ///   url cell.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// The `text` and `tip` parameters are optional and can be set as a blank
+    /// string. The `format` is an `Option<>` parameter and can be specified as
+    /// `None` if not required.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxStringLengthExceeded} - Text string exceeds Excel's
+    ///   limit of 32,767 characters.
+    /// - {@link XlsxError#MaxUrlLengthExceeded} - URL string or anchor exceeds
+    ///   Excel's limit of 2080 characters or the screen tip exceed 255
+    ///   characters.
+    /// - {@link XlsxError#UnknownUrlType} - The URL has an unknown URI type. See
+    ///   the supported types listed above.
+    /// - {@link XlsxError#ParameterError} - {@link Url} mouseover tool tip exceeds
+    ///   Excel's limit of 255 characters.
+    #[wasm_bindgen(js_name = "writeUrlWithOptions", skip_jsdoc)]
+    pub fn write_url_with_options(
+        &self,
+        row: u32,
+        col: u16,
+        link: Url,
+        text: &str,
+        tip: &str,
+        format: Option<&Format>,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_url_with_options(
+                row,
+                col,
+                link.inner.lock().unwrap().clone(),
+                text,
+                tip,
+                format,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_url_with_options(
+                row,
+                col,
+                link.inner.lock().unwrap().clone(),
+                text,
+                tip,
+                format,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted date and/or time to a worksheet cell.
+    ///
+    /// The method method writes dates/times that implements {@link IntoExcelDateTime}
+    /// to a worksheet cell.
+    ///
+    /// The date/time types supported are:
+    /// - {@link ExcelDateTime}.
+    ///
+    /// If the `chrono` feature is enabled you can use the following types:
+    ///
+    /// - {@link chrono#NaiveDateTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDateTime.html).
+    /// - {@link chrono#NaiveDate}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDate.html).
+    /// - {@link chrono#NaiveTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveTime.html).
+    ///
+    /// If the `jiff` feature is enabled you can use the following types:
+    ///
+    /// - {@link jiff#civil::CivilDateTime}(https://docs.rs/jiff/latest/jiff/civil/struct.DateTime.html).
+    /// - {@link jiff#civil::CivilDate}(https://docs.rs/jiff/latest/jiff/civil/struct.Date.html).
+    /// - {@link jiff#civil::CivilTime}(https://docs.rs/jiff/latest/jiff/civil/struct.Time.html).
+    ///
+    /// Excel stores dates and times as a floating point number with a number
+    /// format to defined how it is displayed. The number format is set via a
+    /// {@link Format} struct which can also control visual formatting such as bold
+    /// and italic text.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `datetime`: A date/time instance that implements {@link IntoExcelDateTime}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeDatetimeWithFormat", skip_jsdoc)]
+    pub fn write_datetime_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        datetime: &ExcelDateTime,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_datetime_with_format(
+                row,
+                col,
+                &*datetime.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_datetime_with_format(
+                row,
+                col,
+                &*datetime.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write an unformatted date and/or time to a worksheet cell.
+    ///
+    /// In general an unformatted date/time isn't very useful since a date in
+    /// Excel without a format is just a number. However, this method is
+    /// provided for cases where an implicit format is derived from the column
+    /// or row format.
+    ///
+    /// However, for most use cases you should use the
+    /// {@link write_datetime_with_format}
+    /// method with an explicit format.
+    ///
+    /// The date/time types supported are:
+    /// - {@link ExcelDateTime}.
+    ///
+    /// If the `chrono` feature is enabled you can use the following types:
+    ///
+    /// - {@link chrono#NaiveDateTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDateTime.html).
+    /// - {@link chrono#NaiveDate}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDate.html).
+    /// - {@link chrono#NaiveTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveTime.html).
+    ///
+    /// If the `jiff` feature is enabled you can use the following types:
+    ///
+    /// - {@link jiff#civil::CivilDateTime}(https://docs.rs/jiff/latest/jiff/civil/struct.DateTime.html).
+    /// - {@link jiff#civil::CivilDate}(https://docs.rs/jiff/latest/jiff/civil/struct.Date.html).
+    /// - {@link jiff#civil::CivilTime}(https://docs.rs/jiff/latest/jiff/civil/struct.Time.html).
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `datetime`: A date/time instance that implements
+    ///   {@link IntoExcelDateTime}.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeDatetime", skip_jsdoc)]
+    pub fn write_datetime(
+        &self,
+        row: u32,
+        col: u16,
+        datetime: &ExcelDateTime,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .write_datetime(row, col, &*datetime.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .write_datetime(row, col, &*datetime.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted date to a worksheet cell.
+    ///
+    /// The method method writes dates/times that implements {@link IntoExcelDateTime}
+    /// to a worksheet cell.
+    ///
+    /// The date/time types supported are:
+    /// - {@link ExcelDateTime}.
+    ///
+    /// If the `chrono` feature is enabled you can use the following types:
+    ///
+    /// - {@link chrono#NaiveDateTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDateTime.html).
+    /// - {@link chrono#NaiveDate}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDate.html).
+    /// - {@link chrono#NaiveTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveTime.html).
+    ///
+    /// If the `jiff` feature is enabled you can use the following types:
+    ///
+    /// - {@link jiff#civil::CivilDateTime}(https://docs.rs/jiff/latest/jiff/civil/struct.DateTime.html).
+    /// - {@link jiff#civil::CivilDate}(https://docs.rs/jiff/latest/jiff/civil/struct.Date.html).
+    /// - {@link jiff#civil::CivilTime}(https://docs.rs/jiff/latest/jiff/civil/struct.Time.html).
+    ///
+    /// Excel stores dates and times as a floating point number with a number
+    /// format to defined how it is displayed. The number format is set via a
+    /// {@link Format} struct which can also control visual formatting such as bold
+    /// and italic text.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `date`: A date/time instance that implements {@link IntoExcelDateTime}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeDateWithFormat", skip_jsdoc)]
+    pub fn write_date_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        date: &ExcelDateTime,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_date_with_format(
+                row,
+                col,
+                &*date.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_date_with_format(
+                row,
+                col,
+                &*date.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted time to a worksheet cell.
+    ///
+    /// The method method writes dates/times that implements {@link IntoExcelDateTime}
+    /// to a worksheet cell.
+    ///
+    /// The date/time types supported are:
+    /// - {@link ExcelDateTime}.
+    ///
+    /// If the `chrono` feature is enabled you can use the following types:
+    ///
+    /// - {@link chrono#NaiveDateTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDateTime.html).
+    /// - {@link chrono#NaiveDate}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDate.html).
+    /// - {@link chrono#NaiveTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveTime.html).
+    ///
+    /// If the `jiff` feature is enabled you can use the following types:
+    ///
+    /// - {@link jiff#civil::CivilDateTime}(https://docs.rs/jiff/latest/jiff/civil/struct.DateTime.html).
+    /// - {@link jiff#civil::CivilDate}(https://docs.rs/jiff/latest/jiff/civil/struct.Date.html).
+    /// - {@link jiff#civil::CivilTime}(https://docs.rs/jiff/latest/jiff/civil/struct.Time.html).
+    ///
+    /// Excel stores dates and times as a floating point number with a number
+    /// format to defined how it is displayed. The number format is set via a
+    /// {@link Format} struct which can also control visual formatting such as bold
+    /// and italic text.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `time`: A date/time instance that implements {@link IntoExcelDateTime}.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeTimeWithFormat", skip_jsdoc)]
+    pub fn write_time_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        time: &ExcelDateTime,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_time_with_format(
+                row,
+                col,
+                &*time.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_time_with_format(
+                row,
+                col,
+                &*time.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write an unformatted boolean value to a cell.
+    ///
+    /// Write an unformatted Excel boolean value to a worksheet cell.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `boolean`: The boolean value to write to the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeBoolean", skip_jsdoc)]
+    pub fn write_boolean(&self, row: u32, col: u16, boolean: bool) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().write_boolean(row, col, boolean)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().write_boolean(row, col, boolean)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a formatted boolean value to a worksheet cell.
+    ///
+    /// Write a boolean value with formatting to a worksheet cell. The format is set
+    /// via a {@link Format} struct which can control the numerical formatting of
+    /// the number, for example as a currency or a percentage value, or the
+    /// visual format, such as bold and italic text.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `boolean`: The boolean value to write to the cell.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "writeBooleanWithFormat", skip_jsdoc)]
+    pub fn write_boolean_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        boolean: bool,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_boolean_with_format(
+                row,
+                col,
+                boolean,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_boolean_with_format(
+                row,
+                col,
+                boolean,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Merge a range of cells.
+    ///
+    /// The `merge_range()` method allows cells to be merged together so that
+    /// they act as a single area.
+    ///
+    /// The `merge_range()` method writes a string to the merged cells. In order
+    /// to write other data types, such as a number or a formula, you can
+    /// overwrite the first cell with a call to one of the other
+    /// `worksheet.write_*()` functions. The same {@link Format} instance should be
+    /// used as was used in the merged range, see the example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `string`: The string to write to the cell. Other types can also be
+    ///   handled. See the documentation above and the example below.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    /// - {@link XlsxError#MergeRangeSingleCell} - A merge range cannot be a single
+    ///   cell in Excel.
+    /// - {@link XlsxError#MergeRangeOverlaps} - The merge range overlaps a
+    ///   previous merge range.
+    #[wasm_bindgen(js_name = "mergeRange", skip_jsdoc)]
+    pub fn merge_range(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        string: &str,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().merge_range(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                string,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().merge_range(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                string,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add an image to a worksheet.
+    ///
+    /// Add an image to a worksheet at a cell location. The image should be
+    /// encapsulated in an {@link Image} object.
+    ///
+    /// The supported image formats are:
+    ///
+    /// - PNG
+    /// - JPG
+    /// - GIF: The image can be an animated gif in more recent versions of
+    ///   Excel.
+    /// - BMP: BMP images are only supported for backward compatibility. In
+    ///   general it is best to avoid BMP images since they are not compressed.
+    ///   If used, BMP images must be 24 bit, true color, bitmaps.
+    ///
+    /// EMF and WMF file formats will be supported in an upcoming version of the
+    /// library.
+    ///
+    /// **NOTE on SVG and WebP files**: Excel doesn't directly support SVG and
+    /// WebP files in the same way as other image file formats. Excel allows the
+    /// user to add SVG and WebP images but it converts them to PNG files and
+    /// displays them in that format. As such, SVG and WebP images are not
+    /// supported by `rust_xlsxwriter` since a conversion to the PNG format
+    /// would be required, and that format is already supported.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `image`: The {@link Image} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertImage", skip_jsdoc)]
+    pub fn insert_image(&self, row: u32, col: u16, image: &Image) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .insert_image(row, col, &*image.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .insert_image(row, col, &*image.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add an image to a worksheet at an offset.
+    ///
+    /// Add an image to a worksheet at a pixel offset within a cell location.
+    /// The image should be encapsulated in an {@link Image} object.
+    ///
+    /// This method is similar to {@link Worksheet#insertImage} except that the
+    /// image can be offset from the top left of the cell.
+    ///
+    /// Note, it is possible to offset the image outside the target cell if
+    /// required.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `image`: The {@link Image} to insert into the cell.
+    /// - `x_offset`: The horizontal offset within the cell in pixels.
+    /// - `y_offset`: The vertical offset within the cell in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertImageWithOffset", skip_jsdoc)]
+    pub fn insert_image_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        image: &Image,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_image_with_offset(
+                row,
+                col,
+                &*image.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_image_with_offset(
+                row,
+                col,
+                &*image.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Embed an image to a worksheet and fit it to a cell.
+    ///
+    /// This method can be used to embed a image into a worksheet cell and have
+    /// the image automatically scale to the width and height of the cell. The
+    /// X/Y scaling of the image is preserved but the size of the image is
+    /// adjusted to fit the largest possible width or height depending on the
+    /// cell dimensions.
+    ///
+    /// This is the equivalent of Excel's menu option to insert an image using
+    /// the option to "Place in Cell" which is only available in Excel 365
+    /// versions from 2023 onwards. For older versions of Excel a `#VALUE!`
+    /// error is displayed.
+    ///
+    /// The image should be encapsulated in an {@link Image} object. See
+    /// {@link Worksheet#insertImage} above for details on the supported image
+    /// types.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `image`: The {@link Image} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#ParameterError} - Embedded images can only be added to
+    ///   the current row in "constant memory" mode. They cannot be added to a
+    ///   previously written row.
+    #[wasm_bindgen(js_name = "embedImage", skip_jsdoc)]
+    pub fn embed_image(&self, row: u32, col: u16, image: &Image) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .embed_image(row, col, &*image.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .embed_image(row, col, &*image.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Embed an image to a worksheet and fit it to a formatted cell.
+    ///
+    /// This method can be used to embed a image into a worksheet cell and have
+    /// the image automatically scale to the width and height of the cell. This
+    /// is similar to the {@link Worksheet#embedImage} above but it allows you
+    /// to add an additional cell format using {@link Format}. This is occasionally
+    /// useful if you want to center the image, set a cell border around it, or
+    /// add a cell background color. See the {@link Worksheet#embedImage}
+    /// example above.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `image`: The {@link Image} to insert into the cell.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "embedImageWithFormat", skip_jsdoc)]
+    pub fn embed_image_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        image: &Image,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().embed_image_with_format(
+                row,
+                col,
+                &*image.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().embed_image_with_format(
+                row,
+                col,
+                &*image.inner.lock().unwrap(),
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add an image to a worksheet and scale it fit in a cell.
+    ///
+    /// Add an image to a worksheet and scale it so that it fits in a cell. This
+    /// is similar in effect to {@link Worksheet#embedImage} but in Excel's
+    /// terminology it inserts the image placed *over* the cell instead of *in*
+    /// the cell. The only advantage of this method is that the output file will
+    /// work will all versions of Excel. The `Worksheet::embed_image()` method
+    /// only works with versions of Excel from 2023 onwards.
+    ///
+    /// This method can be useful when creating a product spreadsheet with a
+    /// column of images for each product. The image should be encapsulated in
+    /// an {@link Image} object. See {@link Worksheet#insertImage} above for details
+    /// on the supported image types. The scaling calculation for this method
+    /// takes into account the DPI of the image in the same way that Excel does.
+    ///
+    /// There are two options, which are controlled by the `keep_aspect_ratio`
+    /// parameter. The image can be scaled vertically and horizontally to occupy
+    /// the entire cell or the aspect ratio of the image can be maintained so
+    /// that the image is scaled to the lesser of the horizontal or vertical
+    /// sizes. See the example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `image`: The {@link Image} to insert into the cell.
+    /// - `keep_aspect_ratio`: Boolean value to maintain the aspect ratio of the
+    ///   image if `true` or scale independently in the horizontal and vertical
+    ///   directions if `false`.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertImageFitToCell", skip_jsdoc)]
+    pub fn insert_image_fit_to_cell(
+        &self,
+        row: u32,
+        col: u16,
+        image: &Image,
+        keep_aspect_ratio: bool,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_image_fit_to_cell(
+                row,
+                col,
+                &*image.inner.lock().unwrap(),
+                keep_aspect_ratio,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_image_fit_to_cell(
+                row,
+                col,
+                &*image.inner.lock().unwrap(),
+                keep_aspect_ratio,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add an image to a worksheet and scale it to fit, centered in a cell.
+    ///
+    /// Add an image to a worksheet and scale it so that it fits, centered, in a
+    /// cell. This is similar in effect to {@link Worksheet#embedImage} with a
+    /// "center" cell format but in Excel's terminology it inserts the image
+    /// placed *over* the cell instead of *in* the cell. The only advantage of
+    /// this method is that the output file will work will all versions of
+    /// Excel. The `Worksheet::embed_image()` method only works with versions of
+    /// Excel from 2023 onwards.
+    ///
+    /// This method is similar to {@link Worksheet#insertImageFitToCell}
+    /// above, except that it always keeps the aspect ratio of the image and
+    /// centers the image within the cell.
+    ///
+    /// See the example in {@link Worksheet#embedImage} above.
+    ///
+    /// **Note for macOS Excel users**: the image scale and centering may appear
+    /// different in Excel for macOS compared to Windows. This is an Excel
+    /// issue and not a `rust_xlsxwriter` issue. See this [Microsoft support
+    /// article].
+    ///
+    /// [Microsoft support article]: https://learn.microsoft.com/en-us/answers/questions/4938947/size-of-images-changes-(mac-windows)?forum=msoffice-all&referrer=answers
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `image`: The {@link Image} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertImageFitToCellCentered", skip_jsdoc)]
+    pub fn insert_image_fit_to_cell_centered(
+        &self,
+        row: u32,
+        col: u16,
+        image: &Image,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .insert_image_fit_to_cell_centered(row, col, &*image.inner.lock().unwrap()),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .insert_image_fit_to_cell_centered(row, col, &*image.inner.lock().unwrap()),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
     /// Insert a background image into a worksheet.
     ///
     /// A background image can be added to a worksheet to add a watermark or
@@ -109,6 +1836,236 @@ impl Worksheet {
             parent: Arc::clone(&self.parent),
             accessor: self.accessor,
         }
+    }
+    /// Add a chart to a worksheet.
+    ///
+    /// Add a {@link Chart} to a worksheet at a cell location.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `chart`: The {@link Chart} to insert into the cell.
+    ///
+    /// When used with a [Chartsheet](Worksheet::new_chartsheet) the row/column
+    /// arguments are ignored but it is best to use `(0, 0)` for clarity.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#ChartError} - A general error that is raised when a
+    ///   chart parameter is incorrect or a chart is configured incorrectly.
+    #[wasm_bindgen(js_name = "insertChart", skip_jsdoc)]
+    pub fn insert_chart(&self, row: u32, col: u16, chart: &Chart) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .insert_chart(row, col, &*chart.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .insert_chart(row, col, &*chart.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add a chart to a worksheet at an offset.
+    ///
+    /// Add a {@link Chart} to a worksheet  at a pixel offset within a cell
+    /// location.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `chart`: The {@link Chart} to insert into the cell.
+    /// - `x_offset`: The horizontal offset within the cell in pixels.
+    /// - `y_offset`: The vertical offset within the cell in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#ChartError} - A general error that is raised when a
+    ///   chart parameter is incorrect or a chart is configured incorrectly.
+    #[wasm_bindgen(js_name = "insertChartWithOffset", skip_jsdoc)]
+    pub fn insert_chart_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        chart: &Chart,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_chart_with_offset(
+                row,
+                col,
+                &*chart.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_chart_with_offset(
+                row,
+                col,
+                &*chart.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add a Note to a cell.
+    ///
+    /// A Note is a post-it style message that is revealed when the user mouses
+    /// over a worksheet cell. The presence of a Note is indicated by a small
+    /// red triangle in the upper right-hand corner of the cell.
+    ///
+    /// In versions of Excel prior to Office 365 Notes were referred to as
+    /// "Comments". The name Comment is now used for a newer style threaded
+    /// comment and Note is used for the older non threaded version. See the
+    /// Microsoft docs on [The difference between threaded comments and notes].
+    ///
+    /// [The difference between threaded comments and notes]:
+    ///     https://support.microsoft.com/en-us/office/the-difference-between-threaded-comments-and-notes-75a51eec-4092-42ab-abf8-7669077b7be3
+    ///
+    /// See {@link Note} for details on the properties of Notes.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `note`: The {@link Note} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#MaxStringLengthExceeded} - Text exceeds Excel's limit of
+    ///   32,713 characters.
+    #[wasm_bindgen(js_name = "insertNote", skip_jsdoc)]
+    pub fn insert_note(&self, row: u32, col: u16, note: &Note) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .insert_note(row, col, &*note.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .insert_note(row, col, &*note.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Insert a textbox shape into a worksheet.
+    ///
+    /// This method can be used to insert an Excel Textbox shape with text into
+    /// a worksheet.
+    ///
+    /// See the {@link Shape} documentation for a detailed description of the
+    /// methods that can be used to configure the size and appearance of the
+    /// textbox.
+    ///
+    /// Note, no Excel shape other than Textbox is supported. See Support for
+    /// other Excel shape
+    /// types.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `shape`: The {@link Shape} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertShape", skip_jsdoc)]
+    pub fn insert_shape(&self, row: u32, col: u16, shape: &Shape) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .insert_shape(row, col, &*shape.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .insert_shape(row, col, &*shape.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Insert a textbox shape into a worksheet cell at an offset.
+    ///
+    /// This method can be used to insert an Excel Textbox shape with text into
+    /// a worksheet cell at a pixel offset.
+    ///
+    /// See the {@link Shape} documentation for a detailed description of the
+    /// methods that can be used to configure the size and appearance of the
+    /// textbox.
+    ///
+    /// Note, no Excel shape other than Textbox is supported. See Support for
+    /// other Excel shape
+    /// types.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `shape`: The {@link Shape} to insert into the cell.
+    /// - `x_offset`: The horizontal offset within the cell in pixels.
+    /// - `y_offset`: The vertical offset within the cell in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertShapeWithOffset", skip_jsdoc)]
+    pub fn insert_shape_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        shape: &Shape,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_shape_with_offset(
+                row,
+                col,
+                &*shape.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_shape_with_offset(
+                row,
+                col,
+                &*shape.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
     }
     /// Make all worksheet notes visible when the file loads.
     ///
@@ -161,6 +2118,464 @@ impl Worksheet {
             accessor: self.accessor,
         }
     }
+    /// Add a Excel Form Control button object to a worksheet.
+    ///
+    /// Add a {@link Button} to a worksheet at a cell location. The worksheet button
+    /// object is mainly provided as a way of triggering a VBA macro, see
+    /// Working with VBA macros for more details.
+    ///
+    /// Note, Button is the only VBA Control supported by `rust_xlsxwriter`. It
+    /// is unlikely that any other Excel form elements will be added in the
+    /// future due to the implementation effort required.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `button`: The {@link Button} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertButton", skip_jsdoc)]
+    pub fn insert_button(&self, row: u32, col: u16, button: &Button) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .insert_button(row, col, &*button.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .insert_button(row, col, &*button.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add a Excel Form Control button object to a  at an offset.
+    ///
+    /// Add a {@link Button} to a worksheet  at a pixel offset within a cell
+    /// location. See {@link Worksheet#insertButton} above
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `button`: The {@link Button} to insert into the cell.
+    /// - `x_offset`: The horizontal offset within the cell in pixels.
+    /// - `y_offset`: The vertical offset within the cell in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertButtonWithOffset", skip_jsdoc)]
+    pub fn insert_button_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        button: &Button,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_button_with_offset(
+                row,
+                col,
+                &*button.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_button_with_offset(
+                row,
+                col,
+                &*button.inner.lock().unwrap(),
+                x_offset,
+                y_offset,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Insert a boolean checkbox in a worksheet cell.
+    ///
+    /// Checkboxes are a [new feature] added to Excel in 2024. They are a way of
+    /// displaying a boolean value as a checkbox in a cell. The underlying value
+    /// is still an Excel `TRUE/FALSE` boolean value and can be used in formulas
+    /// and in references.
+    ///
+    /// [new feature]:
+    ///     https://techcommunity.microsoft.com/blog/excelblog/introducing-checkboxes-in-excel/4173561
+    ///
+    /// The `insert_checkbox()` method can be used to replicate this behavior,
+    /// see the examples below.
+    ///
+    /// The checkbox feature is only available in Excel versions from 2024 and
+    /// later. In older versions the value will be displayed as a standard Excel
+    /// `TRUE` or `FALSE` boolean. In fact Excel actually stores a checkbox as a
+    /// normal boolean but with a special format. If required you can make use
+    /// of this property to create a checkbox with
+    /// {@link Worksheet#writeBooleanWithFormat} and a cell format that has
+    /// the {@link Format#setCheckbox} property set, see the second example
+    /// below.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `boolean`: The boolean value to display as a checkbox.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertCheckbox", skip_jsdoc)]
+    pub fn insert_checkbox(&self, row: u32, col: u16, boolean: bool) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().insert_checkbox(row, col, boolean)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().insert_checkbox(row, col, boolean)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Insert a boolean checkbox in a worksheet cell with a cell format.
+    ///
+    /// This method allow you to insert a boolean checkbox in a worksheet cell
+    /// with a background color or other cell format property.
+    ///
+    /// See the {@link Worksheet#insertCheckbox} method above for more details.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `boolean`: The boolean value to display as a checkbox.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "insertCheckboxWithFormat", skip_jsdoc)]
+    pub fn insert_checkbox_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        boolean: bool,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_checkbox_with_format(
+                row,
+                col,
+                boolean,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_checkbox_with_format(
+                row,
+                col,
+                boolean,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the height for a row of cells.
+    ///
+    /// The `set_row_height()` method is used to change the default height of a
+    /// row. The height is specified in character units, where the default
+    /// height is 15. Excel allows height values in increments of 0.25.
+    ///
+    /// It is generally preferable to set the height in pixels using the
+    /// {@link Worksheet#setRowHeightPixels} method since it is more
+    /// precise.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `height`: The row height in character units.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setRowHeight", skip_jsdoc)]
+    pub fn set_row_height(&self, row: u32, height: f64) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_row_height(row, height),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_row_height(row, height),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the height for a row of cells, in pixels.
+    ///
+    /// The `set_row_height_pixels()` method is used to change the default height of a
+    /// row. The height is specified in pixels, where the default
+    /// height is 20.
+    ///
+    /// To specify the height in Excel's character units use the
+    /// {@link Worksheet#setRowHeight} method.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `height`: The row height in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setRowHeightPixels", skip_jsdoc)]
+    pub fn set_row_height_pixels(&self, row: u32, height: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_row_height_pixels(row, height)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().set_row_height_pixels(row, height)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the format for a row of cells.
+    ///
+    /// The `set_row_format()` method is used to change the default format of a
+    /// row. Any unformatted data written to that row will then adopt that
+    /// format. Formatted data written to the row will maintain its own cell
+    /// format. See the example below.
+    ///
+    /// A future version of this library may support automatic merging of
+    /// explicit cell formatting with the row formatting but that isn't
+    /// currently supported.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setRowFormat", skip_jsdoc)]
+    pub fn set_row_format(&self, row: u32, format: &Format) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_row_format(row, &*format.inner.lock().unwrap()),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_row_format(row, &*format.inner.lock().unwrap()),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Group a range of rows into a worksheet outline group.
+    ///
+    /// In Excel an outline is a group of rows or columns that can be collapsed
+    /// or expanded to simplify hierarchical data. It is most often used with
+    /// the `SUBTOTAL()` function. See the examples below and the the
+    /// documentation on [Grouping and outlining
+    /// data](../worksheet/index.html#grouping-and-outlining-data).
+    ///
+    /// A grouping is created as follows:
+    ///
+    /// Which creates a grouping at level 1:
+    ///
+    /// src="https://rustxlsxwriter.github.io/images/worksheet_group_rows_intro1.png">
+    ///
+    /// Hierarchical sub-groups are created by repeating the method calls for a
+    /// sub-range of an upper level group:
+    ///
+    /// This creates the following grouping and sub-grouping at levels 1 and 2:
+    ///
+    /// src="https://rustxlsxwriter.github.io/images/worksheet_group_rows_intro2.png">
+    ///
+    /// It should be noted that Excel requires outline groups at the same level
+    /// to be separated by at least one row (or column) or else it will merge
+    /// them into a single group. This is generally to allow a subtotal
+    /// row/column.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. Zero indexed.
+    /// - `last_row`: The last row of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row. Note, to reverse the group direction see the
+    ///   {@link Worksheet#groupSymbolsAbove} method.
+    /// - {@link XlsxError#MaxGroupLevelExceeded} - Group depth level exceeds
+    ///   Excel's limit of 8 levels.
+    #[wasm_bindgen(js_name = "groupRows", skip_jsdoc)]
+    pub fn group_rows(&self, first_row: u32, last_row: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().group_rows(first_row, last_row),
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().group_rows(first_row, last_row)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Group a range of rows into a collapsed worksheet outline group.
+    ///
+    /// In Excel an outline is a group of rows or columns that can be collapsed
+    /// or expanded to simplify hierarchical data. It is most often used with
+    /// the `SUBTOTAL()` function. See the examples below and the the
+    /// documentation on [Grouping and outlining
+    /// data](../worksheet/index.html#grouping-and-outlining-data).
+    ///
+    /// See {@link Worksheet#groupRows} above for an explanation on how to create
+    /// sub-groupings.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. Zero indexed.
+    /// - `last_row`: The last row of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row. Note, to reverse the group direction see the
+    ///   {@link Worksheet#groupSymbolsAbove} method.
+    /// - {@link XlsxError#MaxGroupLevelExceeded} - Group depth level exceeds
+    ///   Excel's limit of 8 levels.
+    #[wasm_bindgen(js_name = "groupRowsCollapsed", skip_jsdoc)]
+    pub fn group_rows_collapsed(&self, first_row: u32, last_row: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .group_rows_collapsed(first_row, last_row),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .group_rows_collapsed(first_row, last_row),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Group a range of columns into a worksheet outline group.
+    ///
+    /// In Excel an outline is a group of rows or columns that can be collapsed
+    /// or expanded to simplify hierarchical data. It is most often used with
+    /// the `SUBTOTAL()` function. See the examples below and the the
+    /// documentation on [Grouping and outlining
+    /// data](../worksheet/index.html#grouping-and-outlining-data).
+    ///
+    /// See {@link Worksheet#groupRows} above for an explanation on how to create
+    /// sub-groupings.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. Zero indexed.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First column greater than the last
+    ///   column. Note, to reverse the group direction see the
+    ///   {@link Worksheet#groupSymbolsToLeft} method.
+    /// - {@link XlsxError#MaxGroupLevelExceeded} - Group depth level exceeds
+    ///   Excel's limit of 8 levels.
+    #[wasm_bindgen(js_name = "groupColumns", skip_jsdoc)]
+    pub fn group_columns(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().group_columns(first_col, last_col)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().group_columns(first_col, last_col)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Group a range of columns into a collapsed worksheet outline group.
+    ///
+    /// In Excel an outline is a group of rows or columns that can be collapsed
+    /// or expanded to simplify hierarchical data. It is most often used with
+    /// the `SUBTOTAL()` function. See the examples below and the the
+    /// documentation on [Grouping and outlining
+    /// data](../worksheet/index.html#grouping-and-outlining-data).
+    ///
+    /// See {@link Worksheet#groupRows} above for an explanation on how to
+    /// create sub-groupings.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. Zero indexed.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First column greater than the
+    ///   last column. Note, to reverse the group direction see the
+    ///   {@link Worksheet#groupSymbolsToLeft} method.
+    /// - {@link XlsxError#MaxGroupLevelExceeded} - Group depth level exceeds
+    ///   Excel's limit of 7 levels.
+    #[wasm_bindgen(js_name = "groupColumnsCollapsed", skip_jsdoc)]
+    pub fn group_columns_collapsed(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .group_columns_collapsed(first_col, last_col),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .group_columns_collapsed(first_col, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
     /// Place the row outline group expand/collapse symbols above the range.
     ///
     /// This method toggles the Excel worksheet option to place the outline
@@ -209,6 +2624,58 @@ impl Worksheet {
             parent: Arc::clone(&self.parent),
             accessor: self.accessor,
         }
+    }
+    /// Hide a worksheet row.
+    ///
+    /// The `set_row_hidden()` method is used to hide a row. This can be
+    /// used, for example, to hide intermediary steps in a complicated
+    /// calculation.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setRowHidden", skip_jsdoc)]
+    pub fn set_row_hidden(&self, row: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_row_hidden(row),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_row_hidden(row),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Unhide a user hidden worksheet row.
+    ///
+    /// The `set_row_unhidden()` method is used to unhide a previously hidden
+    /// row. This can occasionally be useful when used in conjunction with
+    /// autofilter rules.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setRowUnhidden", skip_jsdoc)]
+    pub fn set_row_unhidden(&self, row: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_row_unhidden(row),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_row_unhidden(row),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
     }
     /// Set the default row height for all rows in a worksheet, efficiently.
     ///
@@ -304,6 +2771,344 @@ impl Worksheet {
             accessor: self.accessor,
         }
     }
+    /// Set the width for a worksheet column.
+    ///
+    /// The `set_column_width()` method is used to change the default width of a
+    /// worksheet column.
+    ///
+    /// The `width` parameter sets the column width in the same units used by
+    /// Excel which is: the number of characters in the default font. The
+    /// default width is 8.43 in the default font of Calibri 11. The actual
+    /// relationship between a string width and a column width in Excel is
+    /// complex. See the [following explanation of column
+    /// widths](https://support.microsoft.com/en-us/kb/214123) from the
+    /// Microsoft support documentation for more details.
+    ///
+    /// It is generally preferable to set the width in pixels using the
+    /// {@link Worksheet#setColumnWidthPixels} method since it is more
+    /// precise.
+    ///
+    /// See also the {@link Worksheet#autofit} method.
+    ///
+    /// # Parameters
+    ///
+    /// - `col`: The zero indexed column number.
+    /// - `width`: The column width in character units.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setColumnWidth", skip_jsdoc)]
+    pub fn set_column_width(&self, col: u16, width: f64) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_column_width(col, width),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_column_width(col, width),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the width for a worksheet column in pixels.
+    ///
+    /// The `set_column_width_pixels()` method is used to change the default
+    /// width in pixels of a worksheet column.
+    ///
+    /// To set the width in Excel character units use the
+    /// {@link Worksheet#setColumnWidth} method.
+    ///
+    /// See also the {@link Worksheet#autofit} method.
+    ///
+    /// # Parameters
+    ///
+    /// - `col`: The zero indexed column number.
+    /// - `width`: The column width in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setColumnWidthPixels", skip_jsdoc)]
+    pub fn set_column_width_pixels(&self, col: u16, width: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_column_width_pixels(col, width)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().set_column_width_pixels(col, width)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the column pixel width in auto-fit mode.
+    ///
+    /// In Excel the width of an auto-fitted column will increase if the user
+    /// edits a number and increases the number of digits past the previous
+    /// maximum width. This behavior doesn't apply to strings or when the number
+    /// of digits is decreased. It also doesn't apply to columns that have been
+    /// set manually.
+    ///
+    /// The `Worksheet::set_column_autofit_width()` method emulates this auto-fit
+    /// behavior whereas the {@link Worksheet#setColumnWidthPixels} method,
+    /// see above, is equivalent to setting the width manually.
+    ///
+    /// The distinction is subtle and most users are unaware of this behavior in
+    /// Excel. However, it is supported for users who wish to implement their
+    /// own version of auto-fit.
+    ///
+    /// # Parameters
+    ///
+    /// - `col`: The zero indexed column number.
+    /// - `width`: The column width in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setColumnAutofitWidth", skip_jsdoc)]
+    pub fn set_column_autofit_width(&self, col: u16, width: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_column_autofit_width(col, width)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().set_column_autofit_width(col, width)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the format for a column of cells.
+    ///
+    /// The `set_column_format()` method is used to change the default format of a
+    /// column. Any unformatted data written to that column will then adopt that
+    /// format. Formatted data written to the column will maintain its own cell
+    /// format. See the example below.
+    ///
+    /// A future version of this library may support automatic merging of
+    /// explicit cell formatting with the column formatting but that isn't
+    /// currently supported.
+    ///
+    /// # Parameters
+    ///
+    /// - `col`: The zero indexed column number.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setColumnFormat", skip_jsdoc)]
+    pub fn set_column_format(&self, col: u16, format: &Format) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_column_format(col, &*format.inner.lock().unwrap()),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_column_format(col, &*format.inner.lock().unwrap()),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Hide a worksheet column.
+    ///
+    /// The `set_column_hidden()` method is used to hide a column. This can be
+    /// used, for example, to hide intermediary steps in a complicated
+    /// calculation.
+    ///
+    /// # Parameters
+    ///
+    /// - `col`: The zero indexed column number.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    #[wasm_bindgen(js_name = "setColumnHidden", skip_jsdoc)]
+    pub fn set_column_hidden(&self, col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_column_hidden(col),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_column_hidden(col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the width for a range of columns.
+    ///
+    /// This is a syntactic shortcut for setting the width for a range of
+    /// contiguous cells. See {@link Worksheet#setColumnWidth} for more
+    /// details on the single column version.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. Zero indexed.
+    /// - `last_col`: The last column of the range.
+    /// - `width`: The column width in character units.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First column larger than the last
+    ///   column.
+    #[wasm_bindgen(js_name = "setColumnRangeWidth", skip_jsdoc)]
+    pub fn set_column_range_width(
+        &self,
+        first_col: u16,
+        last_col: u16,
+        width: f64,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_column_range_width(first_col, last_col, width),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_column_range_width(first_col, last_col, width),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the pixel width for a range of columns.
+    ///
+    /// This is a syntactic shortcut for setting the width in pixels for a range of
+    /// contiguous cells. See {@link Worksheet#setColumnWidthPixels} for more
+    /// details on the single column version.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. Zero indexed.
+    /// - `last_col`: The last column of the range.
+    /// - `width`: The column width in pixels.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First column larger than the last
+    ///   column.
+    #[wasm_bindgen(js_name = "setColumnRangeWidthPixels", skip_jsdoc)]
+    pub fn set_column_range_width_pixels(
+        &self,
+        first_col: u16,
+        last_col: u16,
+        width: u32,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_column_range_width_pixels(first_col, last_col, width),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_column_range_width_pixels(first_col, last_col, width),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the format for a range of columns.
+    ///
+    /// This is a syntactic shortcut for setting the format for a range of
+    /// contiguous cells. See {@link Worksheet#setColumnFormat} for more
+    /// details on the single column version.
+    ///
+    /// Note, this method can be used to set the cell format for the entire
+    /// worksheet when applied to all the columns in the worksheet (see the
+    /// example below). This is relatively efficient since it is stored as a
+    /// single XML element. This is also how Excel applies a format to an entire
+    /// worksheet.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. Zero indexed.
+    /// - `last_col`: The last column of the range.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First column larger than the last
+    ///   column.
+    #[wasm_bindgen(js_name = "setColumnRangeFormat", skip_jsdoc)]
+    pub fn set_column_range_format(
+        &self,
+        first_col: u16,
+        last_col: u16,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_column_range_format(
+                first_col,
+                last_col,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_column_range_format(
+                first_col,
+                last_col,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Hide a range of worksheet columns.
+    ///
+    /// This is a syntactic shortcut for hiding a range of contiguous cells. See
+    /// {@link Worksheet#setColumnHidden} for more details on the single column
+    /// version.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. Zero indexed.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First column larger than the last
+    ///   column.
+    #[wasm_bindgen(js_name = "setColumnRangeHidden", skip_jsdoc)]
+    pub fn set_column_range_hidden(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_column_range_hidden(first_col, last_col),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_column_range_hidden(first_col, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
     /// Set the default cell format for a worksheet.
     ///
     /// See the {@link Workbook#setDefaultFormat} method for details.
@@ -354,6 +3159,127 @@ impl Worksheet {
             accessor: self.accessor,
         })
     }
+    /// Set the autofilter area in the worksheet.
+    ///
+    /// The `autofilter()` method allows an autofilter to be added to a
+    /// worksheet. An autofilter is a way of adding drop down lists to the
+    /// headers of a 2D range of worksheet data. This allows users to filter the
+    /// data based on simple criteria so that some data is shown and some is
+    /// hidden.
+    ///
+    /// See the {@link Worksheet#filterColumn} method for an explanation of how to
+    /// set a filter conditions for columns in the autofilter range.
+    ///
+    /// Note, Excel only allows one autofilter range per worksheet so calling
+    /// this method multiple times will overwrite the previous range.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    /// - {@link XlsxError#AutofilterRangeOverlaps} - The autofilter range overlaps
+    ///   a table autofilter range.
+    #[wasm_bindgen(js_name = "autofilter", skip_jsdoc)]
+    pub fn autofilter(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .autofilter(first_row, first_col, last_row, last_col),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .autofilter(first_row, first_col, last_row, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the filter condition for a column in an autofilter range.
+    ///
+    /// The {@link Worksheet#autofilter} method sets the cell range for an
+    /// autofilter but in order to filter rows within the filter area you must
+    /// also add a filter condition.
+    ///
+    /// Excel supports two main types of filter. The first, and most common, is
+    /// a list filter where the user selects the items to filter from a list of
+    /// all the values in the the column range:
+    ///
+    /// The other main type of filter is a custom filter where the user can
+    /// specify 1 or 2 conditions like ">= 4000" and "<= 6000":
+    ///
+    /// src="https://rustxlsxwriter.github.io/images/autofilter_custom.png">
+    ///
+    /// In Excel these are mutually exclusive and you will need to choose one or
+    /// the other via the {@link FilterCondition} struct parameter.
+    ///
+    /// For more details on setting filter conditions see {@link FilterCondition}
+    /// and the [Working with Autofilters] section of the Users Guide.
+    ///
+    /// [Working with Autofilters]:
+    ///     https://rustxlsxwriter.github.io/formulas/autofilters.html
+    ///
+    /// Note, there are some limitations on autofilter conditions. The main one
+    /// is that the hiding of rows that don't match a filter is not an automatic
+    /// part of the file format. Instead it is necessary to hide rows that don't
+    /// match the filters. The `rust_xlsxwriter` library does this automatically
+    /// and in most cases will get it right, however, there may be cases where
+    /// you need to manually hide some of the rows. See [Auto-hiding filtered
+    /// rows].
+    ///
+    /// [Auto-hiding filtered rows]:
+    ///     https://rustxlsxwriter.github.io/formulas/autofilters.html#auto-hiding-filtered-rows
+    ///
+    /// # Parameters
+    ///
+    /// - `col`: The zero indexed column number.
+    /// - `filter_condition`: The column filter condition defined by the
+    ///   {@link FilterCondition} struct.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Column exceeds Excel's worksheet
+    ///   limits.
+    /// - {@link XlsxError#ParameterError} - Parameter error for the following
+    ///   issues:
+    ///   - The {@link Worksheet#autofilter} range hasn't been set.
+    ///   - The column is outside the {@link Worksheet#autofilter} range.
+    ///   - The {@link FilterCondition} doesn't have a condition set.
+    #[wasm_bindgen(js_name = "filterColumn", skip_jsdoc)]
+    pub fn filter_column(
+        &self,
+        col: u16,
+        filter_condition: &FilterCondition,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .filter_column(col, &*filter_condition.inner.lock().unwrap()),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .filter_column(col, &*filter_condition.inner.lock().unwrap()),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
     /// Turn off the option to automatically hide rows that don't match filters.
     ///
     /// Rows that don't match autofilter conditions are hidden by Excel at
@@ -379,6 +3305,265 @@ impl Worksheet {
             parent: Arc::clone(&self.parent),
             accessor: self.accessor,
         }
+    }
+    /// Add a table to a worksheet.
+    ///
+    /// Tables in Excel are a way of grouping a range of cells into a single
+    /// entity that has common formatting or that can be referenced from
+    /// formulas. Tables can have column headers, autofilters, total rows,
+    /// column formulas and different formatting styles.
+    ///
+    /// The headers and total row of a table should be configured via a
+    /// {@link Table} struct but the table data can be added via standard
+    /// {@link Worksheet#write} methods.
+    ///
+    /// For more information on tables see the Microsoft documentation on
+    /// [Overview of Excel tables].
+    ///
+    /// [Overview of Excel tables]:
+    ///     https://support.microsoft.com/en-us/office/overview-of-excel-tables-7ab0bb7d-3a9e-4b56-a3c9-6c94334e492c
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// Note, you need to ensure that the `first_row` and `last_row` range
+    /// includes all the rows for the table including the header and the total
+    /// row, if present.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    /// - {@link XlsxError#TableError} - A general error that is raised when a
+    ///   table parameter is incorrect or a table is configured incorrectly.
+    /// - {@link XlsxError#TableRangeOverlaps} - The table range overlaps a
+    ///   previous table range.
+    /// - {@link XlsxError#AutofilterRangeOverlaps} - The table autofilter range
+    ///   overlaps the worksheet autofilter range.
+    #[wasm_bindgen(js_name = "addTable", skip_jsdoc)]
+    pub fn add_table(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        table: &Table,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().add_table(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*table.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().add_table(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*table.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add a data validation to one or more cells to restrict user input based
+    /// on types and rules.
+    ///
+    /// Data validation is a feature of Excel which allows you to restrict the
+    /// data that a user enters in a cell and to display associated help and
+    /// warning messages. It also allows you to restrict input to values in a
+    /// dropdown list.
+    ///
+    /// See {@link DataValidation} for more information and examples.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `data_validation`: A {@link DataValidation} data validation instance.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "addDataValidation", skip_jsdoc)]
+    pub fn add_data_validation(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        data_validation: &DataValidation,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().add_data_validation(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*data_validation.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().add_data_validation(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*data_validation.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add a sparkline to a worksheet cell.
+    ///
+    /// Sparklines are a feature of Excel 2010+ which allows you to add small
+    /// charts to worksheet cells. These are useful for showing data trends in a
+    /// compact visual format.
+    ///
+    /// The `add_sparkline()` method allows you to add a sparkline to a single
+    /// cell that displays data from a 1D range of cells.
+    ///
+    /// The sparkline can be configured with all the parameters supported by
+    /// Excel. See {@link Sparkline} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `sparkline`: The {@link Sparkline} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#SparklineError} - An error that is raised when there is
+    ///   an parameter error with the sparkline.
+    /// - {@link XlsxError#ChartError} - An error that is raised when there is an
+    ///   parameter error with the data range for the sparkline.
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#SheetnameCannotBeBlank} - Worksheet name in chart range
+    ///   cannot be blank.
+    /// - {@link XlsxError#SheetnameLengthExceeded} - Worksheet name in chart range
+    ///   exceeds Excel's limit of 31 characters.
+    /// - {@link XlsxError#SheetnameContainsInvalidCharacter} - Worksheet name in
+    ///   chart range cannot contain invalid characters: `[ ] : * ? / \`
+    /// - {@link XlsxError#SheetnameStartsOrEndsWithApostrophe} - Worksheet name in
+    ///   chart range cannot start or end with an apostrophe.
+    #[wasm_bindgen(js_name = "addSparkline", skip_jsdoc)]
+    pub fn add_sparkline(
+        &self,
+        row: u32,
+        col: u16,
+        sparkline: &Sparkline,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .add_sparkline(row, col, &*sparkline.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .add_sparkline(row, col, &*sparkline.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add a sparkline group to a worksheet range.
+    ///
+    /// Sparklines are a feature of Excel 2010+ which allows you to add small
+    /// charts to worksheet cells. These are useful for showing data trends in a
+    /// compact visual format.
+    ///
+    /// In Excel sparklines can be added as a single entity in a cell that
+    /// refers to a 1D data range or as a "group" sparkline that is applied
+    /// across a 1D range and refers to data in a 2D range. A grouped sparkline
+    /// uses one sparkline for the specified range and any changes to it are
+    /// applied to the entire sparkline group.
+    ///
+    /// The {@link Worksheet#addSparkline} method shown above allows you to add
+    /// a sparkline to a single cell that displays data from a 1D range of cells
+    /// whereas `add_sparkline_group()` applies the group sparkline to a range.
+    ///
+    /// The sparkline can be configured with all the parameters supported by
+    /// Excel. See {@link Sparkline} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `sparkline`: The {@link Sparkline} to insert into the cell.
+    ///
+    /// # Errors
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#SparklineError} - An error that is raised when there is
+    ///   an parameter error with the sparkline.
+    /// - {@link XlsxError#ChartError} - An error that is raised when there is an
+    ///   parameter error with the data range for the sparkline.
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#SheetnameCannotBeBlank} - Worksheet name in chart range
+    ///   cannot be blank.
+    /// - {@link XlsxError#SheetnameLengthExceeded} - Worksheet name in chart range
+    ///   exceeds Excel's limit of 31 characters.
+    /// - {@link XlsxError#SheetnameContainsInvalidCharacter} - Worksheet name in
+    ///   chart range cannot contain invalid characters: `[ ] : * ? / \`
+    /// - {@link XlsxError#SheetnameStartsOrEndsWithApostrophe} - Worksheet name in
+    ///   chart range cannot start or end with an apostrophe.
+    #[wasm_bindgen(js_name = "addSparklineGroup", skip_jsdoc)]
+    pub fn add_sparkline_group(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        sparkline: &Sparkline,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().add_sparkline_group(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*sparkline.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().add_sparkline_group(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*sparkline.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
     }
     /// Protect a worksheet from modification.
     ///
@@ -473,6 +3658,213 @@ impl Worksheet {
             accessor: self.accessor,
         }
     }
+    /// Unprotect a range of cells in a protected worksheet.
+    ///
+    /// As shown in the example for the {@link Worksheet#protect} method it is
+    /// possible to unprotect a cell by setting the format `unprotect` property.
+    /// Excel also offers an interface to unprotect larger ranges of cells. This
+    /// is replicated in `rust_xlsxwriter` using the `unprotect_range()` method,
+    /// see the example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "unprotectRange", skip_jsdoc)]
+    pub fn unprotect_range(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .unprotect_range(first_row, first_col, last_row, last_col),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .unprotect_range(first_row, first_col, last_row, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Unprotect a range of cells in a protected worksheet, with options.
+    ///
+    /// This method is similar to {@link Worksheet#unprotectRange}, see above,
+    /// expect that it allows you to specify two additional parameters to set
+    /// the name of the range (instead of the default `Range1` .. `RangeN`) and
+    /// also a optional weak password (see
+    /// {@link Worksheet#protectWithPassword} for an explanation of what weak
+    /// means here).
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `name`: The name of the range instead of `RangeN`. Can be blank if not
+    ///   required.
+    /// - `password`: The password to prevent modification of the range. Can be
+    ///   blank if not required.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "unprotectRangeWithOptions", skip_jsdoc)]
+    pub fn unprotect_range_with_options(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        name: &str,
+        password: &str,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().unprotect_range_with_options(
+                first_row, first_col, last_row, last_col, name, password,
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().unprotect_range_with_options(
+                first_row, first_col, last_row, last_col, name, password,
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the selected cell or cells in a worksheet.
+    ///
+    /// The `set_selection()` method can be used to specify which cell or range
+    /// of cells is selected in a worksheet. The most common requirement is to
+    /// select a single cell, in which case the `first_` and `last_` parameters
+    /// should be the same.
+    ///
+    /// The active cell within a selected range is determined by the order in
+    /// which `first_` and `last_` are specified.
+    ///
+    /// Only one range of cells can be selected. The default cell selection is
+    /// (0, 0, 0, 0), "A1".
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "setSelection", skip_jsdoc)]
+    pub fn set_selection(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_selection(first_row, first_col, last_row, last_col),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_selection(first_row, first_col, last_row, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the first visible cell at the top left of a worksheet.
+    ///
+    /// This `set_top_left_cell()` method can be used to set the top leftmost
+    /// visible cell in the worksheet.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "setTopLeftCell", skip_jsdoc)]
+    pub fn set_top_left_cell(&self, row: u32, col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_top_left_cell(row, col),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_top_left_cell(row, col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Write a user defined result to a worksheet formula cell.
+    ///
+    /// The `rust_xlsxwriter` library doesn’t calculate the result of a formula
+    /// written using {@link Worksheet#writeFormulaWithFormat} or
+    /// {@link Worksheet#writeFormula}. Instead it stores the value 0 as the
+    /// formula result. It then sets a global flag in the xlsx file to say that
+    /// all formulas and functions should be recalculated when the file is
+    /// opened.
+    ///
+    /// This works fine with Excel and other spreadsheet applications. However,
+    /// applications that don’t have a facility to calculate formulas will only
+    /// display the 0 results.
+    ///
+    /// If required, it is possible to specify the calculated result of a
+    /// formula using the `set_formula_result()` method.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `result`: The formula result to write to the cell.
+    ///
+    /// # Warnings
+    ///
+    /// You will get a warning if you try to set a formula result for a cell
+    /// that doesn't have a formula.
+    #[wasm_bindgen(js_name = "setFormulaResult", skip_jsdoc)]
+    pub fn set_formula_result(&self, row: u32, col: u16, result: &str) -> Worksheet {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_formula_result(row, col, result)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().set_formula_result(row, col, result)
+            }
+        };
+        Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
     /// Write the default formula result for worksheet formulas.
     ///
     /// The `rust_xlsxwriter` library doesn’t calculate the result of a formula
@@ -499,6 +3891,261 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_formula_result_default(result)
             }
+        };
+        Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Add formatting to a cell without overwriting the cell data.
+    ///
+    /// In Excel the data in a worksheet cell is comprised of a type, a value
+    /// and a format. When using `rust_xlsxwriter` the type is inferred and the
+    /// value and format are generally written at the same time using methods
+    /// like {@link Worksheet#writeWithFormat}. However, if required you can
+    /// write the data separately and then add the format using methods like
+    /// `set_cell_format()`.
+    ///
+    /// Although this method requires an additional step it allows for use cases
+    /// where it is easier to write a large amount of data in one go and then
+    /// figure out where formatting should be applied. See also the
+    /// documentation section on [Worksheet Cell
+    /// formatting](../worksheet/index.html#cell-formatting).
+    ///
+    /// For use cases where the cell formatting changes based on cell values
+    /// Conditional Formatting may be a better option (see [Working with
+    /// Conditional Formats](../conditional_format/index.html)).
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "setCellFormat", skip_jsdoc)]
+    pub fn set_cell_format(&self, row: u32, col: u16, format: &Format) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .set_cell_format(row, col, &*format.inner.lock().unwrap())
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .set_cell_format(row, col, &*format.inner.lock().unwrap())
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add formatting to a range of cells without overwriting the cell data.
+    ///
+    /// In Excel the data in a worksheet cell is comprised of a type, a value
+    /// and a format. When using `rust_xlsxwriter` the type is inferred and the
+    /// value and format are generally written at the same time using methods
+    /// like {@link Worksheet#writeWithFormat}. However, if required you can
+    /// write the data separately and then add the format using methods like
+    /// `set_range_format()` or {@link Worksheet#setCellFormat} (see above).
+    ///
+    /// Although this method requires an additional step it allows for use cases
+    /// where it is easier to write a large amount of data in one go and then
+    /// figure out where formatting should be applied. See also the
+    /// documentation section on [Worksheet Cell
+    /// formatting](../worksheet/index.html#cell-formatting).
+    ///
+    /// For use cases where the cell formatting changes based on cell values
+    /// Conditional Formatting may be a better option (see [Working with
+    /// Conditional Formats](../conditional_format/index.html)).
+    ///
+    /// Note, this method should **not** be used to set the formatting for an
+    /// entire worksheet since it would add an XML element for each of the 34
+    /// billion cells in the worksheet which would result in a very large and
+    /// slow output file. To set the format for the entire worksheet see the
+    /// {@link Worksheet#setColumnRangeFormat} method.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `format`: The {@link Format} property for the cell.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "setRangeFormat", skip_jsdoc)]
+    pub fn set_range_format(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_range_format(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_range_format(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Add formatting to a range of cells with an external border.
+    ///
+    /// This method is similar to the  {@link Worksheet#setRangeFormat} method
+    /// (see above) except it also adds a border around the cell range.
+    ///
+    /// Add a border around a range of cells in Excel is generally easy to do
+    /// using the GUI interface. However, creating a border around a range of
+    /// cells programmatically is much harder since it requires the creation of
+    /// up to 9 separate formats and the tracking of where cells are relative to
+    /// the border.
+    ///
+    /// The `set_range_format_with_border()` method is provided to simplify this
+    /// task. It allows you to specify one format for the cells and another for
+    /// the border.
+    ///
+    /// You should also consider formatting a range of cells as a Worksheet
+    /// Table may be a better option than simple cell formatting (see the
+    /// {@link Table} section of the documentation).
+    ///
+    /// Note, this method should **not** be used to set the formatting for an
+    /// entire worksheet since it would add an XML element for each of the 34
+    /// billion cells in the worksheet which would result in a very large and
+    /// slow output file. To set the format for the entire worksheet see the
+    /// {@link Worksheet#setColumnRangeFormat} method.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `cell_format`: The {@link Format} property for the cells in the range. If
+    ///   you don't require internal formatting you can use `Format::default()`.
+    /// - `border_format`: The {@link Format} property for the border. Only the
+    ///   {@link Format#setBorder} and {@link Format#setBorderColor} properties
+    ///   are used.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "setRangeFormatWithBorder", skip_jsdoc)]
+    pub fn set_range_format_with_border(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        cell_format: &Format,
+        border_format: &Format,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_range_format_with_border(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*cell_format.inner.lock().unwrap(),
+                &*border_format.inner.lock().unwrap(),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_range_format_with_border(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &*cell_format.inner.lock().unwrap(),
+                &*border_format.inner.lock().unwrap(),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Clear the data and formatting from a worksheet cell.
+    ///
+    /// This method can be used to clear data and formatting previously written
+    /// to a worksheet cell using one of the worksheet `write()` methods.
+    ///
+    /// This can occasionally be useful for scenarios where it is easier to add
+    /// data in bulk but then remove certain elements.
+    ///
+    /// This method only clears data, it doesn't clear images or conditional
+    /// formatting, or other non-data elements.
+    ///
+    /// Note, this method doesn't return a `Result` or errors. Instructions to
+    /// clear non-existent cells are simply ignored.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    #[wasm_bindgen(js_name = "clearCell", skip_jsdoc)]
+    pub fn clear_cell(&self, row: u32, col: u16) -> Worksheet {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().clear_cell(row, col),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().clear_cell(row, col),
+        };
+        Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Clear the formatting from a worksheet cell.
+    ///
+    /// This method can be used to clear the formatting previously added to a
+    /// worksheet cell using one of the worksheet `write_with_format()` methods.
+    ///
+    /// This can occasionally be useful for scenarios where it is easier to add
+    /// formatted data in bulk but then remove the formatting from certain
+    /// elements.
+    ///
+    /// See also the {@link Worksheet#setCellFormat} method for a similar
+    /// method to change the format of a cell.
+    ///
+    /// Note, this method doesn't return a `Result` or errors. Instructions to
+    /// clear non-existent cells are simply ignored.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    #[wasm_bindgen(js_name = "clearCellFormat", skip_jsdoc)]
+    pub fn clear_cell_format(&self, row: u32, col: u16) -> Worksheet {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().clear_cell_format(row, col),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().clear_cell_format(row, col),
         };
         Worksheet {
             parent: Arc::clone(&self.parent),
@@ -865,6 +4512,38 @@ impl Worksheet {
             accessor: self.accessor,
         }
     }
+    /// Set the horizontal page breaks on a worksheet.
+    ///
+    /// The `set_page_breaks()` method adds horizontal page breaks to a
+    /// worksheet. A page break causes all the data that follows it to be
+    /// printed on the next page. Horizontal page breaks act between rows.
+    ///
+    /// # Parameters
+    ///
+    /// - `breaks`: A list of one or more row numbers where the page breaks
+    ///   occur. To create a page break between rows 20 and 21 you must specify
+    ///   the break at row 21. However in zero index notation this is actually
+    ///   row 20. So you can pretend for a small while that you are using 1
+    ///   index notation.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#ParameterError} - The number of page breaks exceeds
+    ///   Excel's limit of 1023 page breaks.
+    #[wasm_bindgen(js_name = "setPageBreaks", skip_jsdoc)]
+    pub fn set_page_breaks(&self, breaks: Vec<u32>) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_page_breaks(&breaks),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_page_breaks(&breaks),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
     /// Set the vertical page breaks on a worksheet.
     ///
     /// The `set_vertical_page_breaks()` method adds vertical page breaks to a
@@ -944,6 +4623,74 @@ impl Worksheet {
             parent: Arc::clone(&self.parent),
             accessor: self.accessor,
         }
+    }
+    /// Freeze panes in a worksheet.
+    ///
+    /// The `set_freeze_panes()` method can be used to divide a worksheet into
+    /// horizontal or vertical regions known as panes and to “freeze” these
+    /// panes so that the splitter bars are not visible.
+    ///
+    /// As with Excel the split is to the top and left of the cell. So to freeze
+    /// the top row and leftmost column you would use `(1, 1)` (zero-indexed).
+    /// Also, you can set one of the row and col parameters as 0 if you do not
+    /// want either the vertical or horizontal split. See the example below.
+    ///
+    /// In Excel it is also possible to set "split" panes without freezing them.
+    /// That feature isn't currently supported by `rust_xlsxwriter`.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "setFreezePanes", skip_jsdoc)]
+    pub fn set_freeze_panes(&self, row: u32, col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_freeze_panes(row, col),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_freeze_panes(row, col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the top most cell in the scrolling area of a freeze pane.
+    ///
+    /// This method is used in conjunction with the
+    /// {@link Worksheet#setFreezePanes} method to set the top most visible
+    /// cell in the scrolling range. For example you may want to freeze the top
+    /// row but have the worksheet pre-scrolled so that cell `A20` is visible in
+    /// the scrolled area. See the example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    #[wasm_bindgen(js_name = "setFreezePanesTopCell", skip_jsdoc)]
+    pub fn set_freeze_panes_top_cell(&self, row: u32, col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_freeze_panes_top_cell(row, col)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().set_freeze_panes_top_cell(row, col)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
     }
     /// Set the printed page header caption.
     ///
@@ -1500,6 +5247,130 @@ impl Worksheet {
             accessor: self.accessor,
         }
     }
+    /// Set the print area for the worksheet.
+    ///
+    /// This method is used to specify the area of the worksheet that will be
+    /// printed.
+    ///
+    /// In order to specify an entire row or column range such as `1:20` or
+    /// `A:H` you must specify the corresponding maximum column or row range.
+    /// For example:
+    ///
+    /// - `(0, 0, 31, 16_383) == 1:32`.
+    /// - `(0, 0, 1_048_575, 12) == A:M`.
+    ///
+    /// In these examples 16,383 is the maximum column and 1,048,575 is the
+    /// maximum row (zero indexed).
+    ///
+    /// See also the example below and the documentation on
+    /// [Worksheet Page Setup - Sheet](../worksheet/index.html#page-setup---sheet).
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row or column is larger
+    ///   than the last row or column.
+    #[wasm_bindgen(js_name = "setPrintArea", skip_jsdoc)]
+    pub fn set_print_area(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock
+                .add_worksheet()
+                .set_print_area(first_row, first_col, last_row, last_col),
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_print_area(first_row, first_col, last_row, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the number of rows to repeat at the top of each printed page.
+    ///
+    /// For large Excel documents it is often desirable to have the first row or
+    /// rows of the worksheet print out at the top of each page.
+    ///
+    /// See the example below and the documentation on [Worksheet Page Setup -
+    /// Sheet](../worksheet/index.html#page-setup---sheet).
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (Zero indexed.)
+    /// - `last_row`: The last row of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row greater than the last
+    ///   row.
+    #[wasm_bindgen(js_name = "setRepeatRows", skip_jsdoc)]
+    pub fn set_repeat_rows(&self, first_row: u32, last_row: u32) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_repeat_rows(first_row, last_row)
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet().set_repeat_rows(first_row, last_row)
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Set the columns to repeat at the left hand side of each printed page.
+    ///
+    /// For large Excel documents it is often desirable to have the first column
+    /// or columns of the worksheet print out at the left hand side of each
+    /// page.
+    ///
+    /// See the example below and the documentation on [Worksheet Page Setup -
+    /// Sheet](../worksheet/index.html#page-setup---sheet).
+    ///
+    /// # Parameters
+    ///
+    /// - `first_col`: The first column of the range. (Zero indexed.)
+    /// - `last_col`: The last column of the range.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row or column is larger
+    ///   than the last row or column.
+    #[wasm_bindgen(js_name = "setRepeatColumns", skip_jsdoc)]
+    pub fn set_repeat_columns(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet().set_repeat_columns(first_col, last_col)
+            }
+            WorksheetAccessor::AddChartsheet => lock
+                .add_chartsheet()
+                .set_repeat_columns(first_col, last_col),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
     /// Autofit the worksheet column widths to the widest data in the column,
     /// approximately.
     ///
@@ -1538,6 +5409,36 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().autofit(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().autofit(),
+        };
+        Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Set the maximum row used for autofitting worksheet columns.
+    ///
+    /// The {@link Worksheet#autofit} method simulates Excel's column autofit by
+    /// calculating the width of each cell based on its contents formatted as a
+    /// string which, for large datasets, this can be an expensive operation. In
+    /// order to mitigate this the `set_autofit_max_row()` method can be used to
+    /// limit the number of rows processed for autofitting. This takes advantage
+    /// of the fact that a user will typically only see about 50 to 100 rows on
+    /// a screen so it is often sufficient to autofit just the first few hundred
+    /// rows. This can significantly speed up the autofit operation for large
+    /// datasets.
+    ///
+    /// A value of 200 rows is recommended as a good compromise between
+    /// performance and visual accuracy.
+    ///
+    /// # Parameters
+    ///
+    /// - `max_row`: The maximum row number to use for autofitting.
+    #[wasm_bindgen(js_name = "setAutofitMaxRow", skip_jsdoc)]
+    pub fn set_autofit_max_row(&self, max_row: u32) -> Worksheet {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_autofit_max_row(max_row),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_autofit_max_row(max_row),
         };
         Worksheet {
             parent: Arc::clone(&self.parent),
@@ -1728,6 +5629,137 @@ impl Worksheet {
             parent: Arc::clone(&self.parent),
             accessor: self.accessor,
         }
+    }
+    /// Ignore an Excel error or warning in a worksheet cell.
+    ///
+    /// Excel flags a number of data errors and inconsistencies with a a small
+    /// green triangle in the top left hand corner of the cell. For example the
+    /// following causes a warning of "Number Stored as Text":
+    ///
+    /// src="https://rustxlsxwriter.github.io/images/worksheet_ignore_error1.png">
+    ///
+    /// These warnings can be useful indicators that there is an issue in the
+    /// spreadsheet but sometimes it is preferable to turn them off. At the file
+    /// level these errors can be ignored for a cell or cell range using
+    /// `Worksheet::ignore_error()` and {@link Worksheet#ignoreErrorRange} (see
+    /// below).
+    ///
+    /// The errors and warnings that can be turned off at the file level are
+    /// represented by the {@link IgnoreError} enum values. These equate, with some
+    /// minor exceptions, to the error categories shown in the Excel Error
+    /// Checking dialog:
+    ///
+    /// src="https://rustxlsxwriter.github.io/images/ignore_errors_dialog.png">
+    ///
+    /// (Note: some of the items shown in the above dialog such as "Misleading
+    /// Number Formats" aren't saved in the output file by Excel and can't be
+    /// turned off permanently.)
+    ///
+    /// <br>
+    ///
+    /// The `Worksheet::ignore_error()` method can be called repeatedly to
+    /// ignore errors in different cells but **Excel only allows one ignored
+    /// error per cell**.
+    ///
+    /// An error can be turned off for a range of cells using the
+    /// {@link Worksheet#ignoreErrorRange} method (see below).
+    ///
+    /// # Parameters
+    ///
+    /// - `row`: The zero indexed row number.
+    /// - `col`: The zero indexed column number.
+    /// - `error_type`: An {@link IgnoreError} enum value.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#ParameterError} - Parameter error if more than one rule
+    ///   is added to the same cell.
+    #[wasm_bindgen(js_name = "ignoreError", skip_jsdoc)]
+    pub fn ignore_error(
+        &self,
+        row: u32,
+        col: u16,
+        error_type: IgnoreError,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => {
+                lock.add_worksheet()
+                    .ignore_error(row, col, xlsx::IgnoreError::from(error_type))
+            }
+            WorksheetAccessor::AddChartsheet => {
+                lock.add_chartsheet()
+                    .ignore_error(row, col, xlsx::IgnoreError::from(error_type))
+            }
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
+    }
+    /// Ignore an Excel error or warning in a range of worksheet cells.
+    ///
+    /// See {@link Worksheet#ignoreError} above for a detailed explanation of
+    /// Excel worksheet errors.
+    ///
+    /// The `Worksheet::ignore_error_range()` method can be used to ignore an
+    /// error in a range, a row, a column, or the entire worksheet and it can be
+    /// called repeatedly to ignore errors in different cells ranges. It should
+    /// be noted however that **Excel only allows one ignored error per cell**.
+    /// The `rust_xlsxwriter` library verifies that multiple rules aren't added
+    /// to the same cell or cell range and will raise an error if this occurs.
+    /// However it doesn't currently verify whether cells within ranges overlap.
+    /// It is up to the user to ensure that this doesn't happen when using
+    /// ranges.
+    ///
+    /// # Parameters
+    ///
+    /// - `first_row`: The first row of the range. (All zero indexed.)
+    /// - `first_col`: The first column of the range.
+    /// - `last_row`: The last row of the range.
+    /// - `last_col`: The last column of the range.
+    /// - `error_type`: An {@link IgnoreError} enum value.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
+    ///   worksheet limits.
+    /// - {@link XlsxError#RowColumnOrderError} - First row or column is larger
+    ///   than the last row or column.
+    /// - {@link XlsxError#ParameterError} - Parameter error if more than one rule
+    ///   is added to the same range.
+    #[wasm_bindgen(js_name = "ignoreErrorRange", skip_jsdoc)]
+    pub fn ignore_error_range(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        error_type: IgnoreError,
+    ) -> WasmResult<Worksheet> {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            WorksheetAccessor::AddWorksheet => lock.add_worksheet().ignore_error_range(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                xlsx::IgnoreError::from(error_type),
+            ),
+            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().ignore_error_range(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                xlsx::IgnoreError::from(error_type),
+            ),
+        };
+        Ok(Worksheet {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        })
     }
     /// Get the local instance DXF id for a format.
     ///

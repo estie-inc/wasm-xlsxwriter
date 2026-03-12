@@ -23,16 +23,22 @@ struct RawOverrides {
     /// Override specific parameter types: "Struct::method::param" = "ParamType"
     #[serde(default)]
     param_type: HashMap<String, String>,
+    /// Struct names whose auto-generated `new()` constructor should be suppressed
+    /// (used when the companion file provides a custom constructor)
+    #[serde(default)]
+    skip_constructors: HashMap<String, String>,
 }
 
 /// Parsed result of overrides.toml. Holds per-method override information.
 pub struct Overrides {
     /// Map of `"Struct::method"` to MethodOverride (wildcards are normalized to `"*::method"`)
     entries: HashMap<String, MethodOverride>,
-    /// Enum names to skip entirely during generation
-    skip_enums: HashSet<String>,
+    /// Enum names to skip generation (hand-written separately)
+    pub skip_enums: HashSet<String>,
     /// Map of `"Struct::method::param"` to param type override string
     param_types: HashMap<String, String>,
+    /// Struct names whose auto-generated constructor should be suppressed
+    pub skip_constructors: HashSet<String>,
 }
 
 pub fn load_overrides(path: &Path) -> anyhow::Result<Overrides> {
@@ -65,6 +71,7 @@ impl Overrides {
             entries,
             skip_enums: raw.skip_enums.into_keys().collect(),
             param_types: raw.param_type,
+            skip_constructors: raw.skip_constructors.into_keys().collect(),
         }
     }
 

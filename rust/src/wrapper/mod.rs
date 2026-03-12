@@ -4,7 +4,6 @@ mod excel_data;
 pub mod generated;
 mod image;
 mod rich_string;
-mod table;
 mod utils;
 mod workbook;
 mod worksheet;
@@ -19,8 +18,6 @@ pub(crate) type WasmResult<T> = std::result::Result<T, XlsxError>;
 pub(crate) use generated::*;
 // Hand-written types that can't be auto-generated
 pub(crate) use datetime::ExcelDateTime;
-pub(crate) use image::Image;
-pub(crate) use table::{Table, TableColumn};
 pub(crate) use workbook::Workbook;
 pub(crate) use worksheet::Worksheet;
 

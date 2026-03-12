@@ -167,10 +167,17 @@ fn resolve_manifest(
     }
 }
 
+struct AnalysisResult {
+    analyzed: ir::AnalyzedCrate,
+    overrides: overrides::Overrides,
+    /// Enum names from the upstream crate before skip_enums filtering
+    all_upstream_enum_names: std::collections::HashSet<String>,
+}
+
 fn load_and_analyze(
     manifest: &Path,
     overrides_path: &Path,
-) -> Result<(ir::AnalyzedCrate, overrides::Overrides)> {
+) -> Result<AnalysisResult> {
     eprintln!(
         "Loading upstream crate from: {}",
         manifest.display()
@@ -187,6 +194,10 @@ fn load_and_analyze(
     let mut analyzed = analyze::analyze_crate(&krate);
 
     let ov = overrides::load_overrides(overrides_path)?;
+
+    // Capture all upstream enum names before filtering
+    let all_upstream_enum_names: std::collections::HashSet<String> =
+        analyzed.enums.iter().map(|e| e.name.clone()).collect();
 
     // Filter out enums listed in skip_enums (doc-hidden types are already excluded during analysis)
     analyzed.enums.retain(|e| !ov.should_skip_enum(&e.name));
@@ -211,7 +222,11 @@ fn load_and_analyze(
         }
     }
 
-    Ok((analyzed, ov))
+    Ok(AnalysisResult {
+        analyzed,
+        overrides: ov,
+        all_upstream_enum_names,
+    })
 }
 
 /// Resolve the manifest path for an upstream dependency using cargo metadata.
@@ -258,7 +273,7 @@ fn cmd_generate(
     filter: Option<&str>,
     existing_dir: Option<&Path>,
 ) -> Result<()> {
-    let (analyzed, _ov) = load_and_analyze(manifest, overrides_path)?;
+    let AnalysisResult { analyzed, overrides: ov, all_upstream_enum_names } = load_and_analyze(manifest, overrides_path)?;
     let filter_set: Option<Vec<&str>> =
         filter.map(|f| f.split(',').map(str::trim).collect());
 
@@ -278,9 +293,8 @@ fn cmd_generate(
         );
     }
 
-    // Used to determine types in enum variants. Structs use Arc<Mutex> and are tsify-incompatible, so we distinguish them.
-    let crate_enum_names: std::collections::HashSet<String> =
-        analyzed.enums.iter().map(|e| e.name.clone()).collect();
+    // all_upstream_enum_names includes skip_enums (captured before filtering)
+    let crate_enum_names = all_upstream_enum_names;
     let crate_struct_names: std::collections::HashSet<String> =
         analyzed.structs.iter().map(|s| s.name.clone()).collect();
 
@@ -318,18 +332,24 @@ fn cmd_generate(
     }
 
     // Collect all type names present in wrappers (existing + generated structs/enums - skipped)
+    // Exclude unresolvable enums and skipped structs from available_types,
+    // but keep skip_enums entries (they have hand-written .rs files)
     let skipped_set: std::collections::HashSet<&str> = skipped_enums
         .iter()
         .chain(skipped_structs.iter())
-        .map(|s| s.as_str())
+        .map(String::as_str)
         .collect();
-    let available_types: std::collections::HashSet<String> = existing_types
+    let mut available_types: std::collections::HashSet<String> = existing_types
         .iter()
         .cloned()
         .chain(crate_enum_names.iter().cloned())
         .chain(crate_struct_names.iter().cloned())
         .filter(|name| !skipped_set.contains(name.as_str()))
         .collect();
+    // skip_enums entries are hand-written separately, so they're still available as types
+    for name in &ov.skip_enums {
+        available_types.insert(name.clone());
+    }
 
     let codegen_ctx = codegen::CodegenContext {
         enum_names: crate_enum_names.clone(),
@@ -346,6 +366,7 @@ fn cmd_generate(
             .filter(|name| crate_enum_names.contains(*name))
             .cloned()
             .collect(),
+        skip_constructors: ov.skip_constructors.clone(),
     };
 
     for s in &analyzed.structs {
@@ -366,6 +387,18 @@ fn cmd_generate(
             struct_modules.push(module);
         }
         eprintln!("  struct: {} -> {}", s.name, path.display());
+    }
+
+    // Include skip_enums in enum mod.rs if they have a hand-written .rs file in the enums dir
+    // (e.g. TableFunction) and aren't already provided by hand-written wrapper code outside generated/
+    for name in &ov.skip_enums {
+        if existing_types.contains(name) {
+            continue;
+        }
+        let module = to_snake_case_filename(name);
+        if enums_dir.join(format!("{module}.rs")).exists() {
+            enum_modules.push(module);
+        }
     }
 
     write_mod_file(output_dir, &struct_modules, true)?;
@@ -564,7 +597,7 @@ fn run_rustfmt(struct_dir: &Path, enums_dir: &Path) {
 // ── verify ──────────────────────────────────────────────────────────────────
 
 fn cmd_verify(manifest: &Path, overrides_path: &Path) -> Result<()> {
-    let (analyzed, _ov) = load_and_analyze(manifest, overrides_path)?;
+    let AnalysisResult { analyzed, .. } = load_and_analyze(manifest, overrides_path)?;
 
     println!("=== Wrapper Generator: Verify ===\n");
     println!(
@@ -669,7 +702,7 @@ fn cmd_diff(
     existing_dir: &Path,
     struct_filter: Option<&str>,
 ) -> Result<()> {
-    let (analyzed, _ov) = load_and_analyze(manifest, overrides_path)?;
+    let AnalysisResult { analyzed, .. } = load_and_analyze(manifest, overrides_path)?;
 
     println!("=== Wrapper Generator: Diff ===\n");
     println!(

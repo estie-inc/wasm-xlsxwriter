@@ -15,12 +15,6 @@ pub struct Image {
 
 #[wasm_bindgen]
 impl Image {
-    #[wasm_bindgen(constructor)]
-    pub fn new(path: P) -> Image {
-        Image {
-            inner: Arc::new(Mutex::new(xlsx::Image::new(path))),
-        }
-    }
     #[doc = r" Create a deep clone of this object."]
     #[wasm_bindgen(js_name = "clone")]
     pub fn deep_clone(&self) -> Image {
