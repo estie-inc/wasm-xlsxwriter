@@ -5,8 +5,10 @@ use crate::wrapper::ChartAxisLabelAlignment;
 use crate::wrapper::ChartAxisLabelPosition;
 use crate::wrapper::ChartAxisTickType;
 use crate::wrapper::ChartFont;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::ChartLayout;
 use crate::wrapper::ChartLine;
+use crate::wrapper::ExcelDateTime;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -34,6 +36,37 @@ pub struct ChartAxis {
 
 #[wasm_bindgen]
 impl ChartAxis {
+    /// Add a title for a chart axis.
+    ///
+    /// Set the name (title) for the chart axis.
+    ///
+    /// The name can be a simple string, a formula such as `Sheet1!$A$1` or a
+    /// tuple with a sheet name, row and column such as `('Sheet1', 0, 0)`.
+    ///
+    /// # Parameters
+    ///
+    /// - `range`: The range property which can be one of the following generic
+    ///   types:
+    ///    - A simple string title.
+    ///    - A string with an Excel like range formula such as `"Sheet1!$A$1"`.
+    ///    - A tuple that can be used to create the range programmatically using
+    ///      a sheet name and zero indexed row and column values like:
+    ///      `("Sheet1", 0, 0)` (this gives the same range as the previous
+    ///      string value).
+    #[wasm_bindgen(js_name = "setName", skip_jsdoc)]
+    pub fn set_name(&self, name: &str) -> ChartAxis {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            ChartAxisAccessor::XAxis => lock.x_axis().set_name(name),
+            ChartAxisAccessor::YAxis => lock.y_axis().set_name(name),
+            ChartAxisAccessor::X2Axis => lock.x2_axis().set_name(name),
+            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_name(name),
+        };
+        ChartAxis {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
     /// Set the font properties of a chart axis title.
     ///
     /// Set the font properties of a chart axis name/title using a {@link ChartFont}
@@ -56,16 +89,106 @@ impl ChartAxis {
     /// `font`: A {@link ChartFont} struct reference to represent the font
     /// properties.
     #[wasm_bindgen(js_name = "setNameFont", skip_jsdoc)]
-    pub fn set_name_font(&self, font: ChartFont) -> ChartAxis {
+    pub fn set_name_font(&self, font: &ChartFont) -> ChartAxis {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            ChartAxisAccessor::XAxis => lock.x_axis().set_name_font(&font.inner),
-            ChartAxisAccessor::YAxis => lock.y_axis().set_name_font(&font.inner),
-            ChartAxisAccessor::X2Axis => lock.x2_axis().set_name_font(&font.inner),
-            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_name_font(&font.inner),
-        }
+            ChartAxisAccessor::XAxis => lock.x_axis().set_name_font(&*font.inner.lock().unwrap()),
+            ChartAxisAccessor::YAxis => lock.y_axis().set_name_font(&*font.inner.lock().unwrap()),
+            ChartAxisAccessor::X2Axis => lock.x2_axis().set_name_font(&*font.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_name_font(&*font.inner.lock().unwrap()),
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Set the formatting properties for a chart axis title.
+    ///
+    /// Set the formatting properties for a chart axis name/title via a
+    /// {@link ChartFormat} object or a sub struct that implements
+    /// {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    ///
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setNameFormat", skip_jsdoc)]
+    pub fn set_name_format(&self, format: &ChartFormat) -> ChartAxis {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            ChartAxisAccessor::XAxis => lock
+                .x_axis()
+                .set_name_format(&mut *format.inner.lock().unwrap()),
+            ChartAxisAccessor::YAxis => lock
+                .y_axis()
+                .set_name_format(&mut *format.inner.lock().unwrap()),
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_name_format(&mut *format.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_name_format(&mut *format.inner.lock().unwrap()),
+        };
+        ChartAxis {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Set the formatting properties for a chart axis.
+    ///
+    /// Set the formatting properties for a chart axis via a {@link ChartFormat}
+    /// object or a sub struct that implements {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    ///
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartAxis {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            ChartAxisAccessor::XAxis => {
+                lock.x_axis().set_format(&mut *format.inner.lock().unwrap())
+            }
+            ChartAxisAccessor::YAxis => {
+                lock.y_axis().set_format(&mut *format.inner.lock().unwrap())
+            }
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_format(&mut *format.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_format(&mut *format.inner.lock().unwrap()),
+        };
+        ChartAxis {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the font properties of a chart axis.
@@ -90,16 +213,17 @@ impl ChartAxis {
     /// `font`: A {@link ChartFont} struct reference to represent the font
     /// properties.
     #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
-    pub fn set_font(&self, font: ChartFont) -> ChartAxis {
+    pub fn set_font(&self, font: &ChartFont) -> ChartAxis {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            ChartAxisAccessor::XAxis => lock.x_axis().set_font(&font.inner),
-            ChartAxisAccessor::YAxis => lock.y_axis().set_font(&font.inner),
-            ChartAxisAccessor::X2Axis => lock.x2_axis().set_font(&font.inner),
-            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_font(&font.inner),
-        }
+            ChartAxisAccessor::XAxis => lock.x_axis().set_font(&*font.inner.lock().unwrap()),
+            ChartAxisAccessor::YAxis => lock.y_axis().set_font(&*font.inner.lock().unwrap()),
+            ChartAxisAccessor::X2Axis => lock.x2_axis().set_font(&*font.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_font(&*font.inner.lock().unwrap()),
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the number format for a chart axis.
@@ -128,9 +252,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_num_format(num_format),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_num_format(num_format),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_num_format(num_format),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the category axis as a date axis.
@@ -165,9 +290,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_date_axis(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_date_axis(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_date_axis(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the category axis as a text axis.
@@ -183,9 +309,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_text_axis(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_text_axis(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_text_axis(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the category axis as an automatic axis - generally the default.
@@ -201,9 +328,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_automatic_axis(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_automatic_axis(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_automatic_axis(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the crossing point for the opposite axis.
@@ -236,9 +364,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_crossing(xlsx::ChartAxisCrossing::from(crossing)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Reverse the direction of the axis categories or values.
@@ -253,9 +382,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_reverse(),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_reverse(),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_reverse(),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the maximum value for an axis.
@@ -284,9 +414,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_max(max),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_max(max),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_max(max),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the minimum value for an axis.
@@ -306,9 +437,72 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_min(min),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_min(min),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_min(min),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Set the maximum date value for a date axis.
+    ///
+    /// Set the maximum date/time bound to be displayed for a date axis. This is
+    /// just a syntactic helper around {@link ChartAxis#setMax} to allow dates
+    /// that support the {@link IntoExcelDateTime} trait to be passed to the API.
+    ///
+    /// # Parameters
+    ///
+    /// `datetime` - A date/time instance that implements {@link IntoExcelDateTime}.
+    #[wasm_bindgen(js_name = "setMaxDate", skip_jsdoc)]
+    pub fn set_max_date(&self, datetime: &ExcelDateTime) -> ChartAxis {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            ChartAxisAccessor::XAxis => {
+                lock.x_axis().set_max_date(&*datetime.inner.lock().unwrap())
+            }
+            ChartAxisAccessor::YAxis => {
+                lock.y_axis().set_max_date(&*datetime.inner.lock().unwrap())
+            }
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_max_date(&*datetime.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_max_date(&*datetime.inner.lock().unwrap()),
+        };
+        ChartAxis {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
+        }
+    }
+    /// Set the minimum date value for a date axis.
+    ///
+    /// Set the minimum date/time bound to be displayed for a date axis. This is
+    /// just a syntactic helper around {@link ChartAxis#setMin} to allow dates
+    /// that support the {@link IntoExcelDateTime} trait to be passed to the API.
+    ///
+    /// # Parameters
+    ///
+    /// `datetime` - A date/time instance that implements {@link IntoExcelDateTime}.
+    #[wasm_bindgen(js_name = "setMinDate", skip_jsdoc)]
+    pub fn set_min_date(&self, datetime: &ExcelDateTime) -> ChartAxis {
+        let mut lock = self.parent.lock().unwrap();
+        match self.accessor {
+            ChartAxisAccessor::XAxis => {
+                lock.x_axis().set_min_date(&*datetime.inner.lock().unwrap())
+            }
+            ChartAxisAccessor::YAxis => {
+                lock.y_axis().set_min_date(&*datetime.inner.lock().unwrap())
+            }
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_min_date(&*datetime.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_min_date(&*datetime.inner.lock().unwrap()),
+        };
+        ChartAxis {
+            parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the increment of the major units in the axis range.
@@ -332,9 +526,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_major_unit(value),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_major_unit(value),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_major_unit(value),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the increment of the minor units in the axis range.
@@ -353,9 +548,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_minor_unit(value),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_minor_unit(value),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_minor_unit(value),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the display unit type such as Thousands, Millions, or other units.
@@ -392,9 +588,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_display_unit_type(xlsx::ChartAxisDisplayUnitType::from(unit_type)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Make the display units visible (if they have been set).
@@ -410,9 +607,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_display_units_visible(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_display_units_visible(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_display_units_visible(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the major unit type as days, months or years.
@@ -436,9 +634,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_major_unit_date_type(xlsx::ChartAxisDateUnitType::from(unit_type)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the minor unit type as days, months or years.
@@ -462,9 +661,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_minor_unit_date_type(xlsx::ChartAxisDateUnitType::from(unit_type)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the alignment of the axis labels relative to the tick mark.
@@ -488,9 +688,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_label_alignment(xlsx::ChartAxisLabelAlignment::from(alignment)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Turn on/off major gridlines for a chart axis.
@@ -509,9 +710,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_major_gridlines(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_major_gridlines(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_major_gridlines(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Turn on/off minor gridlines for a chart axis.
@@ -529,9 +731,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_minor_gridlines(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_minor_gridlines(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_minor_gridlines(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the line formatting for a chart axis major gridlines.
@@ -543,16 +746,25 @@ impl ChartAxis {
     ///
     /// - `line`: A {@link ChartLine} struct reference.
     #[wasm_bindgen(js_name = "setMajorGridlinesLine", skip_jsdoc)]
-    pub fn set_major_gridlines_line(&self, line: ChartLine) -> ChartAxis {
+    pub fn set_major_gridlines_line(&self, line: &ChartLine) -> ChartAxis {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            ChartAxisAccessor::XAxis => lock.x_axis().set_major_gridlines_line(&line.inner),
-            ChartAxisAccessor::YAxis => lock.y_axis().set_major_gridlines_line(&line.inner),
-            ChartAxisAccessor::X2Axis => lock.x2_axis().set_major_gridlines_line(&line.inner),
-            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_major_gridlines_line(&line.inner),
-        }
+            ChartAxisAccessor::XAxis => lock
+                .x_axis()
+                .set_major_gridlines_line(&*line.inner.lock().unwrap()),
+            ChartAxisAccessor::YAxis => lock
+                .y_axis()
+                .set_major_gridlines_line(&*line.inner.lock().unwrap()),
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_major_gridlines_line(&*line.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_major_gridlines_line(&*line.inner.lock().unwrap()),
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the line formatting for a chart axis minor gridlines.
@@ -564,16 +776,25 @@ impl ChartAxis {
     ///
     /// - `line`: A {@link ChartLine} struct reference.
     #[wasm_bindgen(js_name = "setMinorGridlinesLine", skip_jsdoc)]
-    pub fn set_minor_gridlines_line(&self, line: ChartLine) -> ChartAxis {
+    pub fn set_minor_gridlines_line(&self, line: &ChartLine) -> ChartAxis {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            ChartAxisAccessor::XAxis => lock.x_axis().set_minor_gridlines_line(&line.inner),
-            ChartAxisAccessor::YAxis => lock.y_axis().set_minor_gridlines_line(&line.inner),
-            ChartAxisAccessor::X2Axis => lock.x2_axis().set_minor_gridlines_line(&line.inner),
-            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_minor_gridlines_line(&line.inner),
-        }
+            ChartAxisAccessor::XAxis => lock
+                .x_axis()
+                .set_minor_gridlines_line(&*line.inner.lock().unwrap()),
+            ChartAxisAccessor::YAxis => lock
+                .y_axis()
+                .set_minor_gridlines_line(&*line.inner.lock().unwrap()),
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_minor_gridlines_line(&*line.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_minor_gridlines_line(&*line.inner.lock().unwrap()),
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the label position for the axis.
@@ -600,9 +821,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_label_position(xlsx::ChartAxisLabelPosition::from(position)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the axis position on or between the tick marks.
@@ -632,9 +854,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_position_between_ticks(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_position_between_ticks(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_position_between_ticks(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the interval of the axis labels.
@@ -658,9 +881,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_label_interval(interval),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_label_interval(interval),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_label_interval(interval),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the interval of the axis ticks.
@@ -684,9 +908,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_tick_interval(interval),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_tick_interval(interval),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_tick_interval(interval),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the type of major tick for the axis.
@@ -717,9 +942,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_major_tick_type(xlsx::ChartAxisTickType::from(tick_type)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the type of minor tick for the axis.
@@ -746,9 +972,10 @@ impl ChartAxis {
             ChartAxisAccessor::Y2Axis => lock
                 .y2_axis()
                 .set_minor_tick_type(xlsx::ChartAxisTickType::from(tick_type)),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the log base of the axis range.
@@ -771,9 +998,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_log_base(base),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_log_base(base),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_log_base(base),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Hide the chart axis.
@@ -791,9 +1019,10 @@ impl ChartAxis {
             ChartAxisAccessor::YAxis => lock.y_axis().set_hidden(enable),
             ChartAxisAccessor::X2Axis => lock.x2_axis().set_hidden(enable),
             ChartAxisAccessor::Y2Axis => lock.y2_axis().set_hidden(enable),
-        }
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the manual position of the chart axis label.
@@ -805,16 +1034,25 @@ impl ChartAxis {
     ///
     /// - `layout`: A {@link ChartLayout} struct reference.
     #[wasm_bindgen(js_name = "setLabelLayout", skip_jsdoc)]
-    pub fn set_label_layout(&self, layout: ChartLayout) -> ChartAxis {
+    pub fn set_label_layout(&self, layout: &ChartLayout) -> ChartAxis {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
-            ChartAxisAccessor::XAxis => lock.x_axis().set_label_layout(&layout.inner),
-            ChartAxisAccessor::YAxis => lock.y_axis().set_label_layout(&layout.inner),
-            ChartAxisAccessor::X2Axis => lock.x2_axis().set_label_layout(&layout.inner),
-            ChartAxisAccessor::Y2Axis => lock.y2_axis().set_label_layout(&layout.inner),
-        }
+            ChartAxisAccessor::XAxis => lock
+                .x_axis()
+                .set_label_layout(&*layout.inner.lock().unwrap()),
+            ChartAxisAccessor::YAxis => lock
+                .y_axis()
+                .set_label_layout(&*layout.inner.lock().unwrap()),
+            ChartAxisAccessor::X2Axis => lock
+                .x2_axis()
+                .set_label_layout(&*layout.inner.lock().unwrap()),
+            ChartAxisAccessor::Y2Axis => lock
+                .y2_axis()
+                .set_label_layout(&*layout.inner.lock().unwrap()),
+        };
         ChartAxis {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
 }

@@ -48,6 +48,13 @@ impl ChartFormat {
             inner: Arc::new(Mutex::new(xlsx::ChartFormat::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartFormat {
+        ChartFormat {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the line formatting for a chart element.
     ///
     /// See the {@link ChartLine} struct for details on the line properties that can
@@ -57,9 +64,9 @@ impl ChartFormat {
     ///
     /// - `line`: A {@link ChartLine} struct reference.
     #[wasm_bindgen(js_name = "setLine", skip_jsdoc)]
-    pub fn set_line(&self, line: ChartLine) -> ChartFormat {
+    pub fn set_line(&self, line: &ChartLine) -> ChartFormat {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_line(&line.inner);
+        lock.set_line(&*line.inner.lock().unwrap());
         ChartFormat {
             inner: Arc::clone(&self.inner),
         }
@@ -75,9 +82,9 @@ impl ChartFormat {
     ///
     /// - `line`: A {@link ChartLine} struct reference.
     #[wasm_bindgen(js_name = "setBorder", skip_jsdoc)]
-    pub fn set_border(&self, line: ChartLine) -> ChartFormat {
+    pub fn set_border(&self, line: &ChartLine) -> ChartFormat {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_border(&line.inner);
+        lock.set_border(&*line.inner.lock().unwrap());
         ChartFormat {
             inner: Arc::clone(&self.inner),
         }
@@ -127,9 +134,9 @@ impl ChartFormat {
     ///
     /// - `fill`: A {@link ChartSolidFill} struct reference.
     #[wasm_bindgen(js_name = "setSolidFill", skip_jsdoc)]
-    pub fn set_solid_fill(&self, fill: ChartSolidFill) -> ChartFormat {
+    pub fn set_solid_fill(&self, fill: &ChartSolidFill) -> ChartFormat {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_solid_fill(&fill.inner);
+        lock.set_solid_fill(&*fill.inner.lock().unwrap());
         ChartFormat {
             inner: Arc::clone(&self.inner),
         }
@@ -143,9 +150,9 @@ impl ChartFormat {
     ///
     /// - `fill`: A {@link ChartPatternFill} struct reference.
     #[wasm_bindgen(js_name = "setPatternFill", skip_jsdoc)]
-    pub fn set_pattern_fill(&self, fill: ChartPatternFill) -> ChartFormat {
+    pub fn set_pattern_fill(&self, fill: &ChartPatternFill) -> ChartFormat {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_pattern_fill(&fill.inner);
+        lock.set_pattern_fill(&*fill.inner.lock().unwrap());
         ChartFormat {
             inner: Arc::clone(&self.inner),
         }
@@ -159,9 +166,9 @@ impl ChartFormat {
     ///
     /// - `fill`: A {@link ChartGradientFill} struct reference.
     #[wasm_bindgen(js_name = "setGradientFill", skip_jsdoc)]
-    pub fn set_gradient_fill(&self, fill: ChartGradientFill) -> ChartFormat {
+    pub fn set_gradient_fill(&self, fill: &ChartGradientFill) -> ChartFormat {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_gradient_fill(&fill.inner);
+        lock.set_gradient_fill(&*fill.inner.lock().unwrap());
         ChartFormat {
             inner: Arc::clone(&self.inner),
         }

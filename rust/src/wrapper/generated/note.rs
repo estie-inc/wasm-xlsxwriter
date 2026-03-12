@@ -40,6 +40,13 @@ impl Note {
             inner: Arc::new(Mutex::new(xlsx::Note::new(text))),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Note {
+        Note {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the note author name.
     ///
     /// The author name appears in two places: at the start of the note text in

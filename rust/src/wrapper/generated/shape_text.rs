@@ -34,6 +34,13 @@ impl ShapeText {
             inner: Arc::new(Mutex::new(xlsx::ShapeText::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ShapeText {
+        ShapeText {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the horizontal alignment for the text in a shape textbox.
     ///
     /// This method sets the horizontal alignment for the text in a shape while

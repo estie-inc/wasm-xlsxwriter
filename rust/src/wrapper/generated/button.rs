@@ -35,6 +35,13 @@ impl Button {
             inner: Arc::new(Mutex::new(xlsx::Button::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Button {
+        Button {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the button caption.
     ///
     /// The default button caption in Excel is "Button 1", "Button 2" etc. This

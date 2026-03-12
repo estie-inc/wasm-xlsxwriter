@@ -69,9 +69,9 @@ fn method_types_available(m: &AnalyzedMethod, available: &HashSet<String>) -> bo
 
 fn param_type_available(ty: &ParamType, available: &HashSet<String>) -> bool {
     match ty {
-        ParamType::WrappedType(name) | ParamType::RefWrappedType(name) => {
-            available.contains(name)
-        }
+        ParamType::WrappedType(name)
+        | ParamType::RefWrappedType(name)
+        | ParamType::MutRefWrappedType(name) => available.contains(name),
         ParamType::VecOf(inner) | ParamType::RefSliceOf(inner) | ParamType::OptionOf(inner) => {
             param_type_available(inner, available)
         }
@@ -81,7 +81,9 @@ fn param_type_available(ty: &ParamType, available: &HashSet<String>) -> bool {
 
 fn collect_wrapped_types_from_param(ty: &ParamType, out: &mut Vec<String>) {
     match ty {
-        ParamType::WrappedType(name) | ParamType::RefWrappedType(name) => {
+        ParamType::WrappedType(name)
+        | ParamType::RefWrappedType(name)
+        | ParamType::MutRefWrappedType(name) => {
             out.push(name.clone());
         }
         ParamType::VecOf(inner)
@@ -165,13 +167,31 @@ fn generate_standalone_struct(s: &AnalyzedStruct, ctx: &CodegenContext) -> Strin
 
     let struct_def_str = format!("{}{}", struct_doc, struct_def);
 
-    let methods_body = if ctor_string.is_empty() {
-        method_strings.join("\n")
+    // Generate clone (JS: "clone") for all standalone structs with Clone trait
+    let deep_clone_string = if s.has_clone {
+        quote! {
+            /// Create a deep clone of this object.
+            #[wasm_bindgen(js_name = "clone")]
+            pub fn deep_clone(&self) -> #name_ident {
+                #name_ident {
+                    inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+                }
+            }
+        }
+        .to_string()
     } else {
-        let mut parts = vec![ctor_string];
-        parts.extend(method_strings);
-        parts.join("\n")
+        String::new()
     };
+
+    let mut parts = Vec::new();
+    if !ctor_string.is_empty() {
+        parts.push(ctor_string);
+    }
+    if !deep_clone_string.is_empty() {
+        parts.push(deep_clone_string);
+    }
+    parts.extend(method_strings);
+    let methods_body = parts.join("\n");
 
     let impl_block_str = format!(
         "#[wasm_bindgen]\nimpl {} {{\n{}\n}}",
@@ -436,28 +456,43 @@ fn generate_proxy_method(
         }
     };
 
+    // For multi-accessor proxies, the return struct needs the accessor field preserved
+    let return_struct: TokenStream = if multi_accessor {
+        quote! { #struct_ident { parent: Arc::clone(&self.parent), accessor: self.accessor } }
+    } else {
+        quote! { #struct_ident { parent: Arc::clone(&self.parent) } }
+    };
+
     let body: TokenStream = match &m.returns {
         ReturnKind::SelfType => {
             // match block needs no semicolon; single expression needs a semicolon
             if multi_accessor {
                 quote! {
                     let mut lock = self.parent.lock().unwrap();
-                    #accessor_expr
-                    #struct_ident { parent: Arc::clone(&self.parent) }
+                    #accessor_expr;
+                    #return_struct
                 }
             } else {
                 quote! {
                     let mut lock = self.parent.lock().unwrap();
                     #accessor_expr;
-                    #struct_ident { parent: Arc::clone(&self.parent) }
+                    #return_struct
                 }
             }
         }
         ReturnKind::ResultSelf => {
-            quote! {
-                let mut lock = self.parent.lock().unwrap();
-                #accessor_expr?;
-                Ok(#struct_ident { parent: Arc::clone(&self.parent) })
+            if multi_accessor {
+                quote! {
+                    let mut lock = self.parent.lock().unwrap();
+                    #accessor_expr;
+                    Ok(#return_struct)
+                }
+            } else {
+                quote! {
+                    let mut lock = self.parent.lock().unwrap();
+                    #accessor_expr?;
+                    Ok(#return_struct)
+                }
             }
         }
         ReturnKind::ResultVoid => {
@@ -526,6 +561,7 @@ mod tests {
             constructor: Some(AnalyzedConstructor { params: vec![] }),
             methods: vec![],
             doc: None,
+            has_clone: true,
         }
     }
 
@@ -772,6 +808,7 @@ mod tests {
                 doc: Some("Set the title name.".into()),
             }],
             doc: Some("Represents a chart title.".into()),
+            has_clone: true,
         };
         let code = generate_struct_file(&s, &CodegenContext::empty());
         assert!(
@@ -810,10 +847,52 @@ mod tests {
                 doc: None,
             }],
             doc: None,
+            has_clone: true,
         };
         let code = generate_struct_file(&s, &CodegenContext::empty());
         assert!(code.contains("pub (crate) parent : Arc < Mutex < xlsx :: Chart > >") || code.contains("pub(crate) parent: Arc<Mutex<xlsx::Chart>>") || code.contains("pub (crate) parent"), "missing parent field in: {}", code);
         assert!(code.contains("lock . title () . set_name (name)") || code.contains("lock.title().set_name(name)"), "missing lock.title().set_name(name) in: {}", code);
         assert!(code.contains("ChartTitle") && code.contains("Arc :: clone (& self . parent)") || code.contains("Arc::clone(&self.parent)"), "missing ChartTitle with Arc::clone in: {}", code);
+    }
+
+    #[test]
+    fn standalone_struct_generates_deep_clone() {
+        let s = make_standalone("Format", true);
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(code.contains("fn deep_clone"), "missing deep_clone method in: {}", code);
+        assert!(code.contains(r#"js_name = "clone""#), "missing js_name clone in: {}", code);
+        assert!(code.contains("Arc :: new (Mutex :: new (self . inner . lock () . unwrap () . clone ()))") ||
+                code.contains("Arc::new(Mutex::new(self.inner.lock().unwrap().clone()))"),
+                "missing deep clone body in: {}", code);
+    }
+
+    #[test]
+    fn no_clone_trait_prevents_deep_clone_generation() {
+        let mut s = make_standalone("Comment", true);
+        s.has_clone = false;
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(!code.contains("fn deep_clone"), "deep_clone should not be generated when has_clone is false in: {}", code);
+    }
+
+    #[test]
+    fn proxy_struct_does_not_generate_deep_clone() {
+        let s = AnalyzedStruct {
+            name: "ChartTitle".into(),
+            role: StructRole::Proxy {
+                parent_name: "Chart".into(),
+                accessors: vec![Accessor {
+                    parent_method: "title".into(),
+                    js_name: "title".into(),
+                }],
+            },
+            has_default: false,
+            consume_self_default: None,
+            constructor: None,
+            methods: vec![],
+            doc: None,
+            has_clone: true,
+        };
+        let code = generate_struct_file(&s, &CodegenContext::empty());
+        assert!(!code.contains("fn deep_clone"), "proxy struct should not have deep_clone in: {}", code);
     }
 }

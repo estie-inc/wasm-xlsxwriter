@@ -1,4 +1,6 @@
 use crate::wrapper::ChartDataTable;
+use crate::wrapper::ChartEmptyCells;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::ChartSeries;
 use crate::wrapper::ChartType;
 use crate::wrapper::ObjectMovement;
@@ -32,7 +34,16 @@ impl Chart {
     #[wasm_bindgen(constructor)]
     pub fn new(chart_type: ChartType) -> Chart {
         Chart {
-            inner: Arc::new(Mutex::new(xlsx::Chart::new(chart_type.inner))),
+            inner: Arc::new(Mutex::new(xlsx::Chart::new(xlsx::ChartType::from(
+                chart_type,
+            )))),
+        }
+    }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Chart {
+        Chart {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
         }
     }
     /// Add a chart series to a chart.
@@ -51,92 +62,12 @@ impl Chart {
     ///
     /// `series` - a {@link ChartSeries} instance.
     #[wasm_bindgen(js_name = "pushSeries", skip_jsdoc)]
-    pub fn push_series(&self, series: ChartSeries) -> Chart {
+    pub fn push_series(&self, series: &ChartSeries) -> Chart {
         let mut lock = self.inner.lock().unwrap();
         lock.push_series(&*series.inner.lock().unwrap());
         Chart {
             inner: Arc::clone(&self.inner),
         }
-    }
-    /// Get the chart title object in order to set its properties.
-    ///
-    /// Get a reference to the chart's X-Axis {@link ChartTitle} object in order to
-    /// set its properties.
-    #[wasm_bindgen(js_name = "title", skip_jsdoc)]
-    pub fn title(&self) -> &mut ChartTitle {
-        let lock = self.inner.lock().unwrap();
-        lock.title()
-    }
-    /// Get the chart X-Axis object in order to set its properties.
-    ///
-    /// Get a reference to the chart's X-Axis {@link ChartAxis} object in order to
-    /// set its properties.
-    #[wasm_bindgen(js_name = "xAxis", skip_jsdoc)]
-    pub fn x_axis(&self) -> &mut ChartAxis {
-        let lock = self.inner.lock().unwrap();
-        lock.x_axis()
-    }
-    /// Get the chart Y-Axis object in order to set its properties.
-    ///
-    /// Get a reference to the chart's Y-Axis {@link ChartAxis} object in order to
-    /// set its properties.
-    ///
-    /// See the {@link Chart#xAxis} method above.
-    #[wasm_bindgen(js_name = "yAxis", skip_jsdoc)]
-    pub fn y_axis(&self) -> &mut ChartAxis {
-        let lock = self.inner.lock().unwrap();
-        lock.y_axis()
-    }
-    /// Get the chart X2-Axis object in order to set its properties.
-    ///
-    /// Get a reference to the chart's X2-Axis {@link ChartAxis} object in order to
-    /// set its properties.
-    ///
-    /// See the {@link Chart#xAxis} method above.
-    #[wasm_bindgen(js_name = "x2Axis", skip_jsdoc)]
-    pub fn x2_axis(&self) -> &mut ChartAxis {
-        let lock = self.inner.lock().unwrap();
-        lock.x2_axis()
-    }
-    /// Get the chart Y2-Axis object in order to set its properties.
-    ///
-    /// Get a reference to the chart's Y2-Axis {@link ChartAxis} object in order to
-    /// set its properties.
-    ///
-    /// See the {@link Chart#xAxis} method above.
-    #[wasm_bindgen(js_name = "y2Axis", skip_jsdoc)]
-    pub fn y2_axis(&self) -> &mut ChartAxis {
-        let lock = self.inner.lock().unwrap();
-        lock.y2_axis()
-    }
-    /// Get the chart legend object in order to set its properties.
-    ///
-    /// Get a reference to the chart's {@link ChartLegend} object in order to set
-    /// its properties.
-    #[wasm_bindgen(js_name = "legend", skip_jsdoc)]
-    pub fn legend(&self) -> &mut ChartLegend {
-        let lock = self.inner.lock().unwrap();
-        lock.legend()
-    }
-    /// Get the chart area object in order to set its properties.
-    ///
-    /// Get a reference to the chart's {@link ChartArea} object in order to set its
-    /// properties. The `ChartArea` is a representation of the background area
-    /// object of an Excel chart.
-    #[wasm_bindgen(js_name = "chartArea", skip_jsdoc)]
-    pub fn chart_area(&self) -> &mut ChartArea {
-        let lock = self.inner.lock().unwrap();
-        lock.chart_area()
-    }
-    /// Get the chart plot area object in order to set its properties.
-    ///
-    /// Get a reference to the chart's {@link ChartPlotArea} object in order to set
-    /// its properties. The `ChartPlotArea` struct is a representation of the
-    /// plotting area an Excel chart.
-    #[wasm_bindgen(js_name = "plotArea", skip_jsdoc)]
-    pub fn plot_area(&self) -> &mut ChartPlotArea {
-        let lock = self.inner.lock().unwrap();
-        lock.plot_area()
     }
     /// Create a combined chart from two different chart types.
     ///
@@ -158,7 +89,7 @@ impl Chart {
     ///
     /// - `chart`: The {@link Chart} to insert into the cell.
     #[wasm_bindgen(js_name = "combine", skip_jsdoc)]
-    pub fn combine(&self, chart: Chart) -> Chart {
+    pub fn combine(&self, chart: &Chart) -> Chart {
         let mut lock = self.inner.lock().unwrap();
         lock.combine(&*chart.inner.lock().unwrap());
         Chart {
@@ -238,6 +169,44 @@ impl Chart {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the formatting properties for Line chart up bars.
+    ///
+    /// Set the formatting properties for Line chart positive "Up" bars via a
+    /// {@link ChartFormat} object or a sub struct that implements
+    /// {@link IntoChartFormat}.
+    ///
+    /// See {@link ChartFormat} for the format properties that can be set.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setUpBarFormat", skip_jsdoc)]
+    pub fn set_up_bar_format(&self, format: &ChartFormat) -> Chart {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_up_bar_format(&mut *format.inner.lock().unwrap());
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for Line chart down bars.
+    ///
+    /// Set the formatting for negative "Down" bars on an "Up-Down" chart
+    /// element. See the documentation for {@link Chart#setUpBarFormat}.
+    /// # Parameters
+    ///
+    /// - `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    ///   convert into a `ChartFormat` instance. See the docs for
+    ///   {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setDownBarFormat", skip_jsdoc)]
+    pub fn set_down_bar_format(&self, format: &ChartFormat) -> Chart {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_down_bar_format(&mut *format.inner.lock().unwrap());
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set High-Low lines for a Line chart.
     ///
     /// Set High-Low lines for a Line chart to indicate the high and low values
@@ -251,6 +220,26 @@ impl Chart {
     pub fn set_high_low_lines(&self, enable: bool) -> Chart {
         let mut lock = self.inner.lock().unwrap();
         lock.set_high_low_lines(enable);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for Line chart High-Low lines.
+    ///
+    /// Set the formatting properties for line chart high-low lines via a
+    /// {@link ChartFormat} object or a sub struct that implements
+    /// {@link IntoChartFormat}. In general you will only need to use a
+    /// {@link ChartLine} to define the line format properties.
+    ///
+    /// # Parameters
+    ///
+    /// - `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    ///   convert into a `ChartFormat` instance. See the docs for
+    ///   {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setHighLowLinesFormat", skip_jsdoc)]
+    pub fn set_high_low_lines_format(&self, format: &ChartFormat) -> Chart {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_high_low_lines_format(&mut *format.inner.lock().unwrap());
         Chart {
             inner: Arc::clone(&self.inner),
         }
@@ -272,6 +261,26 @@ impl Chart {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the formatting properties for a chart drop lines.
+    ///
+    /// Set the formatting properties for a chart drop lines via a
+    /// {@link ChartFormat} object or a sub struct that implements
+    /// {@link IntoChartFormat}. In general you will only need to use a
+    /// {@link ChartLine} to define the line format properties.
+    ///
+    /// # Parameters
+    ///
+    /// - `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    ///   convert into a `ChartFormat` instance. See the docs for
+    ///   {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setDropLinesFormat", skip_jsdoc)]
+    pub fn set_drop_lines_format(&self, format: &ChartFormat) -> Chart {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_drop_lines_format(&mut *format.inner.lock().unwrap());
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set a data table for a chart.
     ///
     /// A chart data table in Excel is an additional table below a chart that
@@ -286,7 +295,7 @@ impl Chart {
     ///
     /// - `table`: A {@link ChartDataTable} reference.
     #[wasm_bindgen(js_name = "setDataTable", skip_jsdoc)]
-    pub fn set_data_table(&self, table: ChartDataTable) -> Chart {
+    pub fn set_data_table(&self, table: &ChartDataTable) -> Chart {
         let mut lock = self.inner.lock().unwrap();
         lock.set_data_table(&*table.inner.lock().unwrap());
         Chart {
@@ -435,6 +444,27 @@ impl Chart {
     pub fn set_object_movement(&self, option: ObjectMovement) -> Chart {
         let mut lock = self.inner.lock().unwrap();
         lock.set_object_movement(xlsx::ObjectMovement::from(option));
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the option for displaying empty cells in a chart.
+    ///
+    /// The options are:
+    ///
+    /// - {@link ChartEmptyCells#Gaps}: Show empty cells in the chart as gaps. The
+    ///   default.
+    /// - {@link ChartEmptyCells#Zero}: Show empty cells in the chart as zeroes.
+    /// - {@link ChartEmptyCells#Connected}: Show empty cells in the chart
+    ///   connected by a line to the previous point.
+    ///
+    /// # Parameters
+    ///
+    /// `option` - A {@link ChartEmptyCells} enum value.
+    #[wasm_bindgen(js_name = "showEmptyCellsAs", skip_jsdoc)]
+    pub fn show_empty_cells_as(&self, option: ChartEmptyCells) -> Chart {
+        let mut lock = self.inner.lock().unwrap();
+        lock.show_empty_cells_as(xlsx::ChartEmptyCells::from(option));
         Chart {
             inner: Arc::clone(&self.inner),
         }

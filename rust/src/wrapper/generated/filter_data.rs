@@ -15,4 +15,12 @@ pub struct FilterData {
 }
 
 #[wasm_bindgen]
-impl FilterData {}
+impl FilterData {
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> FilterData {
+        FilterData {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+}

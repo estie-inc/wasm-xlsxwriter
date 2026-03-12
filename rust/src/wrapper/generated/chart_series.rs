@@ -1,7 +1,9 @@
 use crate::wrapper::ChartDataLabel;
 use crate::wrapper::ChartErrorBars;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::ChartMarker;
 use crate::wrapper::ChartPoint;
+use crate::wrapper::ChartRange;
 use crate::wrapper::ChartTrendline;
 use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
@@ -19,11 +21,81 @@ use wasm_bindgen::prelude::*;
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct ChartSeries {
-    pub(crate) parent: Arc<Mutex<xlsx::Chart>>,
+    pub(crate) inner: Arc<Mutex<xlsx::ChartSeries>>,
 }
 
 #[wasm_bindgen]
 impl ChartSeries {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> ChartSeries {
+        ChartSeries {
+            inner: Arc::new(Mutex::new(xlsx::ChartSeries::new())),
+        }
+    }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartSeries {
+        ChartSeries {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+    /// Add a values range to a chart series.
+    ///
+    /// All chart series in Excel must have a data range that defines the range
+    /// of values for the series. In Excel this is typically a range like
+    /// `"Sheet1!$B$1:$B$5"`.
+    ///
+    /// This is the most important property of a series and is the only
+    /// mandatory option for every chart object. This series values links the
+    /// chart with the worksheet data that it displays. The data range can be
+    /// set using a formula as shown in the first part of the example below or
+    /// using a list of values as shown in the second part.
+    ///
+    /// # Parameters
+    ///
+    /// - `range`: The range property which can be one of two generic types:
+    ///    - A string with an Excel like range formula such as
+    ///      `"Sheet1!$A$1:$A$3"`.
+    ///    - A tuple that can be used to create the range programmatically using
+    ///      a sheet name and zero indexed row and column values like:
+    ///      `("Sheet1", 0, 0, 2, 0)` (this gives the same range as the previous
+    ///      string value).
+    #[wasm_bindgen(js_name = "setValues", skip_jsdoc)]
+    pub fn set_values(&self, range: &ChartRange) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_values(&*range.inner.lock().unwrap());
+        ChartSeries {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Add a category range chart series.
+    ///
+    /// This method sets the chart category labels. The category is more or less
+    /// the same as the X axis. In most chart types the categories property is
+    /// optional and the chart will just assume a sequential series from `1..n`.
+    /// The exception to this is the Scatter chart types for which a category
+    /// range is mandatory in Excel.
+    ///
+    /// The data range can be set using a formula as shown in the first part of
+    /// the example below or using a list of values as shown in the second part.
+    ///
+    /// # Parameters
+    ///
+    /// - `range`: The range property which can be one of two generic types:
+    ///    - A string with an Excel like range formula such as
+    ///      `"Sheet1!$A$1:$A$3"`.
+    ///    - A tuple that can be used to create the range programmatically using
+    ///      a sheet name and zero indexed row and column values like:
+    ///      `("Sheet1", 0, 0, 2, 0)` (this gives the same range as the previous
+    ///      string value).
+    #[wasm_bindgen(js_name = "setCategories", skip_jsdoc)]
+    pub fn set_categories(&self, range: &ChartRange) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_categories(&*range.inner.lock().unwrap());
+        ChartSeries {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Plot the chart series on the secondary axis.
     ///
     /// It is possible to add a secondary axis of the same type to a chart by
@@ -35,10 +107,66 @@ impl ChartSeries {
     /// - `enable`: Turn the property on/off. It is off by default.
     #[wasm_bindgen(js_name = "setSecondaryAxis", skip_jsdoc)]
     pub fn set_secondary_axis(&self, enable: bool) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_secondary_axis(enable);
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_secondary_axis(enable);
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Add a name for a chart series.
+    ///
+    /// Set the name for the series. The name is displayed in the formula bar.
+    /// For non-Pie/Doughnut charts it is also displayed in the legend. The name
+    /// property is optional and if it isn’t supplied it will default to `Series
+    /// 1..n`. The name can be a simple string, a formula such as `Sheet1!$A$1`
+    /// or a tuple with a sheet name, row and column such as `('Sheet1', 0, 0)`.
+    ///
+    /// # Parameters
+    ///
+    /// - `range`: The range property which can be one of the following generic
+    ///   types:
+    ///    - A simple string title.
+    ///    - A string with an Excel like range formula such as `"Sheet1!$A$1"`.
+    ///    - A tuple that can be used to create the range programmatically using
+    ///      a sheet name and zero indexed row and column values like:
+    ///      `("Sheet1", 0, 0)` (this gives the same range as the previous
+    ///      string value).
+    #[wasm_bindgen(js_name = "setName", skip_jsdoc)]
+    pub fn set_name(&self, name: &str) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_name(name);
+        ChartSeries {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for a chart series.
+    ///
+    /// Set the formatting properties for a chart series via a {@link ChartFormat}
+    /// object or a sub struct that implements {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    ///
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_format(&mut *format.inner.lock().unwrap());
+        ChartSeries {
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the markers for a chart series.
@@ -51,11 +179,11 @@ impl ChartSeries {
     ///
     /// `marker`: A {@link ChartMarker} instance.
     #[wasm_bindgen(js_name = "setMarker", skip_jsdoc)]
-    pub fn set_marker(&self, marker: ChartMarker) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_marker(&marker.inner);
+    pub fn set_marker(&self, marker: &ChartMarker) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_marker(&*marker.inner.lock().unwrap());
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the data labels for a chart series.
@@ -67,11 +195,11 @@ impl ChartSeries {
     ///
     /// `data_label`: A {@link ChartDataLabel} instance.
     #[wasm_bindgen(js_name = "setDataLabel", skip_jsdoc)]
-    pub fn set_data_label(&self, data_label: ChartDataLabel) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_data_label(&data_label.inner);
+    pub fn set_data_label(&self, data_label: &ChartDataLabel) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_data_label(&*data_label.inner.lock().unwrap());
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set custom data labels for a data series.
@@ -88,15 +216,15 @@ impl ChartSeries {
     /// `data_labels`: A slice of {@link ChartDataLabel} objects.
     #[wasm_bindgen(js_name = "setCustomDataLabels", skip_jsdoc)]
     pub fn set_custom_data_labels(&self, data_labels: Vec<ChartDataLabel>) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_custom_data_labels(
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_custom_data_labels(
             &data_labels
                 .iter()
-                .map(|x| x.inner.clone())
+                .map(|x| x.inner.lock().unwrap().clone())
                 .collect::<Vec<_>>(),
         );
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the formatting and properties for points in a chart series.
@@ -116,42 +244,15 @@ impl ChartSeries {
     /// `points`: A slice of {@link ChartPoint} objects.
     #[wasm_bindgen(js_name = "setPoints", skip_jsdoc)]
     pub fn set_points(&self, points: Vec<ChartPoint>) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series()
-            .set_points(&points.iter().map(|x| x.inner.clone()).collect::<Vec<_>>());
-        ChartSeries {
-            parent: Arc::clone(&self.parent),
-        }
-    }
-    /// Set the colors for points in a chart series.
-    ///
-    /// As explained above, in the section on {@link ChartSeries#setPoints}, the
-    /// most common use case for point formatting is to set the formatting of
-    /// individual segments of Pie charts, or in particular to set the colors of
-    /// pie segments. For this simple use case the {@link ChartSeries#setPoints}
-    /// method can be overly verbose.
-    ///
-    /// As a syntactic shortcut the `set_point_colors()` method allows you to
-    /// set the colors of chart points with a simpler interface.
-    ///
-    /// Compare the example below with the previous more general example which
-    /// both produce the same result.
-    ///
-    /// # Parameters
-    ///
-    /// `colors`: a slice of {@link Color} enum values or types that will convert
-    /// into {@link Color}.
-    #[wasm_bindgen(js_name = "setPointColors", skip_jsdoc)]
-    pub fn set_point_colors(&self, colors: Vec<Color>) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_point_colors(
-            &colors
-                .into_iter()
-                .map(|x| xlsx::Color::from(x))
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_points(
+            &points
+                .iter()
+                .map(|x| x.inner.lock().unwrap().clone())
                 .collect::<Vec<_>>(),
         );
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the trendline for a chart series.
@@ -168,12 +269,11 @@ impl ChartSeries {
     ///
     /// `trendline`: A {@link ChartTrendline} reference.
     #[wasm_bindgen(js_name = "setTrendline", skip_jsdoc)]
-    pub fn set_trendline(&self, trendline: ChartTrendline) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series()
-            .set_trendline(&*trendline.inner.lock().unwrap());
+    pub fn set_trendline(&self, trendline: &ChartTrendline) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_trendline(&*trendline.inner.lock().unwrap());
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the vertical error bars for a chart series.
@@ -190,12 +290,11 @@ impl ChartSeries {
     ///
     /// `error_bars`: A {@link ChartErrorBars} reference.
     #[wasm_bindgen(js_name = "setYErrorBars", skip_jsdoc)]
-    pub fn set_y_error_bars(&self, error_bars: ChartErrorBars) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series()
-            .set_y_error_bars(&*error_bars.inner.lock().unwrap());
+    pub fn set_y_error_bars(&self, error_bars: &ChartErrorBars) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_y_error_bars(&*error_bars.inner.lock().unwrap());
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the horizontal error bars for a chart series.
@@ -209,12 +308,11 @@ impl ChartSeries {
     ///
     /// `error_bars`: A {@link ChartErrorBars} reference.
     #[wasm_bindgen(js_name = "setXErrorBars", skip_jsdoc)]
-    pub fn set_x_error_bars(&self, error_bars: ChartErrorBars) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series()
-            .set_x_error_bars(&*error_bars.inner.lock().unwrap());
+    pub fn set_x_error_bars(&self, error_bars: &ChartErrorBars) -> ChartSeries {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_x_error_bars(&*error_bars.inner.lock().unwrap());
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the series overlap for a chart/bar chart.
@@ -232,10 +330,10 @@ impl ChartSeries {
     ///   range is -100 <= overlap <= 100 and the default is 0.
     #[wasm_bindgen(js_name = "setOverlap", skip_jsdoc)]
     pub fn set_overlap(&self, overlap: i8) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_overlap(overlap);
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_overlap(overlap);
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the gap width for a chart/bar chart.
@@ -255,10 +353,10 @@ impl ChartSeries {
     /// See the example for {@link ChartSeries#setOverlap} above.
     #[wasm_bindgen(js_name = "setGap", skip_jsdoc)]
     pub fn set_gap(&self, gap: u16) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_gap(gap);
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_gap(gap);
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set line type charts to smooth for a series.
@@ -277,10 +375,10 @@ impl ChartSeries {
     ///   type.
     #[wasm_bindgen(js_name = "setSmooth", skip_jsdoc)]
     pub fn set_smooth(&self, enable: bool) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_smooth(enable);
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_smooth(enable);
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Invert the color for negative values in a column/bar chart series.
@@ -293,10 +391,10 @@ impl ChartSeries {
     /// {@link ChartSeries#setInvertIfNegativeColor} below.
     #[wasm_bindgen(js_name = "setInvertIfNegative", skip_jsdoc)]
     pub fn set_invert_if_negative(&self) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().set_invert_if_negative();
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_invert_if_negative();
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the inverted color for negative values in a column/bar chart series.
@@ -314,11 +412,10 @@ impl ChartSeries {
     /// - `color`: The inverse color property defined by a {@link Color} enum value.
     #[wasm_bindgen(js_name = "setInvertIfNegativeColor", skip_jsdoc)]
     pub fn set_invert_if_negative_color(&self, color: Color) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series()
-            .set_invert_if_negative_color(xlsx::Color::from(color));
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_invert_if_negative_color(xlsx::Color::from(color));
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Delete/hide the series name from the chart legend.
@@ -338,10 +435,10 @@ impl ChartSeries {
     /// - `enable`: Turn the property on/off. It is off by default.
     #[wasm_bindgen(js_name = "deleteFromLegend", skip_jsdoc)]
     pub fn delete_from_legend(&self, enable: bool) -> ChartSeries {
-        let mut lock = self.parent.lock().unwrap();
-        lock.add_series().delete_from_legend(enable);
+        let mut lock = self.inner.lock().unwrap();
+        lock.delete_from_legend(enable);
         ChartSeries {
-            parent: Arc::clone(&self.parent),
+            inner: Arc::clone(&self.inner),
         }
     }
 }

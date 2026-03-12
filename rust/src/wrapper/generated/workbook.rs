@@ -21,109 +21,6 @@ impl Workbook {
             inner: Arc::new(Mutex::new(xlsx::Workbook::new())),
         }
     }
-    /// Add a new chartsheet to a workbook.
-    ///
-    /// The `add_chartsheet()` method adds a new "chartsheet" {@link Worksheet} to a
-    /// workbook.
-    ///
-    /// A Chartsheet in Excel is a specialized type of worksheet that doesn't
-    /// have cells but instead is used to display a single chart. It supports
-    /// worksheet display options such as headers and footers, margins, tab
-    /// selection, and print properties.
-    ///
-    /// The chartsheets will be given standard Excel name like `Chart1`,
-    /// `Chart2`, etc. Alternatively, the name can be set using
-    /// {@link Worksheet#setName}.
-    ///
-    /// The `add_worksheet()` method returns a borrowed mutable reference to a
-    /// Worksheet instance owned by the Workbook so only one worksheet can be in
-    /// existence at a time. This limitation can be avoided, if necessary, by
-    /// creating standalone Worksheet objects via {@link Worksheet#new} and then
-    /// later adding them to the workbook with {@link Workbook#pushWorksheet}.
-    ///
-    /// See also the documentation on [Creating worksheets] and working with the
-    /// borrow checker.
-    ///
-    /// [Creating worksheets]: ../worksheet/index.html#creating-worksheets
-    #[wasm_bindgen(js_name = "addChartsheet", skip_jsdoc)]
-    pub fn add_chartsheet(&self) -> &mut Worksheet {
-        let lock = self.inner.lock().unwrap();
-        lock.add_chartsheet()
-    }
-    /// Get a worksheet reference by index.
-    ///
-    /// Get a reference to a worksheet created via {@link Workbook#addWorksheet}
-    /// using an index based on the creation order.
-    ///
-    /// Due to borrow checking rules you can only have one active reference to a
-    /// worksheet object created by `add_worksheet()` since that method always
-    /// returns a mutable reference. For a workbook with multiple worksheets
-    /// this restriction is generally workable if you can create and use the
-    /// worksheets sequentially since you will only need to have one reference
-    /// at any one time. However, if you can't structure your code to work
-    /// sequentially then you get a reference to a previously created worksheet
-    /// using `worksheet_from_index()`. The standard borrow checking rules still
-    /// apply so you will have to give up ownership of any other worksheet
-    /// reference prior to calling this method. See the example below.
-    ///
-    /// See also {@link Workbook#worksheetFromName} and the documentation on
-    /// [Creating worksheets] and working with the borrow checker.
-    ///
-    /// [Creating worksheets]: ../worksheet/index.html#creating-worksheets
-    ///
-    /// # Parameters
-    ///
-    /// - `index`: The index of the worksheet to get a reference to.
-    ///
-    /// # Errors
-    ///
-    /// - {@link XlsxError#UnknownWorksheetNameOrIndex} - Error when trying to
-    ///   retrieve a worksheet reference by index. This is usually an index out
-    ///   of bounds error.
-    #[wasm_bindgen(js_name = "worksheetFromIndex", skip_jsdoc)]
-    pub fn worksheet_from_index(&self, index: usize) -> Result<&mut Worksheet> {
-        let lock = self.inner.lock().unwrap();
-        lock.worksheet_from_index(index)
-    }
-    /// Get a worksheet reference by name.
-    ///
-    /// Get a reference to a worksheet created via {@link Workbook#addWorksheet}
-    /// using the sheet name.
-    ///
-    /// Due to borrow checking rules you can only have one active reference to a
-    /// worksheet object created by `add_worksheet()` since that method always
-    /// returns a mutable reference. For a workbook with multiple worksheets
-    /// this restriction is generally workable if you can create and use the
-    /// worksheets sequentially since you will only need to have one reference
-    /// at any one time. However, if you can't structure your code to work
-    /// sequentially then you get a reference to a previously created worksheet
-    /// using `worksheet_from_name()`. The standard borrow checking rules still
-    /// apply so you will have to give up ownership of any other worksheet
-    /// reference prior to calling this method. See the example below.
-    ///
-    /// Worksheet names are usually "Sheet1", "Sheet2", etc., or else a user
-    /// define name that was set using {@link Worksheet#setName}. You can also
-    /// use the {@link Worksheet#name} method to get the name.
-    ///
-    /// See also {@link Workbook#worksheetFromIndex} and the documentation on
-    /// [Creating worksheets] and working with the borrow checker.
-    ///
-    /// [Creating worksheets]: ../worksheet/index.html#creating-worksheets
-    ///
-    /// # Parameters
-    ///
-    /// - `name`: The name of the worksheet to get a reference to.
-    ///
-    /// # Errors
-    ///
-    /// - {@link XlsxError#UnknownWorksheetNameOrIndex} - Error when trying to
-    ///   retrieve a worksheet reference by index. This is usually an index out
-    ///   of bounds error.
-    #[wasm_bindgen(js_name = "worksheetFromName", skip_jsdoc)]
-    pub fn worksheet_from_name(&self, sheetname: &str) -> Result<&mut Worksheet> {
-        let lock = self.inner.lock().unwrap();
-        lock.worksheet_from_name(sheetname)
-    }
     /// Create a defined name in the workbook to use as a variable.
     ///
     /// The `define_name()` method is used to define a variable name that can
@@ -184,7 +81,7 @@ impl Workbook {
     ///
     /// - `properties`: A reference to a {@link DocProperties} object.
     #[wasm_bindgen(js_name = "setProperties", skip_jsdoc)]
-    pub fn set_properties(&self, properties: DocProperties) -> Workbook {
+    pub fn set_properties(&self, properties: &DocProperties) -> Workbook {
         let mut lock = self.inner.lock().unwrap();
         lock.set_properties(&*properties.inner.lock().unwrap());
         Workbook {
@@ -242,7 +139,7 @@ impl Workbook {
     #[wasm_bindgen(js_name = "setDefaultFormat", skip_jsdoc)]
     pub fn set_default_format(
         &self,
-        format: Format,
+        format: &Format,
         row_height: u32,
         col_width: u32,
     ) -> WasmResult<Workbook> {
@@ -387,7 +284,7 @@ impl Workbook {
     ///
     /// `format` - The {@link Format} instance to register.
     #[wasm_bindgen(js_name = "registerFormat", skip_jsdoc)]
-    pub fn register_format(&self, format: Format) -> () {
+    pub fn register_format(&self, format: &Format) -> () {
         let mut lock = self.inner.lock().unwrap();
         lock.register_format(&*format.inner.lock().unwrap());
     }

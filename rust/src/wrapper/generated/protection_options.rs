@@ -24,4 +24,11 @@ impl ProtectionOptions {
             inner: Arc::new(Mutex::new(xlsx::ProtectionOptions::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ProtectionOptions {
+        ProtectionOptions {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
 }

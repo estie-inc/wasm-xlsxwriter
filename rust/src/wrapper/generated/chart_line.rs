@@ -1,3 +1,4 @@
+use crate::wrapper::ChartLineDashType;
 use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
@@ -34,6 +35,13 @@ impl ChartLine {
             inner: Arc::new(Mutex::new(xlsx::ChartLine::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartLine {
+        ChartLine {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the color of a line/border.
     ///
     /// # Parameters
@@ -59,6 +67,19 @@ impl ChartLine {
     pub fn set_width(&self, width: f64) -> ChartLine {
         let mut lock = self.inner.lock().unwrap();
         lock.set_width(width);
+        ChartLine {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the dash type of the line or border.
+    ///
+    /// # Parameters
+    ///
+    /// - `dash_type`: A {@link ChartLineDashType} enum value.
+    #[wasm_bindgen(js_name = "setDashType", skip_jsdoc)]
+    pub fn set_dash_type(&self, dash_type: ChartLineDashType) -> ChartLine {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_dash_type(xlsx::ChartLineDashType::from(dash_type));
         ChartLine {
             inner: Arc::clone(&self.inner),
         }

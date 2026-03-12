@@ -1,7 +1,6 @@
 mod chart;
 mod datetime;
 mod excel_data;
-mod format;
 pub mod generated;
 mod image;
 mod rich_string;
@@ -16,41 +15,12 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 pub(crate) type WasmResult<T> = std::result::Result<T, XlsxError>;
 
-// Re-export all types so generated code can use `crate::wrapper::TypeName`
-pub(crate) use chart::{
-    chart_axis::ChartAxis,
-    chart_data_label::ChartDataLabel,
-    chart_data_label_position::ChartDataLabelPosition,
-    chart_empty_cells::ChartEmptyCells,
-    chart_font::ChartFont,
-    chart_format::ChartFormat,
-    chart_gradient_fill::ChartGradientFill,
-    chart_gradient_fill_type::ChartGradientFillType,
-    chart_gradient_stop::ChartGradientStop,
-    chart_layout::ChartLayout,
-    chart_legend::ChartLegend,
-    chart_legend_position::ChartLegendPosition,
-    chart_line::{ChartLine, ChartLineDashType},
-    chart_marker::ChartMarker,
-    chart_marker_type::ChartMarkerType,
-    chart_pattern_fill::ChartPatternFill,
-    chart_pattern_fill_type::ChartPatternFillType,
-    chart_point::ChartPoint,
-    chart_range::ChartRange,
-    chart_series::ChartSeries,
-    chart_solid_fill::ChartSolidFill,
-    chart_title::ChartTitle,
-    chart_type::ChartType,
-    Chart,
-};
-pub(crate) use datetime::ExcelDateTime;
-pub(crate) use format::{
-    FontScheme, Format, FormatAlign, FormatBorder, FormatDiagonalBorder, FormatPattern,
-    FormatScript, FormatUnderline,
-};
+// Generated types are re-exported via `generated::*`
 pub(crate) use generated::*;
+// Hand-written types that can't be auto-generated
+pub(crate) use datetime::ExcelDateTime;
 pub(crate) use image::Image;
-pub(crate) use table::{Table, TableColumn, TableStyle};
+pub(crate) use table::{Table, TableColumn};
 pub(crate) use workbook::Workbook;
 pub(crate) use worksheet::Worksheet;
 

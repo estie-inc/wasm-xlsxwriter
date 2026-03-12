@@ -41,6 +41,13 @@ impl Formula {
             inner: Arc::new(Mutex::new(xlsx::Formula::new(formula))),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Formula {
+        Formula {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Specify the result of a formula.
     ///
     /// As explained above in the section on [Formula

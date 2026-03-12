@@ -1,4 +1,7 @@
+use crate::wrapper::ChartDataLabelPosition;
 use crate::wrapper::ChartFont;
+use crate::wrapper::ChartFormat;
+use crate::wrapper::ChartRange;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -27,6 +30,13 @@ impl ChartDataLabel {
     pub fn new() -> ChartDataLabel {
         ChartDataLabel {
             inner: Arc::new(Mutex::new(xlsx::ChartDataLabel::new())),
+        }
+    }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartDataLabel {
+        ChartDataLabel {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
         }
     }
     /// Display the point value on the data label.
@@ -99,6 +109,65 @@ impl ChartDataLabel {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the default position of the data label.
+    ///
+    /// In Excel the available data label positions vary for different chart
+    /// types. The available, and default, positions are shown below with their
+    /// {@link ChartDataLabel} value:
+    ///
+    /// | Position     | Line, Scatter | Bar, Column   | Pie, Doughnut | Area, Radar   |
+    /// | :----------- | :------------ | :------------ | :------------ | :------------ |
+    /// | `Center`     | Yes           | Yes           | Yes           | Yes (default) |
+    /// | `Right`      | Yes (default) |               |               |               |
+    /// | `Left`       | Yes           |               |               |               |
+    /// | `Above`      | Yes           |               |               |               |
+    /// | `Below`      | Yes           |               |               |               |
+    /// | `InsideBase` |               | Yes           |               |               |
+    /// | `InsideEnd`  |               | Yes           | Yes           |               |
+    /// | `OutsideEnd` |               | Yes (default) | Yes           |               |
+    /// | `BestFit`    |               |               | Yes (default) |               |
+    ///
+    /// # Parameters
+    ///
+    /// `position`: The label position as defined by the {@link ChartDataLabel} values.
+    #[wasm_bindgen(js_name = "setPosition", skip_jsdoc)]
+    pub fn set_position(&self, position: ChartDataLabelPosition) -> ChartDataLabel {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_position(xlsx::ChartDataLabelPosition::from(position));
+        ChartDataLabel {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for a chart data label.
+    ///
+    /// Set the formatting properties for a chart data label via a {@link ChartFormat}
+    /// object or a sub struct that implements {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    /// - `set_no_border`: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartDataLabel {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_format(&mut *format.inner.lock().unwrap());
+        ChartDataLabel {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the font properties of a chart data label.
     ///
     /// Set the font properties of a chart data labels using a {@link ChartFont}
@@ -116,9 +185,9 @@ impl ChartDataLabel {
     /// `font`: A {@link ChartFont} struct reference to represent the font
     /// properties.
     #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
-    pub fn set_font(&self, font: ChartFont) -> ChartDataLabel {
+    pub fn set_font(&self, font: &ChartFont) -> ChartDataLabel {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_font(&font.inner);
+        lock.set_font(&*font.inner.lock().unwrap());
         ChartDataLabel {
             inner: Arc::clone(&self.inner),
         }
@@ -171,6 +240,30 @@ impl ChartDataLabel {
     pub fn show_x_value(&self) -> ChartDataLabel {
         let mut lock = self.inner.lock().unwrap();
         lock.show_x_value();
+        ChartDataLabel {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the value for a custom data label.
+    ///
+    /// This method sets the value of a custom data label used with the
+    /// {@link ChartSeries#setCustomDataLabels} method. It is ignored if used
+    /// with a series {@link ChartDataLabel}.
+    ///
+    /// # Parameters
+    ///
+    /// - `value`: A {@link IntoChartRange} property which can be one of the
+    ///   following generic types:
+    ///    - A simple string title.
+    ///    - A string with an Excel like range formula such as `"Sheet1!$A$1"`.
+    ///    - A tuple that can be used to create the range programmatically using
+    ///      a sheet name and zero indexed row and column values like:
+    ///      `("Sheet1", 0, 0)` (this gives the same range as the previous
+    ///      string value).
+    #[wasm_bindgen(js_name = "setValue", skip_jsdoc)]
+    pub fn set_value(&self, value: &ChartRange) -> ChartDataLabel {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_value(&*value.inner.lock().unwrap());
         ChartDataLabel {
             inner: Arc::clone(&self.inner),
         }

@@ -79,6 +79,13 @@ impl Url {
             inner: Arc::new(Mutex::new(xlsx::Url::new(link))),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Url {
+        Url {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the alternative text for the URL.
     ///
     /// Set an alternative, user friendly, text for the URL.

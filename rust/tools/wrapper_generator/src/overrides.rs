@@ -17,25 +17,22 @@ struct RawOverrides {
     #[serde(default)]
     custom: HashMap<String, String>,
     #[serde(default)]
-    consume_self_default: HashMap<String, String>,
-    #[serde(default)]
     rename: HashMap<String, String>,
     #[serde(default)]
-    skip_structs: HashMap<String, String>,
-    #[serde(default)]
     skip_enums: HashMap<String, String>,
+    /// Override specific parameter types: "Struct::method::param" = "ParamType"
+    #[serde(default)]
+    param_type: HashMap<String, String>,
 }
 
 /// Parsed result of overrides.toml. Holds per-method override information.
 pub struct Overrides {
     /// Map of `"Struct::method"` to MethodOverride (wildcards are normalized to `"*::method"`)
     entries: HashMap<String, MethodOverride>,
-    /// Map of struct name to dummy constructor expression for ConsumeSelf methods
-    consume_self_defaults: HashMap<String, String>,
-    /// Struct names to skip entirely during generation
-    skip_structs: HashSet<String>,
     /// Enum names to skip entirely during generation
     skip_enums: HashSet<String>,
+    /// Map of `"Struct::method::param"` to param type override string
+    param_types: HashMap<String, String>,
 }
 
 pub fn load_overrides(path: &Path) -> anyhow::Result<Overrides> {
@@ -66,9 +63,8 @@ impl Overrides {
 
         Self {
             entries,
-            consume_self_defaults: raw.consume_self_default,
-            skip_structs: raw.skip_structs.into_keys().collect(),
             skip_enums: raw.skip_enums.into_keys().collect(),
+            param_types: raw.param_type,
         }
     }
 
@@ -84,26 +80,30 @@ impl Overrides {
             .cloned()
     }
 
-    /// Return the consume_self_default expression for the given struct, if any.
-    pub fn get_consume_self_default(&self, struct_name: &str) -> Option<&str> {
-        self.consume_self_defaults.get(struct_name).map(|s| s.as_str())
-    }
-
-    pub fn should_skip_struct(&self, name: &str) -> bool {
-        self.skip_structs.contains(name)
-    }
-
     pub fn should_skip_enum(&self, name: &str) -> bool {
         self.skip_enums.contains(name)
     }
 
+    /// Get the param type override for a specific struct::method::param, if any.
+    pub fn get_param_type(&self, struct_name: &str, method_name: &str, param_name: &str) -> Option<&str> {
+        let key = format!("{}::{}::{}", struct_name, method_name, param_name);
+        self.param_types.get(&key).map(|s| s.as_str())
+    }
+
     /// Apply overrides to a list of methods.
     /// Only methods with `override_` set to `Auto` are eligible for overwriting.
+    /// Also applies param_type overrides to individual parameters.
     pub fn apply_to_methods(&self, struct_name: &str, methods: &mut Vec<AnalyzedMethod>) {
         for method in methods.iter_mut() {
             if let MethodOverride::Auto = method.override_ {
                 if let Some(ov) = self.get(struct_name, &method.name) {
                     method.override_ = ov;
+                }
+            }
+            // Apply param type overrides
+            for param in &mut method.params {
+                if let Some(ty_str) = self.get_param_type(struct_name, &method.name, &param.name) {
+                    param.ty = crate::ir::ParamType::from_override_str(ty_str);
                 }
             }
         }
@@ -147,7 +147,7 @@ mod tests {
 "Workbook::add_worksheet" = "index tracking"
 
 [rename]
-"*.deep_clone" = "clone"
+"Workbook::deep_clone" = "clone"
 "#;
 
     #[test]
@@ -179,18 +179,15 @@ mod tests {
     }
 
     #[test]
-    fn parse_rename_entries_including_wildcard() {
+    fn parse_rename_entries() {
         let ov = load_overrides_from_str(SAMPLE_TOML).unwrap();
 
-        // Wildcard matches any struct
         assert_eq!(
             ov.get("Workbook", "deep_clone"),
             Some(MethodOverride::Rename("clone".into()))
         );
-        assert_eq!(
-            ov.get("Chart", "deep_clone"),
-            Some(MethodOverride::Rename("clone".into()))
-        );
+        // Exact match only
+        assert_eq!(ov.get("Chart", "deep_clone"), None);
     }
 
     #[test]
@@ -199,15 +196,6 @@ mod tests {
 
         assert_eq!(ov.get("Workbook", "unknown_method"), None);
         assert_eq!(ov.get("Worksheet", "save"), None);
-    }
-
-    #[test]
-    fn wildcard_does_not_match_partial_method_name() {
-        let ov = load_overrides_from_str(SAMPLE_TOML).unwrap();
-
-        // The wildcard for "deep_clone" should not match "clone"
-        assert_eq!(ov.get("Workbook", "clone"), None);
-        assert_eq!(ov.get("Workbook", "deep"), None);
     }
 
     #[test]
@@ -251,15 +239,19 @@ mod tests {
 
     #[test]
     fn apply_to_methods_handles_wildcard_rename() {
-        let ov = load_overrides_from_str(SAMPLE_TOML).unwrap();
+        let toml = r#"
+[rename]
+"*.some_method" = "renamed"
+"#;
+        let ov = load_overrides_from_str(toml).unwrap();
 
-        let mut methods = vec![make_method("deep_clone"), make_method("set_color")];
+        let mut methods = vec![make_method("some_method"), make_method("set_color")];
 
         ov.apply_to_methods("AnyStruct", &mut methods);
 
         assert_eq!(
             methods[0].override_,
-            MethodOverride::Rename("clone".into())
+            MethodOverride::Rename("renamed".into())
         );
         assert_eq!(methods[1].override_, MethodOverride::Auto);
     }
@@ -288,4 +280,45 @@ mod tests {
         );
         assert_eq!(ov.get("Worksheet", "write"), None);
     }
+
+    #[test]
+    fn parse_param_type_entries() {
+        let toml = r#"
+[param_type]
+"ChartSeries::set_name::name" = "Str"
+"#;
+        let ov = load_overrides_from_str(toml).unwrap();
+        assert_eq!(ov.get_param_type("ChartSeries", "set_name", "name"), Some("Str"));
+        assert_eq!(ov.get_param_type("ChartSeries", "set_name", "other"), None);
+        assert_eq!(ov.get_param_type("Other", "set_name", "name"), None);
+    }
+
+    #[test]
+    fn apply_to_methods_applies_param_type_override() {
+        use crate::ir::{AnalyzedParam, ParamType};
+
+        let toml = r#"
+[param_type]
+"Chart::set_name::name" = "Str"
+"#;
+        let ov = load_overrides_from_str(toml).unwrap();
+
+        let mut methods = vec![AnalyzedMethod {
+            name: "set_name".into(),
+            js_name: "setName".into(),
+            receiver: crate::ir::ReceiverKind::MutSelf,
+            params: vec![AnalyzedParam {
+                name: "name".into(),
+                ty: ParamType::RefWrappedType("ChartRange".into()),
+            }],
+            returns: crate::ir::ReturnKind::SelfType,
+            override_: MethodOverride::Auto,
+            doc: None,
+        }];
+
+        ov.apply_to_methods("Chart", &mut methods);
+
+        assert_eq!(methods[0].params[0].ty, ParamType::Str);
+    }
+
 }

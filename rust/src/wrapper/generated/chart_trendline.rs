@@ -1,4 +1,5 @@
 use crate::wrapper::ChartFont;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::ChartTrendlineType;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
@@ -25,6 +26,13 @@ impl ChartTrendline {
             inner: Arc::new(Mutex::new(xlsx::ChartTrendline::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartTrendline {
+        ChartTrendline {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the type of the Chart series trendlines.
     ///
     /// Set the trendline type to one of the Excel allowable types represented
@@ -37,6 +45,70 @@ impl ChartTrendline {
     pub fn set_type(&self, trend: ChartTrendlineType) -> ChartTrendline {
         let mut lock = self.inner.lock().unwrap();
         lock.set_type(xlsx::ChartTrendlineType::from(trend));
+        ChartTrendline {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for a chart trendline.
+    ///
+    /// Set the formatting properties for a chart trendline via a
+    /// {@link ChartFormat} object or a sub struct that implements
+    /// {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    /// - `set_no_border`: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartTrendline {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_format(&mut *format.inner.lock().unwrap());
+        ChartTrendline {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for a chart trendline label.
+    ///
+    /// Set the formatting properties for a chart trendline label via a
+    /// {@link ChartFormat} object or a sub struct that implements
+    /// {@link IntoChartFormat}. The label is displayed when you use the
+    /// {@link ChartTrendline#displayEquation} or
+    /// {@link ChartTrendline#displayRSquared} methods.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    ///
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setLabelFormat", skip_jsdoc)]
+    pub fn set_label_format(&self, format: &ChartFormat) -> ChartTrendline {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_label_format(&mut *format.inner.lock().unwrap());
         ChartTrendline {
             inner: Arc::clone(&self.inner),
         }
@@ -63,9 +135,9 @@ impl ChartTrendline {
     /// `font`: A {@link ChartFont} struct reference to represent the font
     /// properties.
     #[wasm_bindgen(js_name = "setLabelFont", skip_jsdoc)]
-    pub fn set_label_font(&self, font: ChartFont) -> ChartTrendline {
+    pub fn set_label_font(&self, font: &ChartFont) -> ChartTrendline {
         let mut lock = self.inner.lock().unwrap();
-        lock.set_label_font(&font.inner);
+        lock.set_label_font(&*font.inner.lock().unwrap());
         ChartTrendline {
             inner: Arc::clone(&self.inner),
         }

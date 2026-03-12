@@ -29,6 +29,13 @@ impl DocProperties {
             inner: Arc::new(Mutex::new(xlsx::DocProperties::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> DocProperties {
+        DocProperties {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the Title field of the document properties.
     ///
     /// Set the "Title" field of the document properties to create a title for

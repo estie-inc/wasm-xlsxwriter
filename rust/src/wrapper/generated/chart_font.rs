@@ -28,6 +28,13 @@ impl ChartFont {
             inner: Arc::new(Mutex::new(xlsx::ChartFont::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartFont {
+        ChartFont {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the bold property for the font of a chart element.
     #[wasm_bindgen(js_name = "setBold", skip_jsdoc)]
     pub fn set_bold(&self) -> ChartFont {

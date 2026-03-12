@@ -12,4 +12,12 @@ pub struct CustomProperty {
 }
 
 #[wasm_bindgen]
-impl CustomProperty {}
+impl CustomProperty {
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> CustomProperty {
+        CustomProperty {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+}

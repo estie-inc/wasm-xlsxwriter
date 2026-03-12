@@ -45,4 +45,12 @@ pub struct Shape {
 }
 
 #[wasm_bindgen]
-impl Shape {}
+impl Shape {
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Shape {
+        Shape {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+}

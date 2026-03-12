@@ -52,9 +52,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_name(name),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_name(name),
-        }?;
+        };
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         })
     }
     /// Get the worksheet name.
@@ -94,7 +95,7 @@ impl Worksheet {
     ///
     /// - `image`: The {@link Image} to use as the worksheet background.
     #[wasm_bindgen(js_name = "insertBackgroundImage", skip_jsdoc)]
-    pub fn insert_background_image(&self, image: Image) -> Worksheet {
+    pub fn insert_background_image(&self, image: &Image) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock
@@ -103,9 +104,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .insert_background_image(&*image.inner.lock().unwrap()),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Make all worksheet notes visible when the file loads.
@@ -124,9 +126,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().show_all_notes(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().show_all_notes(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the default author name for all the notes in the worksheet.
@@ -152,9 +155,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_default_note_author(name),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_default_note_author(name),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Place the row outline group expand/collapse symbols above the range.
@@ -175,9 +179,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().group_symbols_above(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().group_symbols_above(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Place the column outline group expand/collapse symbols to the left of
@@ -199,9 +204,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().group_symbols_to_left(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().group_symbols_to_left(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the default row height for all rows in a worksheet, efficiently.
@@ -232,9 +238,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_default_row_height(height)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the default row height in pixels for all rows in a worksheet,
@@ -259,9 +266,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_default_row_height_pixels(height)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Hide all unused rows in a worksheet, efficiently.
@@ -290,9 +298,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().hide_unused_rows(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().hide_unused_rows(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the default cell format for a worksheet.
@@ -323,7 +332,7 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setDefaultFormat", skip_jsdoc)]
     pub fn set_default_format(
         &self,
-        format: Format,
+        format: &Format,
         row_height: u32,
         col_width: u32,
     ) -> WasmResult<Worksheet> {
@@ -339,9 +348,10 @@ impl Worksheet {
                 row_height,
                 col_width,
             ),
-        }?;
+        };
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         })
     }
     /// Turn off the option to automatically hide rows that don't match filters.
@@ -364,9 +374,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().filter_automatic_off(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().filter_automatic_off(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Protect a worksheet from modification.
@@ -391,9 +402,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().protect(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().protect(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Protect a worksheet from modification with a password.
@@ -423,9 +435,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().protect_with_password(password)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Specify which worksheet elements should, or shouldn't, be protected.
@@ -445,7 +458,7 @@ impl Worksheet {
     /// `options` - Worksheet protection options as defined by a
     /// {@link ProtectionOptions} struct reference.
     #[wasm_bindgen(js_name = "protectWithOptions", skip_jsdoc)]
-    pub fn protect_with_options(&self, options: ProtectionOptions) -> Worksheet {
+    pub fn protect_with_options(&self, options: &ProtectionOptions) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock
@@ -454,9 +467,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .protect_with_options(&*options.inner.lock().unwrap()),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Write the default formula result for worksheet formulas.
@@ -485,9 +499,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_formula_result_default(result)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Display the worksheet cells from right to left for some versions of
@@ -513,9 +528,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_right_to_left(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_right_to_left(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Make a worksheet the active/initially visible worksheet in a workbook.
@@ -533,9 +549,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_active(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_active(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set a worksheet tab as selected.
@@ -557,9 +574,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_selected(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_selected(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Hide a worksheet.
@@ -583,9 +601,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_hidden(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_hidden(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Hide a worksheet. Can only be unhidden in Excel by VBA.
@@ -605,9 +624,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_very_hidden(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_very_hidden(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set current worksheet as the first visible sheet tab.
@@ -630,9 +650,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_first_tab(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_first_tab(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the color of the worksheet tab.
@@ -655,9 +676,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .set_tab_color(xlsx::Color::from(color)),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the paper type/size when printing.
@@ -727,9 +749,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_paper_size(paper_size),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_paper_size(paper_size),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the order in which pages are printed.
@@ -755,9 +778,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_page_order(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_page_order(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page orientation to landscape.
@@ -770,9 +794,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_landscape(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_landscape(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page orientation to portrait.
@@ -786,9 +811,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_portrait(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_portrait(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page view mode to normal layout.
@@ -801,9 +827,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_view_normal(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_view_normal(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page view mode to page layout.
@@ -816,9 +843,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_view_page_layout(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_view_page_layout(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page view mode to page break preview.
@@ -831,9 +859,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_view_page_break_preview(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_view_page_break_preview(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the vertical page breaks on a worksheet.
@@ -863,9 +892,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_vertical_page_breaks(&breaks)
             }
-        }?;
+        };
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         })
     }
     /// Set the worksheet zoom factor.
@@ -885,9 +915,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_zoom(zoom),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_zoom(zoom),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set a chartsheet to automatically zoom to fit the screen.
@@ -908,9 +939,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_zoom_to_fit(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_zoom_to_fit(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the printed page header caption.
@@ -996,9 +1028,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_header(header),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_header(header),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the printed page footer caption.
@@ -1017,9 +1050,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_footer(footer),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_footer(footer),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Insert an image in a worksheet header.
@@ -1041,7 +1075,7 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setHeaderImage", skip_jsdoc)]
     pub fn set_header_image(
         &self,
-        image: Image,
+        image: &Image,
         position: HeaderImagePosition,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
@@ -1054,9 +1088,10 @@ impl Worksheet {
                 &*image.inner.lock().unwrap(),
                 xlsx::HeaderImagePosition::from(position),
             ),
-        }?;
+        };
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         })
     }
     /// Insert an image in a worksheet footer.
@@ -1076,7 +1111,7 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFooterImage", skip_jsdoc)]
     pub fn set_footer_image(
         &self,
-        image: Image,
+        image: &Image,
         position: HeaderImagePosition,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
@@ -1089,9 +1124,10 @@ impl Worksheet {
                 &*image.inner.lock().unwrap(),
                 xlsx::HeaderImagePosition::from(position),
             ),
-        }?;
+        };
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         })
     }
     /// Set the page setup option to scale the header/footer with the document.
@@ -1115,9 +1151,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .set_header_footer_scale_with_doc(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page setup option to align the header/footer with the margins.
@@ -1141,9 +1178,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .set_header_footer_align_with_page(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page margins.
@@ -1179,9 +1217,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .set_margins(left, right, top, bottom, header, footer),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the first page number when printing.
@@ -1207,9 +1246,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => lock
                 .add_chartsheet()
                 .set_print_first_page_number(page_number),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page setup option to set the print scale.
@@ -1233,9 +1273,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_scale(scale),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_scale(scale),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Fit the printed area to a specific number of pages both vertically and
@@ -1279,9 +1320,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_print_fit_to_pages(width, height)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Center the printed page horizontally.
@@ -1305,9 +1347,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_print_center_horizontally(enable)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Center the printed page vertically.
@@ -1331,9 +1374,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_print_center_vertically(enable)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the option to turn on/off the screen gridlines.
@@ -1353,9 +1397,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_screen_gridlines(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_screen_gridlines(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page setup option to turn on printed gridlines.
@@ -1378,9 +1423,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_gridlines(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_gridlines(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page setup option to print in black and white.
@@ -1404,9 +1450,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_print_black_and_white(enable)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page setup option to print in draft quality.
@@ -1423,9 +1470,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_draft(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_draft(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the page setup option to print the row and column headers on the
@@ -1446,9 +1494,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_headings(enable),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_headings(enable),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Autofit the worksheet column widths to the widest data in the column,
@@ -1489,9 +1538,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().autofit(),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().autofit(),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the maximum autofit width for worksheet columns.
@@ -1519,9 +1569,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().set_autofit_max_width(max_width)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Autofit the worksheet columns up to a maximum width.
@@ -1546,9 +1597,10 @@ impl Worksheet {
             WorksheetAccessor::AddChartsheet => {
                 lock.add_chartsheet().autofit_to_max_width(max_width)
             }
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the worksheet name used in VBA macros.
@@ -1588,9 +1640,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_vba_name(name),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_vba_name(name),
-        }?;
+        };
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         })
     }
     /// Set the default string used for NaN values.
@@ -1613,9 +1666,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_nan_value(value),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_nan_value(value),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the default string used for Infinite values.
@@ -1640,9 +1694,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_infinity_value(value),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_infinity_value(value),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Set the default string used for negative Infinite values.
@@ -1668,9 +1723,10 @@ impl Worksheet {
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_neg_infinity_value(value),
             WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_neg_infinity_value(value),
-        }
+        };
         Worksheet {
             parent: Arc::clone(&self.parent),
+            accessor: self.accessor,
         }
     }
     /// Get the local instance DXF id for a format.
@@ -1687,7 +1743,7 @@ impl Worksheet {
     ///
     /// `format` - The {@link Format} instance to register.
     #[wasm_bindgen(js_name = "formatDxfIndex", skip_jsdoc)]
-    pub fn format_dxf_index(&self, format: Format) -> u32 {
+    pub fn format_dxf_index(&self, format: &Format) -> u32 {
         let mut lock = self.parent.lock().unwrap();
         match self.accessor {
             WorksheetAccessor::AddWorksheet => lock

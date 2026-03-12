@@ -1,5 +1,7 @@
 use crate::wrapper::ChartFont;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::ChartLayout;
+use crate::wrapper::ChartLegendPosition;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -35,6 +37,27 @@ impl ChartLegend {
             parent: Arc::clone(&self.parent),
         }
     }
+    /// Set the chart legend position.
+    ///
+    /// Set the position of the legend on the chart. The available positions in
+    /// Excel are:
+    ///
+    /// The equivalent positions in `rust_xlsxwriter` charts are defined by
+    /// {@link ChartLegendPosition}. The default chart position in Excel is to have
+    /// the legend at the right.
+    ///
+    /// # Parameters
+    ///
+    /// `position` - the {@link ChartLegendPosition} position value.
+    #[wasm_bindgen(js_name = "setPosition", skip_jsdoc)]
+    pub fn set_position(&self, position: ChartLegendPosition) -> ChartLegend {
+        let mut lock = self.parent.lock().unwrap();
+        lock.legend()
+            .set_position(xlsx::ChartLegendPosition::from(position));
+        ChartLegend {
+            parent: Arc::clone(&self.parent),
+        }
+    }
     /// Set the chart legend as overlaid on the chart.
     ///
     /// In the Excel "Format Legend" dialog there is a default option of "Show
@@ -65,9 +88,40 @@ impl ChartLegend {
     ///
     /// - `layout`: A {@link ChartLayout} struct reference.
     #[wasm_bindgen(js_name = "setLayout", skip_jsdoc)]
-    pub fn set_layout(&self, layout: ChartLayout) -> ChartLegend {
+    pub fn set_layout(&self, layout: &ChartLayout) -> ChartLegend {
         let mut lock = self.parent.lock().unwrap();
-        lock.legend().set_layout(&layout.inner);
+        lock.legend().set_layout(&*layout.inner.lock().unwrap());
+        ChartLegend {
+            parent: Arc::clone(&self.parent),
+        }
+    }
+    /// Set the formatting properties for a chart legend.
+    ///
+    /// Set the formatting properties for a chart legend via a {@link ChartFormat}
+    /// object or a sub struct that implements {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    /// - `set_no_border`: Turn off the border for the chart object.
+    /// - `set_no_border`: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartLegend {
+        let mut lock = self.parent.lock().unwrap();
+        lock.legend().set_format(&mut *format.inner.lock().unwrap());
         ChartLegend {
             parent: Arc::clone(&self.parent),
         }
@@ -90,9 +144,9 @@ impl ChartLegend {
     /// `font` - A {@link ChartFont} struct reference to represent the font
     /// properties.
     #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
-    pub fn set_font(&self, font: ChartFont) -> ChartLegend {
+    pub fn set_font(&self, font: &ChartFont) -> ChartLegend {
         let mut lock = self.parent.lock().unwrap();
-        lock.legend().set_font(&font.inner);
+        lock.legend().set_font(&*font.inner.lock().unwrap());
         ChartLegend {
             parent: Arc::clone(&self.parent),
         }

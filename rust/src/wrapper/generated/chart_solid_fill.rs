@@ -28,6 +28,13 @@ impl ChartSolidFill {
             inner: Arc::new(Mutex::new(xlsx::ChartSolidFill::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartSolidFill {
+        ChartSolidFill {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the color of a solid fill.
     ///
     /// # Parameters

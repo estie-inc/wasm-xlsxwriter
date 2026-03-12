@@ -28,6 +28,13 @@ impl ShapeFont {
             inner: Arc::new(Mutex::new(xlsx::ShapeFont::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ShapeFont {
+        ShapeFont {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the bold property for the font of a shape element.
     #[wasm_bindgen(js_name = "setBold", skip_jsdoc)]
     pub fn set_bold(&self) -> ShapeFont {

@@ -1,4 +1,11 @@
 use crate::wrapper::Color;
+use crate::wrapper::FontScheme;
+use crate::wrapper::FormatAlign;
+use crate::wrapper::FormatBorder;
+use crate::wrapper::FormatDiagonalBorder;
+use crate::wrapper::FormatPattern;
+use crate::wrapper::FormatScript;
+use crate::wrapper::FormatUnderline;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -23,6 +30,13 @@ impl Format {
             inner: Arc::new(Mutex::new(xlsx::Format::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Format {
+        Format {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Merge two formats into a new combined Format.
     ///
     /// The method returns a new Format object that is a combination of two
@@ -37,7 +51,7 @@ impl Format {
     ///
     /// - `other`: A Format object to merge with the primary Format.
     #[wasm_bindgen(js_name = "merge", skip_jsdoc)]
-    pub fn merge(&self, other: Format) -> Format {
+    pub fn merge(&self, other: &Format) -> Format {
         let lock = self.inner.lock().unwrap();
         lock.merge(&*other.inner.lock().unwrap());
         Format {
@@ -228,6 +242,34 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the Format font scheme property.
+    ///
+    /// This method can be used to indicate that a font is part of a theme using
+    /// {@link FontScheme#Body}. The theme must also contain the appropriate font
+    /// for this to work.
+    ///
+    /// This method can also be used to indicate that a font is not part of a
+    /// theme, for example, if you wished to use a "Calibri" font that is not
+    /// connected to the theme and which will not change if the theme is
+    /// changed.
+    ///
+    /// See also
+    /// {@link Workbook#useCustomTheme} and
+    /// {@link Workbook#setDefaultFormat}.
+    ///
+    /// # Parameters
+    ///
+    /// - `scheme`: The {@link FontScheme} property.
+    #[wasm_bindgen(js_name = "setFontScheme", skip_jsdoc)]
+    pub fn set_font_scheme(&self, scheme: FontScheme) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_font_scheme(xlsx::FontScheme::from(scheme));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the Format font family property.
     ///
     /// Set the font family. This is usually an integer in the range 1-4. This
@@ -264,12 +306,71 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the underline properties for a format.
+    ///
+    /// The difference between a normal underline and an "accounting" underline
+    /// is that a normal underline only underlines the text/number in a cell
+    /// whereas an accounting underline underlines the entire cell width.
+    ///
+    /// # Parameters
+    ///
+    /// - `underline`: The underline type defined by a {@link FormatUnderline} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setUnderline", skip_jsdoc)]
+    pub fn set_underline(&self, underline: FormatUnderline) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_underline(xlsx::FormatUnderline::from(underline));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the Format font strikethrough property.
     #[wasm_bindgen(js_name = "setFontStrikethrough", skip_jsdoc)]
     pub fn set_font_strikethrough(&self) -> Format {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_font_strikethrough();
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the Format font super/subscript property.
+    ///
+    /// This feature is generally only useful when using a font in a "rich"
+    /// string. See
+    /// {@link write_rich_string}.
+    ///
+    /// # Parameters
+    ///
+    /// - `font_script`: The font superscript or subscript property via a
+    ///   {@link FormatScript} enum.
+    #[wasm_bindgen(js_name = "setFontScript", skip_jsdoc)]
+    pub fn set_font_script(&self, font_script: FormatScript) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_font_script(xlsx::FormatScript::from(font_script));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the Format alignment properties.
+    ///
+    /// This method is used to set the horizontal and vertical data alignment
+    /// within a cell.
+    ///
+    /// # Parameters
+    ///
+    /// - `align`: The vertical and or horizontal alignment direction as
+    ///   defined by the {@link FormatAlign} enum.
+    #[wasm_bindgen(js_name = "setAlign", skip_jsdoc)]
+    pub fn set_align(&self, align: FormatAlign) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_align(xlsx::FormatAlign::from(align));
         *lock = inner;
         Format {
             inner: Arc::clone(&self.inner),
@@ -375,6 +476,28 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the Format pattern property.
+    ///
+    /// Set the pattern for a cell. The most commonly used pattern is
+    /// {@link FormatPattern#Solid}.
+    ///
+    /// To set the pattern colors see {@link Format#setBackgroundColor} and
+    /// {@link Format#setForegroundColor}.
+    ///
+    /// # Parameters
+    ///
+    /// - `pattern`: The pattern property defined by a {@link FormatPattern} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setPattern", skip_jsdoc)]
+    pub fn set_pattern(&self, pattern: FormatPattern) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_pattern(xlsx::FormatPattern::from(pattern));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the Format pattern background color property.
     ///
     /// The `set_background_color` method can be used to set the background
@@ -416,6 +539,30 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the Format border property.
+    ///
+    /// Set the cell border style. Individual border elements can be configured
+    /// using the following methods with the same parameters:
+    ///
+    /// - {@link Format#setBorderTop}
+    /// - {@link Format#setBorderLeft}
+    /// - {@link Format#setBorderRight}
+    /// - {@link Format#setBorderColor}
+    ///
+    /// # Parameters
+    ///
+    /// - `border`: The border property as defined by a {@link FormatBorder} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setBorder", skip_jsdoc)]
+    pub fn set_border(&self, border: FormatBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border(xlsx::FormatBorder::from(border));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the Format border color property.
     ///
     /// Set the cell border color. Individual border elements can be configured
@@ -440,6 +587,24 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the cell top border style.
+    ///
+    /// See {@link Format#setBorder} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `border`: The border property as defined by a {@link FormatBorder} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setBorderTop", skip_jsdoc)]
+    pub fn set_border_top(&self, border: FormatBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_top(xlsx::FormatBorder::from(border));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the cell top border color.
     ///
     /// See {@link Format#setBorderColor} for details.
@@ -453,6 +618,24 @@ impl Format {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_border_top_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell bottom border style.
+    ///
+    /// See {@link Format#setBorder} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `border`: The border property as defined by a {@link FormatBorder} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setBorderBottom", skip_jsdoc)]
+    pub fn set_border_bottom(&self, border: FormatBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_bottom(xlsx::FormatBorder::from(border));
         *lock = inner;
         Format {
             inner: Arc::clone(&self.inner),
@@ -476,6 +659,24 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the cell left border style.
+    ///
+    /// See {@link Format#setBorder} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `border`: The border property as defined by a {@link FormatBorder} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setBorderLeft", skip_jsdoc)]
+    pub fn set_border_left(&self, border: FormatBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_left(xlsx::FormatBorder::from(border));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the cell left border color.
     ///
     /// See {@link Format#setBorderColor} for details.
@@ -489,6 +690,24 @@ impl Format {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_border_left_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell right border style.
+    ///
+    /// See {@link Format#setBorder} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `border`: The border property as defined by a {@link FormatBorder} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setBorderRight", skip_jsdoc)]
+    pub fn set_border_right(&self, border: FormatBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_right(xlsx::FormatBorder::from(border));
         *lock = inner;
         Format {
             inner: Arc::clone(&self.inner),
@@ -512,6 +731,26 @@ impl Format {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the Format border diagonal property.
+    ///
+    /// Set the cell border diagonal line style. This method should be used in
+    /// conjunction with the {@link Format#setBorderDiagonalType} method to
+    /// set the diagonal type.
+    ///
+    /// # Parameters
+    ///
+    /// - `border`: The border property as defined by a {@link FormatBorder} enum
+    ///   value.
+    #[wasm_bindgen(js_name = "setBorderDiagonal", skip_jsdoc)]
+    pub fn set_border_diagonal(&self, border: FormatBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_diagonal(xlsx::FormatBorder::from(border));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the cell diagonal border color.
     ///
     /// See {@link Format#setBorderDiagonal} for details.
@@ -525,6 +764,24 @@ impl Format {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_border_diagonal_color(xlsx::Color::from(color));
+        *lock = inner;
+        Format {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the cell diagonal border direction type.
+    ///
+    /// See {@link Format#setBorderDiagonal} for details.
+    ///
+    /// # Parameters
+    ///
+    /// - `border_type`: The diagonal border type as defined by a
+    ///   {@link FormatDiagonalBorder} enum value.
+    #[wasm_bindgen(js_name = "setBorderDiagonalType", skip_jsdoc)]
+    pub fn set_border_diagonal_type(&self, border_type: FormatDiagonalBorder) -> Format {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_border_diagonal_type(xlsx::FormatDiagonalBorder::from(border_type));
         *lock = inner;
         Format {
             inner: Arc::clone(&self.inner),

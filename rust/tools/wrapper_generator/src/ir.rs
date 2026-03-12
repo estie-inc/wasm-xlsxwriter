@@ -24,6 +24,8 @@ pub struct AnalyzedStruct {
     pub constructor: Option<AnalyzedConstructor>,
     pub methods: Vec<AnalyzedMethod>,
     pub doc: Option<String>,
+    /// Whether the inner type implements Clone (enables deep_clone generation)
+    pub has_clone: bool,
 }
 
 /// Whether a struct is a standalone type or a proxy owned by a parent.
@@ -142,8 +144,11 @@ pub enum ParamType {
     /// `Option<T>`
     OptionOf(Box<ParamType>),
     /// A reference to another wasm-xlsxwriter wrapper type (e.g., "&ChartFont")
-    /// Converted via `&param.into()` during codegen
+    /// Converted via `&param.inner` during codegen
     RefWrappedType(String),
+    /// A mutable reference to another wasm-xlsxwriter wrapper type (e.g., "&mut ChartFormat")
+    /// Converted via `&mut param.inner` during codegen
+    MutRefWrappedType(String),
     /// `Vec<T>` but the upstream type is `&[T]` (slice reference)
     RefSliceOf(Box<ParamType>),
     /// An unresolved type (requires custom handling)
@@ -197,7 +202,8 @@ impl AnalyzedStruct {
     }
 
     /// Returns only methods that can be auto-generated (excludes those with Unknown type
-    /// parameters, and also excludes ConsumeSelf patterns that cannot be safely generated)
+    /// parameters, ConsumeSelf patterns that cannot be safely generated, and methods
+    /// returning references to other types which can't be wrapped in wasm_bindgen)
     pub fn generatable_methods(&self) -> impl Iterator<Item = &AnalyzedMethod> {
         let can_consume_self = self.has_default || self.consume_self_default.is_some();
         self.auto_methods()
@@ -213,6 +219,9 @@ impl AnalyzedStruct {
                 }
                 true
             })
+            // Methods returning references to other types (e.g., &mut ChartAxis) can't
+            // be safely returned from wasm_bindgen functions due to lifetime constraints
+            .filter(|m| !matches!(&m.returns, ReturnKind::Other(s) if s.contains('&')))
     }
 }
 
@@ -226,6 +235,26 @@ impl AnalyzedEnum {
 }
 
 impl ParamType {
+    /// Parse a ParamType from override string (e.g., "Str", "Bool", "U32", "Color")
+    pub fn from_override_str(s: &str) -> ParamType {
+        match s {
+            "Bool" => ParamType::Bool,
+            "U8" => ParamType::U8,
+            "U16" => ParamType::U16,
+            "U32" => ParamType::U32,
+            "U64" => ParamType::U64,
+            "I8" => ParamType::I8,
+            "I16" => ParamType::I16,
+            "I32" => ParamType::I32,
+            "I64" => ParamType::I64,
+            "F32" => ParamType::F32,
+            "F64" => ParamType::F64,
+            "Usize" => ParamType::Usize,
+            "Str" => ParamType::Str,
+            other => ParamType::WrappedType(other.to_string()),
+        }
+    }
+
     /// The type name used in the wasm-bindgen signature
     pub fn to_rust_type_str(&self) -> String {
         match self {
@@ -246,7 +275,7 @@ impl ParamType {
             ParamType::VecOf(inner) => format!("Vec<{}>", inner.to_rust_type_str()),
             ParamType::RefSliceOf(inner) => format!("Vec<{}>", inner.to_rust_type_str()),
             ParamType::OptionOf(inner) => format!("Option<{}>", inner.to_rust_type_str()),
-            ParamType::RefWrappedType(name) => name.clone(),
+            ParamType::RefWrappedType(name) | ParamType::MutRefWrappedType(name) => name.clone(),
             ParamType::Unknown(s) => s.clone(),
         }
     }
@@ -296,6 +325,7 @@ mod tests {
             constructor: None,
             methods: vec![],
             doc: None,
+            has_clone: true,
         };
         assert!(!s.is_proxy());
     }
@@ -322,6 +352,7 @@ mod tests {
             constructor: None,
             methods: vec![],
             doc: None,
+            has_clone: true,
         };
         assert!(s.is_proxy());
     }
@@ -355,6 +386,7 @@ mod tests {
                 },
             ],
             doc: None,
+            has_clone: true,
         };
         let auto: Vec<_> = s.auto_methods().collect();
         assert_eq!(auto.len(), 1);
@@ -408,6 +440,18 @@ mod tests {
         assert_eq!(
             ParamType::VecOf(Box::new(ParamType::U8)).to_rust_type_str(),
             "Vec<u8>"
+        );
+    }
+
+    #[test]
+    fn param_type_from_override_str() {
+        assert_eq!(ParamType::from_override_str("Str"), ParamType::Str);
+        assert_eq!(ParamType::from_override_str("Bool"), ParamType::Bool);
+        assert_eq!(ParamType::from_override_str("U32"), ParamType::U32);
+        assert_eq!(ParamType::from_override_str("F64"), ParamType::F64);
+        assert_eq!(
+            ParamType::from_override_str("Color"),
+            ParamType::WrappedType("Color".into())
         );
     }
 }

@@ -31,6 +31,13 @@ impl TableColumn {
             inner: Arc::new(Mutex::new(xlsx::TableColumn::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> TableColumn {
+        TableColumn {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the header caption for a table column.
     ///
     /// Excel uses default captions such as `Column 1`, `Column 2`, etc., for

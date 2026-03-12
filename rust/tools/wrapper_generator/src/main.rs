@@ -188,14 +188,26 @@ fn load_and_analyze(
 
     let ov = overrides::load_overrides(overrides_path)?;
 
-    // Filter out structs/enums listed in skip_structs/skip_enums
-    analyzed.structs.retain(|s| !ov.should_skip_struct(&s.name));
+    // Filter out enums listed in skip_enums (doc-hidden types are already excluded during analysis)
     analyzed.enums.retain(|e| !ov.should_skip_enum(&e.name));
 
     for s in &mut analyzed.structs {
         ov.apply_to_methods(&s.name, &mut s.methods);
-        if let Some(expr) = ov.get_consume_self_default(&s.name) {
-            s.consume_self_default = Some(expr.to_string());
+    }
+
+    // Re-evaluate proxy roles: if all parent methods creating the relationship are
+    // *skipped* (not custom), the child should be standalone. E.g., ChartSeries is standalone
+    // despite Chart::add_series returning &mut ChartSeries, because add_series is skipped.
+    // Custom methods preserve the proxy relationship (the accessor is hand-written).
+    for s in &mut analyzed.structs {
+        if let StructRole::Proxy { parent_name, accessors } = &s.role {
+            let all_skipped = accessors.iter().all(|acc| {
+                ov.get(parent_name, &acc.parent_method)
+                    .is_some_and(|o| matches!(o, MethodOverride::Skip(_)))
+            });
+            if all_skipped {
+                s.role = StructRole::Standalone;
+            }
         }
     }
 

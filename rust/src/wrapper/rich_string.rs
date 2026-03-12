@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex, MutexGuard};
 
-use super::format::Format;
+use super::Format;
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
@@ -31,7 +31,7 @@ impl RichString {
     #[wasm_bindgen]
     pub fn append(&self, format: &Format, string: String) -> RichString {
         let mut inner = self.inner.lock().unwrap();
-        inner.push((format.lock().clone(), string));
+        inner.push((format.inner.lock().unwrap().clone(), string));
         RichString {
             inner: Arc::clone(&self.inner),
         }

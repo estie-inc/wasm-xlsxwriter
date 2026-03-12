@@ -1,3 +1,4 @@
+use crate::wrapper::ChartGradientFillType;
 use crate::wrapper::ChartGradientStop;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
@@ -31,6 +32,31 @@ impl ChartGradientFill {
             inner: Arc::new(Mutex::new(xlsx::ChartGradientFill::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartGradientFill {
+        ChartGradientFill {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+    /// Set the type of the gradient fill.
+    ///
+    /// Change the default type of the gradient fill to one of the styles
+    /// supported by Excel.
+    ///
+    /// The four gradient types supported by Excel are:
+    ///
+    /// # Parameters
+    ///
+    /// `gradient_type`: a {@link ChartGradientFillType} enum value.
+    #[wasm_bindgen(js_name = "setType", skip_jsdoc)]
+    pub fn set_type(&self, gradient_type: ChartGradientFillType) -> ChartGradientFill {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_type(xlsx::ChartGradientFillType::from(gradient_type));
+        ChartGradientFill {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the gradient stops (data points) for a chart gradient fill.
     ///
     /// A gradient stop, encapsulated by the {@link ChartGradientStop} struct,
@@ -53,7 +79,7 @@ impl ChartGradientFill {
         lock.set_gradient_stops(
             &gradient_stops
                 .iter()
-                .map(|x| x.inner.clone())
+                .map(|x| x.inner.lock().unwrap().clone())
                 .collect::<Vec<_>>(),
         );
         ChartGradientFill {

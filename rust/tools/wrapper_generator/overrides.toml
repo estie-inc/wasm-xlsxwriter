@@ -2,34 +2,10 @@
 # Override auto-generation behavior on a per-method basis.
 
 # ========================================
-# skip_structs: internal types not part of the public API
-# (exposed by --document-hidden-items but not useful for WASM wrappers)
-# ========================================
-[skip_structs]
-"App" = "internal XML writer"
-"ContentTypes" = "internal XML writer"
-"Core" = "internal XML writer"
-"Custom" = "internal XML writer"
-"Drawing" = "internal XML writer"
-"FeaturePropertyBag" = "internal XML writer"
-"Metadata" = "internal XML writer"
-"Packager" = "internal file packager"
-"Relationship" = "internal XML writer"
-"RichValue" = "internal XML writer"
-"RichValueRel" = "internal XML writer"
-"RichValueStructure" = "internal XML writer"
-"RichValueTypes" = "internal XML writer"
-"SharedStrings" = "internal XML writer"
-"SharedStringsTable" = "internal XML writer"
-"Styles" = "internal XML writer"
-"Theme" = "internal XML writer"
-"Vml" = "internal XML writer"
-"VmlInfo" = "internal type"
-
-# ========================================
-# skip_enums: internal enums not part of the public API
+# skip_enums: enums that cannot be auto-generated
 # ========================================
 [skip_enums]
+# XlsxError is separately defined in the WASM wrapper with custom error handling
 "XlsxError" = "separately defined in the WASM wrapper"
 
 # ========================================
@@ -56,6 +32,15 @@
 "Worksheet::get_min_col" = "returns internal ColNum type alias"
 # Internal validation helpers
 "*.is_valid" = "internal validation only"
+# char type not supported in wasm_bindgen
+"ChartDataLabel::set_separator" = "char type not supported in wasm_bindgen"
+# IntoCustomProperty is implemented for primitives (&str, bool, f64, i32), not CustomProperty
+"DocProperties::set_custom_property" = "IntoCustomProperty needs polymorphic JS API"
+# Vec<Color> where Color is tsify enum doesn't satisfy wasm_bindgen's ErasableGeneric trait
+"ChartSeries::set_point_colors" = "Vec<tsify enum> not supported by wasm_bindgen"
+# IntoFilterData is implemented for f64/i32/&str primitives, not FilterData — needs custom polymorphic impl
+"FilterCondition::add_list_filter" = "IntoFilterData needs polymorphic JS API"
+"FilterCondition::add_custom_filter" = "IntoFilterData needs polymorphic JS API"
 
 # ========================================
 # custom: methods using hand-written implementations instead of auto-generation
@@ -73,18 +58,27 @@
 "Workbook::push_worksheet" = "index tracking"
 "Workbook::save_to_buffer_sync" = "WASM-specific API"
 "Worksheet::add_conditional_format" = "trait object not possible, custom implementation"
-
-# ========================================
-# consume_self_default: dummy constructor expression for types without Default
-# that have ConsumeSelf methods (e.g. `fn set_foo(self, ...) -> Self`)
-# ========================================
-[consume_self_default]
-"Note" = 'xlsx::Note::new("")'
-"Formula" = 'xlsx::Formula::new("")'
-"Url" = 'xlsx::Url::new("")'
+# Chart accessor methods return proxy objects - need hand-written impl
+"Chart::title" = "returns ChartTitle proxy object"
+"Chart::legend" = "returns ChartLegend proxy object"
+"Chart::x_axis" = "returns ChartAxis proxy object"
+"Chart::y_axis" = "returns ChartAxis proxy object"
+"Chart::x2_axis" = "returns ChartAxis proxy object"
+"Chart::y2_axis" = "returns ChartAxis proxy object"
+# ChartRange custom constructors (no upstream new())
+"ChartRange::set_range" = "custom constructor helper"
 
 # ========================================
 # rename: override names on the JS side
 # ========================================
 [rename]
-"*.deep_clone" = "clone"
+
+# ========================================
+# param_type: override specific parameter types
+# Format: "Struct::method::param" = "ParamType"
+# ========================================
+[param_type]
+# IntoChartRange params that should use &str for simpler JS API
+"ChartSeries::set_name::name" = "Str"
+"ChartTitle::set_name::name" = "Str"
+"ChartAxis::set_name::name" = "Str"

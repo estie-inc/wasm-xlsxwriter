@@ -1,4 +1,5 @@
 use crate::wrapper::ChartFont;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -27,6 +28,13 @@ impl ChartDataTable {
     pub fn new() -> ChartDataTable {
         ChartDataTable {
             inner: Arc::new(Mutex::new(xlsx::ChartDataTable::new())),
+        }
+    }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartDataTable {
+        ChartDataTable {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
         }
     }
     /// Turn on/off the horizontal border lines for a chart data table.
@@ -89,6 +97,38 @@ impl ChartDataTable {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the formatting properties for a chart data table.
+    ///
+    /// Set the formatting properties for a chart data table via a {@link ChartFormat}
+    /// object or a sub struct that implements {@link IntoChartFormat}.
+    ///
+    /// The formatting that can be applied via a {@link ChartFormat} object are:
+    ///
+    /// - {@link ChartFormat#setSolidFill}: Set the {@link ChartSolidFill} properties.
+    /// - {@link ChartFormat#setPatternFill}: Set the {@link ChartPatternFill} properties.
+    /// - {@link ChartFormat#setGradientFill}: Set the {@link ChartGradientFill} properties.
+    /// - {@link ChartFormat#setNoFill}: Turn off the fill for the chart object.
+    /// - {@link ChartFormat#setLine}: Set the {@link ChartLine} properties.
+    /// - {@link ChartFormat#setBorder}: Set the {@link ChartBorder} properties.
+    ///   A synonym for {@link ChartLine} depending on context.
+    /// - {@link ChartFormat#setNoLine}: Turn off the line for the chart object.
+    /// - {@link ChartFormat#setNoBorder}: Turn off the border for the chart object.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartDataTable {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.set_format(&mut *format.inner.lock().unwrap());
+        *lock = inner;
+        ChartDataTable {
+            inner: Arc::clone(&self.inner),
+        }
+    }
     /// Set the font properties of a chart data table.
     ///
     /// Set the font properties of a chart data table using a {@link ChartFont}
@@ -111,10 +151,10 @@ impl ChartDataTable {
     /// `font`: A {@link ChartFont} struct reference to represent the font
     /// properties.
     #[wasm_bindgen(js_name = "setFont", skip_jsdoc)]
-    pub fn set_font(&self, font: ChartFont) -> ChartDataTable {
+    pub fn set_font(&self, font: &ChartFont) -> ChartDataTable {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
-        inner = inner.set_font(&font.inner);
+        inner = inner.set_font(&*font.inner.lock().unwrap());
         *lock = inner;
         ChartDataTable {
             inner: Arc::clone(&self.inner),

@@ -1,15 +1,35 @@
 // Parse upstream rustdoc-json (crate-inspector) and convert to IR
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::ir::{
     AnalyzedConstructor, AnalyzedCrate, AnalyzedEnum, AnalyzedMethod, AnalyzedParam,
     AnalyzedStruct, AnalyzedVariant, Accessor, MethodOverride, ParamType, ReceiverKind, ReturnKind,
     StructRole, VariantKind,
 };
+
 use crate::utils::{process_doc_comment, process_struct_doc_comment, to_camel_case};
-use crate_inspector::{CrateItem, EnumItem, FunctionItem, HasName, StructItem};
-use rustdoc_types::{GenericArg, GenericArgs, GenericBound, GenericParamDefKind, WherePredicate};
+use crate_inspector::{CrateItem, EnumItem, FunctionItem, StructItem};
+use rustdoc_types::{GenericArg, GenericArgs, GenericBound, GenericParamDefKind, Id, WherePredicate};
+
+/// Detect `#[doc(hidden)]` at the item level.
+fn is_doc_hidden(item: &rustdoc_types::Item) -> bool {
+    item.attrs.iter().any(|attr| {
+        matches!(attr, rustdoc_types::Attribute::Other(s) if s.contains("doc(hidden)"))
+    })
+}
+
+/// Build the set of module IDs that are publicly re-exported from the crate root
+/// via `pub use module::*`. Structs and enums in these modules are part of the
+/// crate's public API; others are internal types exposed only by `--document-hidden-items`.
+fn build_public_module_ids(krate: &crate_inspector::Crate) -> HashSet<Id> {
+    // krate.uses() already filters to root module use items
+    krate
+        .uses()
+        .filter(|use_item| use_item.is_public() && use_item.is_glob())
+        .filter_map(|use_item| use_item.inner().id)
+        .collect()
+}
 
 /// Information about a child type accessed from a parent.
 struct ParentInfo {
@@ -78,17 +98,18 @@ fn path_to_short_name(path: &str) -> &str {
 
 pub fn analyze_crate(krate: &crate_inspector::Crate) -> AnalyzedCrate {
     let parent_child = build_parent_child_graph(krate);
+    let public_modules = build_public_module_ids(krate);
 
     let structs: Vec<AnalyzedStruct> = krate
         .all_structs()
         .filter(|s| s.is_crate_item() && s.is_public())
-        .filter_map(|s| analyze_struct(&s, &parent_child))
+        .filter_map(|s| analyze_struct(&s, &parent_child, &public_modules))
         .collect();
 
     let enums: Vec<AnalyzedEnum> = krate
         .all_enums()
         .filter(|e| e.is_crate_item() && e.is_public())
-        .map(|e| analyze_enum(&e))
+        .filter_map(|e| analyze_enum(&e, &public_modules))
         .collect();
 
     AnalyzedCrate { structs, enums }
@@ -97,7 +118,21 @@ pub fn analyze_crate(krate: &crate_inspector::Crate) -> AnalyzedCrate {
 fn analyze_struct(
     struct_item: &StructItem<'_>,
     parent_child: &HashMap<String, ParentInfo>,
+    public_modules: &HashSet<Id>,
 ) -> Option<AnalyzedStruct> {
+    // Skip internal types: only process structs from publicly re-exported modules
+    let in_public_module = struct_item
+        .module()
+        .map(|m| public_modules.contains(&m.item().id))
+        .unwrap_or(false);
+    if !in_public_module {
+        return None;
+    }
+    // Also skip any items explicitly marked #[doc(hidden)]
+    if is_doc_hidden(struct_item.item()) {
+        return None;
+    }
+
     let name = struct_item.name().to_string();
 
     let role = if let Some(info) = parent_child.get(&name) {
@@ -124,6 +159,13 @@ fn analyze_struct(
             .unwrap_or(false)
     });
 
+    let has_clone = struct_item.trait_impls().any(|impl_item| {
+        impl_item
+            .trait_()
+            .map(|t| path_to_short_name(&t.path) == "Clone")
+            .unwrap_or(false)
+    });
+
     let doc = struct_item
         .item()
         .docs
@@ -144,7 +186,7 @@ fn analyze_struct(
 
             if func_name == "new" && !func.is_method() {
                 constructor = Some(analyze_constructor(&func));
-            } else if func.is_method() && func_name != "new" {
+            } else if func.is_method() && func_name != "new" && func_name != "deep_clone" {
                 if let Some(method) = analyze_method(&func, &name) {
                     methods.push(method);
                 }
@@ -152,15 +194,53 @@ fn analyze_struct(
         }
     }
 
+    // Auto-generate consume_self_default for types that:
+    // - don't implement Default
+    // - have a `new(...)` constructor with only zero-value-able params
+    let consume_self_default = if !has_default {
+        constructor
+            .as_ref()
+            .and_then(|ctor| auto_consume_self_default(&name, ctor))
+    } else {
+        None
+    };
+
     Some(AnalyzedStruct {
         name,
         role,
         has_default,
-        consume_self_default: None,
+        consume_self_default,
         constructor,
         methods,
         doc,
+        has_clone,
     })
+}
+
+/// Generate a dummy constructor expression for types without Default that need
+/// ConsumeSelf method support via `mem::replace`. Only succeeds when all constructor
+/// params have known zero values; returns None if any param type is ambiguous.
+fn auto_consume_self_default(name: &str, ctor: &AnalyzedConstructor) -> Option<String> {
+    let mut args = Vec::new();
+    for param in &ctor.params {
+        match &param.ty {
+            ParamType::Str => args.push(r#""""#.to_string()),
+            ParamType::Bool => args.push("false".to_string()),
+            ParamType::U8
+            | ParamType::U16
+            | ParamType::U32
+            | ParamType::U64
+            | ParamType::I8
+            | ParamType::I16
+            | ParamType::I32
+            | ParamType::I64
+            | ParamType::F32
+            | ParamType::F64
+            | ParamType::Usize => args.push("0".to_string()),
+            _ => return None,
+        }
+    }
+    Some(format!("xlsx::{}::new({})", name, args.join(", ")))
 }
 
 fn analyze_constructor(func: &FunctionItem<'_>) -> AnalyzedConstructor {
@@ -373,6 +453,9 @@ pub(crate) fn resolve_param_type(
             } else if has_asref_str_bound(bounds) {
                 // `impl AsRef<str>` -> &str
                 ParamType::Str
+            } else if let Some(param_type) = extract_into_trait_type(bounds) {
+                // `impl IntoChartFormat` -> MutRefWrappedType, `impl IntoChartRange` -> RefWrappedType
+                param_type
             } else {
                 ParamType::Unknown(type_to_string(ty))
             }
@@ -382,6 +465,9 @@ pub(crate) fn resolve_param_type(
             // Search generic parameters for an `Into<T>` bound
             if let Some(inner_type) = resolve_generic_into(name, generics) {
                 resolve_param_type(inner_type, generics)
+            } else if let Some(param_type) = resolve_generic_into_trait(name, generics) {
+                // T: IntoChartFormat -> MutRefWrappedType, T: IntoChartRange -> RefWrappedType
+                param_type
             } else {
                 ParamType::Unknown(name.clone())
             }
@@ -389,6 +475,61 @@ pub(crate) fn resolve_param_type(
 
         other => ParamType::Unknown(type_to_string(other)),
     }
+}
+
+/// Extract a ParamType from traits like `IntoChartRange` or `IntoChartFormat`.
+/// `IntoChartFormat` maps to `MutRefWrappedType` because its impl is for `&mut ChartFormat`.
+/// Other `IntoXxx` traits map to `RefWrappedType` (default immutable ref).
+fn extract_into_trait_type(bounds: &[GenericBound]) -> Option<ParamType> {
+    // Traits whose impls are for `&mut T` rather than `&T`
+    const MUT_REF_TRAITS: &[&str] = &["IntoChartFormat"];
+
+    for bound in bounds {
+        if let GenericBound::TraitBound { trait_: path, .. } = bound {
+            let short = path_to_short_name(&path.path);
+            if let Some(rest) = short.strip_prefix("Into") {
+                if !rest.is_empty() && rest.chars().next().is_some_and(|c| c.is_uppercase()) {
+                    return if MUT_REF_TRAITS.contains(&short) {
+                        Some(ParamType::MutRefWrappedType(rest.to_string()))
+                    } else {
+                        Some(ParamType::RefWrappedType(rest.to_string()))
+                    };
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Search generic parameters or where clauses for `T: IntoXxx` and return the corresponding ParamType.
+fn resolve_generic_into_trait(
+    name: &str,
+    generics: &rustdoc_types::Generics,
+) -> Option<ParamType> {
+    for param in &generics.params {
+        if param.name != name {
+            continue;
+        }
+        if let GenericParamDefKind::Type { bounds, .. } = &param.kind {
+            if let Some(param_type) = extract_into_trait_type(bounds) {
+                return Some(param_type);
+            }
+        }
+    }
+
+    for predicate in &generics.where_predicates {
+        if let WherePredicate::BoundPredicate { type_, bounds, .. } = predicate {
+            if let rustdoc_types::Type::Generic(pred_name) = type_ {
+                if pred_name == name {
+                    if let Some(param_type) = extract_into_trait_type(bounds) {
+                        return Some(param_type);
+                    }
+                }
+            }
+        }
+    }
+
+    None
 }
 
 /// Check if bounds contain `AsRef<str>`.
@@ -469,7 +610,20 @@ fn resolve_generic_into<'a>(
     None
 }
 
-fn analyze_enum(enum_item: &EnumItem<'_>) -> AnalyzedEnum {
+fn analyze_enum(enum_item: &EnumItem<'_>, public_modules: &HashSet<Id>) -> Option<AnalyzedEnum> {
+    // Skip internal types: only process enums from publicly re-exported modules
+    let in_public_module = enum_item
+        .module()
+        .map(|m| public_modules.contains(&m.item().id))
+        .unwrap_or(false);
+    if !in_public_module {
+        return None;
+    }
+    // Also skip any items explicitly marked #[doc(hidden)]
+    if is_doc_hidden(enum_item.item()) {
+        return None;
+    }
+
     let name = enum_item.name().to_string();
 
     let has_default = enum_item.trait_impls().any(|impl_item| {
@@ -539,12 +693,12 @@ fn analyze_enum(enum_item: &EnumItem<'_>) -> AnalyzedEnum {
         })
         .collect();
 
-    AnalyzedEnum {
+    Some(AnalyzedEnum {
         name,
         variants,
         has_default,
         doc,
-    }
+    })
 }
 
 /// Convert a type to a human-readable string (fallback for Unknown types).

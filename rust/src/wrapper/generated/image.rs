@@ -21,6 +21,13 @@ impl Image {
             inner: Arc::new(Mutex::new(xlsx::Image::new(path))),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> Image {
+        Image {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Get the width of the image used for the size calculations in Excel.
     ///
     /// Note, this gets the actual pixel width of the image and not the

@@ -1,11 +1,6 @@
 import {
   ExcelDateTime,
   Format,
-  FormatAlign,
-  FormatBorder,
-  FormatDiagonalBorder,
-  FormatScript,
-  FormatUnderline,
   Formula,
   Workbook,
 } from "../web";
@@ -30,13 +25,13 @@ describe("xlsx-wasm test", () => {
     worksheet.writeNumberWithFormat(0, 2, 123, format1);
     worksheet.writeBooleanWithFormat(0, 3, true, format1);
 
-    const format2 = new Format().setRotation(45).setAlign(FormatAlign.Center);
+    const format2 = new Format().setRotation(45).setAlign("Center");
     worksheet.writeStringWithFormat(0, 4, "rot45", format2);
 
     const format3 = new Format().setFontStrikethrough();
     worksheet.writeStringWithFormat(0, 5, "strikethrough", format3);
 
-    const format4 = new Format().setUnderline(FormatUnderline.Single);
+    const format4 = new Format().setUnderline("Single");
     worksheet.writeStringWithFormat(0, 6, "underline single", format4);
 
     const format5 = new Format().setIndent(2);
@@ -103,27 +98,27 @@ describe("xlsx-wasm test", () => {
     const worksheet = workbook.addWorksheet();
 
     // Act
-    const format1 = new Format().setBorder(FormatBorder.Dotted);
+    const format1 = new Format().setBorder("Dotted");
     worksheet.writeStringWithFormat(0, 0, "AAA", format1);
 
     const format2 = new Format()
       .setBorderColor({ RGB: 0x00ff00 })
-      .setBorderBottom(FormatBorder.Dashed);
+      .setBorderBottom("Dashed");
     worksheet.writeStringWithFormat(0, 1, "BBB", format2);
 
     const format3 = new Format()
-      .setBorderTop(FormatBorder.Dotted)
-      .setBorderRight(FormatBorder.Dashed);
+      .setBorderTop("Dotted")
+      .setBorderRight("Dashed");
     worksheet.writeStringWithFormat(0, 2, "CCC", format3);
 
     const format4 = new Format()
-      .setBorderDiagonal(FormatBorder.Dotted)
+      .setBorderDiagonal("Dotted")
       .setBorderDiagonalColor({ RGB: 0xff0000 });
     worksheet.writeStringWithFormat(0, 3, "DDD", format4);
 
     const format5 = new Format()
-      .setBorderDiagonal(FormatBorder.Thick)
-      .setBorderDiagonalType(FormatDiagonalBorder.BorderUp);
+      .setBorderDiagonal("Thick")
+      .setBorderDiagonalType("BorderUp");
     worksheet.writeStringWithFormat(0, 4, "EEE", format5);
 
     // Assert
@@ -216,8 +211,8 @@ describe("xlsx-wasm test", () => {
     format
       .setFontName("Meiryo UI")
       .setFontSize(16)
-      .setAlign(FormatAlign.Center)
-      .setBorder(FormatBorder.Thin);
+      .setAlign("Center")
+      .setBorder("Thin");
 
     worksheet.writeWithFormat(0, 0, "foo", format);
     worksheet.writeWithFormat(1, 1, "bar", format);
@@ -258,8 +253,8 @@ describe("xlsx-wasm test", () => {
 
     // Act
     const worksheet = workbook.addWorksheet();
-    const superscript = new Format().setFontScript(FormatScript.Superscript);
-    const subscript = new Format().setFontScript(FormatScript.Subscript);
+    const superscript = new Format().setFontScript("Superscript");
+    const subscript = new Format().setFontScript("Subscript");
 
     worksheet.writeStringWithFormat(0, 0, "superscript", superscript);
     worksheet.writeStringWithFormat(0, 1, "subscript", subscript);

@@ -95,6 +95,13 @@ pub struct ExcelDateTime {
 
 #[wasm_bindgen]
 impl ExcelDateTime {
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ExcelDateTime {
+        ExcelDateTime {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Convert the `ExcelDateTime` to an Excel serial date.
     ///
     /// An Excel serial date is a f64 number that represents the time since the

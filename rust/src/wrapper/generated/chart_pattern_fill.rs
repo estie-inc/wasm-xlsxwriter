@@ -1,3 +1,4 @@
+use crate::wrapper::ChartPatternFillType;
 use crate::wrapper::Color;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
@@ -27,6 +28,28 @@ impl ChartPatternFill {
     pub fn new() -> ChartPatternFill {
         ChartPatternFill {
             inner: Arc::new(Mutex::new(xlsx::ChartPatternFill::new())),
+        }
+    }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartPatternFill {
+        ChartPatternFill {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+    /// Set the pattern of a Chart pattern fill element.
+    ///
+    /// See the example above.
+    ///
+    /// # Parameters
+    ///
+    /// - `pattern`: The pattern property defined by a {@link ChartPatternFillType} enum value.
+    #[wasm_bindgen(js_name = "setPattern", skip_jsdoc)]
+    pub fn set_pattern(&self, pattern: ChartPatternFillType) -> ChartPatternFill {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_pattern(xlsx::ChartPatternFillType::from(pattern));
+        ChartPatternFill {
+            inner: Arc::clone(&self.inner),
         }
     }
     /// Set the background color of a Chart pattern fill element.

@@ -24,9 +24,13 @@ pub fn param_type_tokens(ty: &ParamType) -> TokenStream {
         ParamType::F64 => quote! { f64 },
         ParamType::Usize => quote! { usize },
         ParamType::Str => quote! { &str },
-        ParamType::WrappedType(name) | ParamType::RefWrappedType(name) => {
+        ParamType::WrappedType(name) => {
             let ident = format_ident!("{}", name);
             quote! { #ident }
+        }
+        ParamType::RefWrappedType(name) | ParamType::MutRefWrappedType(name) => {
+            let ident = format_ident!("{}", name);
+            quote! { &#ident }
         }
         ParamType::VecOf(inner) | ParamType::RefSliceOf(inner) => {
             let inner_tokens = param_type_tokens(inner);
@@ -74,6 +78,9 @@ pub fn param_call_tokens(name: &str, ty: &ParamType, ctx: &CodegenContext) -> To
                 struct_inner_ref_tokens(&name_ident, type_name, ctx)
             }
         }
+        ParamType::MutRefWrappedType(type_name) => {
+            struct_inner_mut_ref_tokens(&name_ident, type_name, ctx)
+        }
         ParamType::VecOf(inner) => match inner.as_ref() {
             ParamType::WrappedType(type_name) => {
                 vec_of_wrapped_tokens(&name_ident, type_name, ctx)
@@ -102,6 +109,16 @@ fn struct_inner_owned_tokens(
     } else {
         quote! { #name_ident.inner.lock().unwrap().clone() }
     }
+}
+
+fn struct_inner_mut_ref_tokens(
+    name_ident: &proc_macro2::Ident,
+    _type_name: &str,
+    _ctx: &CodegenContext,
+) -> TokenStream {
+    // MutRefWrappedType params are passed by shared ref (&T) in wasm_bindgen,
+    // so we always go through Arc<Mutex<>> to get mutable access
+    quote! { &mut *#name_ident.inner.lock().unwrap() }
 }
 
 fn struct_inner_ref_tokens(

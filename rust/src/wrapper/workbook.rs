@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::XlsxError,
-    wrapper::{format::Format, worksheet::Worksheet, DocProperties},
+    wrapper::{worksheet::Worksheet, DocProperties, Format},
 };
 
 use super::WasmResult;
@@ -315,7 +315,7 @@ impl Workbook {
         col_width: u32,
     ) -> WasmResult<()> {
         let mut workbook = self.inner.lock().unwrap();
-        workbook.set_default_format(&format.lock().clone(), row_height, col_width)?;
+        workbook.set_default_format(&format.inner.lock().unwrap().clone(), row_height, col_width)?;
         Ok(())
     }
 }

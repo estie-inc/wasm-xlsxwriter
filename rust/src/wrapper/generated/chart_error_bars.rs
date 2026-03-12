@@ -1,4 +1,5 @@
 use crate::wrapper::ChartErrorBarsDirection;
+use crate::wrapper::ChartFormat;
 use crate::wrapper::WasmResult;
 use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
@@ -29,6 +30,13 @@ impl ChartErrorBars {
             inner: Arc::new(Mutex::new(xlsx::ChartErrorBars::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartErrorBars {
+        ChartErrorBars {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the direction of a Chart series error bars.
     ///
     /// The {@link ChartErrorBarsDirection} enum defines the error bar direction for a
@@ -54,6 +62,27 @@ impl ChartErrorBars {
     pub fn set_end_cap(&self, enable: bool) -> ChartErrorBars {
         let mut lock = self.inner.lock().unwrap();
         lock.set_end_cap(enable);
+        ChartErrorBars {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the formatting properties for a chart series error bars.
+    ///
+    /// Set the formatting properties for a chart series via a {@link ChartFormat}
+    /// object or a sub struct that implements {@link IntoChartFormat}.
+    ///
+    /// For error bars the only formatting supported by Excel is
+    /// {@link ChartFormat#setLine}.
+    ///
+    /// # Parameters
+    ///
+    /// `format`: A {@link ChartFormat} struct reference or a sub struct that will
+    /// convert into a `ChartFormat` instance. See the docs for
+    /// {@link IntoChartFormat} for details.
+    #[wasm_bindgen(js_name = "setFormat", skip_jsdoc)]
+    pub fn set_format(&self, format: &ChartFormat) -> ChartErrorBars {
+        let mut lock = self.inner.lock().unwrap();
+        lock.set_format(&mut *format.inner.lock().unwrap());
         ChartErrorBars {
             inner: Arc::clone(&self.inner),
         }

@@ -57,6 +57,13 @@ impl ChartLayout {
             inner: Arc::new(Mutex::new(xlsx::ChartLayout::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ChartLayout {
+        ChartLayout {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the offset for a layout.
     ///
     /// With reference to the figure below the layout units are calculated as

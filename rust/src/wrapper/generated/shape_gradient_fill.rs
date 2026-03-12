@@ -32,6 +32,13 @@ impl ShapeGradientFill {
             inner: Arc::new(Mutex::new(xlsx::ShapeGradientFill::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ShapeGradientFill {
+        ShapeGradientFill {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the type of the gradient fill.
     ///
     /// Change the default type of the gradient fill to one of the styles

@@ -1,62 +1,17 @@
-pub(crate) mod chart_axis;
-pub(crate) mod chart_data_label;
-pub(crate) mod chart_data_label_position;
-pub(crate) mod chart_empty_cells;
-pub(crate) mod chart_font;
-pub(crate) mod chart_format;
-pub(crate) mod chart_legend;
-pub(crate) mod chart_legend_position;
-pub(crate) mod chart_marker;
-pub(crate) mod chart_marker_type;
-pub(crate) mod chart_point;
-pub(crate) mod chart_range;
-pub(crate) mod chart_series;
-pub(crate) mod chart_solid_fill;
-pub(crate) mod chart_title;
-pub(crate) mod chart_type;
-pub(crate) mod chart_line;
-pub(crate) mod chart_layout;
-pub(crate) mod chart_pattern_fill;
-pub(crate) mod chart_pattern_fill_type;
-pub(crate) mod chart_gradient_fill;
-pub(crate) mod chart_gradient_fill_type;
-pub(crate) mod chart_gradient_stop;
+// Companion file for Chart: convenience constructors and proxy accessor methods.
+// The struct definition and auto-generated methods are in generated/chart.rs.
+
+mod chart_range;
 
 use std::sync::{Arc, Mutex};
 
-use chart_axis::ChartAxis;
-use chart_empty_cells::ChartEmptyCells;
-use chart_legend::ChartLegend;
-use chart_series::ChartSeries;
-use chart_title::ChartTitle;
-use chart_type::ChartType;
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-pub struct Chart {
-    pub(crate) inner: Arc<Mutex<xlsx::Chart>>,
-}
+use crate::wrapper::{Chart, ChartAxis, ChartAxisAccessor, ChartLegend, ChartTitle};
 
 #[wasm_bindgen]
 impl Chart {
-    /// Create a new Chart object.
-    ///
-    /// Create a new Chart object that can be inserted into a worksheet.
-    ///
-    /// @param {u8} chart_type - The type of the chart.
-    /// @returns {Chart} - The Chart object.
-    #[wasm_bindgen(constructor)]
-    pub fn new(chart_type: ChartType) -> Chart {
-        Chart {
-            inner: Arc::new(Mutex::new(xlsx::Chart::new(chart_type.into()))),
-        }
-    }
-
-    pub(crate) fn lock(&self) -> std::sync::MutexGuard<'_, xlsx::Chart> {
-        self.inner.lock().unwrap()
-    }
-
     #[wasm_bindgen(js_name = "newArea")]
     pub fn new_area() -> Chart {
         Chart {
@@ -78,7 +33,7 @@ impl Chart {
         }
     }
 
-    #[wasm_bindgen(js_name = "newColumnStacked")]
+    #[wasm_bindgen(js_name = "newDoughnut")]
     pub fn new_doughnut() -> Chart {
         Chart {
             inner: Arc::new(Mutex::new(xlsx::Chart::new_doughnut())),
@@ -120,117 +75,49 @@ impl Chart {
         }
     }
 
-    // FIXME: add_series not supported for ownership reasons
-
-    #[wasm_bindgen(js_name = "pushSeries")]
-    pub fn push_series(&self, series: &ChartSeries) -> Chart {
-        let mut chart = self.inner.lock().unwrap();
-        let series = series.inner.lock().unwrap();
-        chart.push_series(&series);
-        Chart {
-            inner: Arc::clone(&self.inner),
-        }
-    }
-
     #[wasm_bindgen(js_name = "title")]
     pub fn title(&self) -> ChartTitle {
         ChartTitle {
-            chart: Arc::clone(&self.inner),
+            parent: Arc::clone(&self.inner),
         }
     }
 
-    /// Set a user defined name for a chart.
-    ///
-    /// By default Excel names charts as "Chart 1", "Chart 2", etc. This name
-    /// shows up in the formula bar and can be used to find or reference a
-    /// chart.
-    ///
-    /// The set_name() method allows you to give the chart a user
-    /// defined name.
-    ///
-    /// @param {string} name - A user defined name for the chart.
-    /// @returns {Chart} - The Chart object.
-    #[wasm_bindgen(js_name = "setName", skip_jsdoc)]
-    pub fn set_name(&self, name: &str) -> Chart {
-        let mut chart = self.inner.lock().unwrap();
-        chart.set_name(name);
-        Chart {
-            inner: Arc::clone(&self.inner),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setAltText", skip_jsdoc)]
-    pub fn set_alt_text(&self, alt_text: &str) -> Chart {
-        let mut chart = self.inner.lock().unwrap();
-        chart.set_alt_text(alt_text);
-        Chart {
-            inner: Arc::clone(&self.inner),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setWidth", skip_jsdoc)]
-    pub fn set_width(&self, width: u32) -> Chart {
-        let mut chart = self.inner.lock().unwrap();
-        chart.set_width(width);
-        Chart {
-            inner: Arc::clone(&self.inner),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "setHeight", skip_jsdoc)]
-    pub fn set_height(&self, height: u32) -> Chart {
-        let mut chart = self.inner.lock().unwrap();
-        chart.set_height(height);
-        Chart {
-            inner: Arc::clone(&self.inner),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "xAxis", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "xAxis")]
     pub fn x_axis(&self) -> ChartAxis {
         ChartAxis {
-            inner: Arc::clone(&self.inner),
-            axis: chart_axis::AxisType::X,
+            parent: Arc::clone(&self.inner),
+            accessor: ChartAxisAccessor::XAxis,
         }
     }
 
-    #[wasm_bindgen(js_name = "yAxis", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "yAxis")]
     pub fn y_axis(&self) -> ChartAxis {
         ChartAxis {
-            inner: Arc::clone(&self.inner),
-            axis: chart_axis::AxisType::Y,
+            parent: Arc::clone(&self.inner),
+            accessor: ChartAxisAccessor::YAxis,
         }
     }
 
-    #[wasm_bindgen(js_name = "x2Axis", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "x2Axis")]
     pub fn x2_axis(&self) -> ChartAxis {
         ChartAxis {
-            inner: Arc::clone(&self.inner),
-            axis: chart_axis::AxisType::X2,
+            parent: Arc::clone(&self.inner),
+            accessor: ChartAxisAccessor::X2Axis,
         }
     }
 
-    #[wasm_bindgen(js_name = "y2Axis", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "y2Axis")]
     pub fn y2_axis(&self) -> ChartAxis {
         ChartAxis {
-            inner: Arc::clone(&self.inner),
-            axis: chart_axis::AxisType::Y2,
+            parent: Arc::clone(&self.inner),
+            accessor: ChartAxisAccessor::Y2Axis,
         }
     }
 
-    #[wasm_bindgen(js_name = "legend", skip_jsdoc)]
+    #[wasm_bindgen(js_name = "legend")]
     pub fn legend(&self) -> ChartLegend {
         ChartLegend {
-            chart: Arc::clone(&self.inner),
-        }
-    }
-
-    #[wasm_bindgen(js_name = "showEmptyCellsAs", skip_jsdoc)]
-    pub fn show_empty_cells_as(&self, option: ChartEmptyCells) -> Chart {
-        let mut chart = self.inner.lock().unwrap();
-        chart.show_empty_cells_as(option.into());
-        Chart {
-            inner: Arc::clone(&self.inner),
+            parent: Arc::clone(&self.inner),
         }
     }
 }

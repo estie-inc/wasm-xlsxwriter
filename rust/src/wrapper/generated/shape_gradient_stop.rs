@@ -35,4 +35,11 @@ impl ShapeGradientStop {
             ))),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ShapeGradientStop {
+        ShapeGradientStop {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
 }

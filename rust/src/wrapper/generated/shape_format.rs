@@ -43,6 +43,13 @@ impl ShapeFormat {
             inner: Arc::new(Mutex::new(xlsx::ShapeFormat::new())),
         }
     }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ShapeFormat {
+        ShapeFormat {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
     /// Set the line formatting for a shape element.
     ///
     /// See the {@link ShapeLine} struct for details on the line properties that can
@@ -52,7 +59,7 @@ impl ShapeFormat {
     ///
     /// - `line`: A {@link ShapeLine} struct reference.
     #[wasm_bindgen(js_name = "setLine", skip_jsdoc)]
-    pub fn set_line(&self, line: ShapeLine) -> ShapeFormat {
+    pub fn set_line(&self, line: &ShapeLine) -> ShapeFormat {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_line(&*line.inner.lock().unwrap());
@@ -84,7 +91,7 @@ impl ShapeFormat {
     ///
     /// - `fill`: A {@link ShapeSolidFill} struct reference.
     #[wasm_bindgen(js_name = "setSolidFill", skip_jsdoc)]
-    pub fn set_solid_fill(&self, fill: ShapeSolidFill) -> ShapeFormat {
+    pub fn set_solid_fill(&self, fill: &ShapeSolidFill) -> ShapeFormat {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_solid_fill(&*fill.inner.lock().unwrap());
@@ -116,7 +123,7 @@ impl ShapeFormat {
     ///
     /// - `fill`: A {@link ShapePatternFill} struct reference.
     #[wasm_bindgen(js_name = "setPatternFill", skip_jsdoc)]
-    pub fn set_pattern_fill(&self, fill: ShapePatternFill) -> ShapeFormat {
+    pub fn set_pattern_fill(&self, fill: &ShapePatternFill) -> ShapeFormat {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_pattern_fill(&*fill.inner.lock().unwrap());
@@ -134,7 +141,7 @@ impl ShapeFormat {
     ///
     /// - `fill`: A {@link ShapeGradientFill} struct reference.
     #[wasm_bindgen(js_name = "setGradientFill", skip_jsdoc)]
-    pub fn set_gradient_fill(&self, fill: ShapeGradientFill) -> ShapeFormat {
+    pub fn set_gradient_fill(&self, fill: &ShapeGradientFill) -> ShapeFormat {
         let mut lock = self.inner.lock().unwrap();
         let mut inner = std::mem::take(&mut *lock);
         inner = inner.set_gradient_fill(&*fill.inner.lock().unwrap());
