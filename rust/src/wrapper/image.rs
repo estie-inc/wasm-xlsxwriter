@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::{Image, ObjectMovement, WasmResult};
+use crate::wrapper::{Image, ObjectMovement, Url, WasmResult};
 
 /// Since xlsx::Image has no default value, we use the smallest valid PNG as a placeholder.
 /// https://evanhahn.com/worlds-smallest-png/
@@ -183,5 +183,16 @@ impl Image {
     #[wasm_bindgen(js_name = "setScaleToSize", skip_jsdoc)]
     pub fn set_scale_to_size(&self, width: u32, height: u32, keep_aspect_ratio: bool) -> Image {
         impl_method!(self.set_scale_to_size(width, height, keep_aspect_ratio));
+    }
+
+    #[wasm_bindgen(js_name = "setUrl", skip_jsdoc)]
+    pub fn set_url(&self, url: &Url) -> WasmResult<Image> {
+        let mut lock = self.inner.lock().unwrap();
+        let inner = std::mem::replace(&mut *lock, new_dummy_image());
+        let inner = inner.set_url(url.inner.lock().unwrap().clone())?;
+        *lock = inner;
+        Ok(Image {
+            inner: Arc::clone(&self.inner),
+        })
     }
 }

@@ -27,6 +27,10 @@ struct RawOverrides {
     /// (used when the companion file provides a custom constructor)
     #[serde(default)]
     skip_constructors: HashMap<String, String>,
+    /// Explicit consume_self_default expressions for types without Default
+    /// e.g. "Shape" = "xlsx::Shape::textbox()"
+    #[serde(default)]
+    consume_self_default: HashMap<String, String>,
 }
 
 /// Parsed result of overrides.toml. Holds per-method override information.
@@ -39,6 +43,8 @@ pub struct Overrides {
     param_types: HashMap<String, String>,
     /// Struct names whose auto-generated constructor should be suppressed
     pub skip_constructors: HashSet<String>,
+    /// Explicit consume_self_default expressions: "StructName" -> "xlsx::Struct::factory()"
+    pub consume_self_default: HashMap<String, String>,
 }
 
 pub fn load_overrides(path: &Path) -> anyhow::Result<Overrides> {
@@ -72,6 +78,7 @@ impl Overrides {
             skip_enums: raw.skip_enums.into_keys().collect(),
             param_types: raw.param_type,
             skip_constructors: raw.skip_constructors.into_keys().collect(),
+            consume_self_default: raw.consume_self_default,
         }
     }
 

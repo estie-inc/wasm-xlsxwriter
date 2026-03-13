@@ -204,6 +204,9 @@ fn load_and_analyze(
 
     for s in &mut analyzed.structs {
         ov.apply_to_methods(&s.name, &mut s.methods);
+        if let Some(expr) = ov.consume_self_default.get(&s.name) {
+            s.consume_self_default = Some(expr.clone());
+        }
     }
 
     // Re-evaluate proxy roles: if all parent methods creating the relationship are

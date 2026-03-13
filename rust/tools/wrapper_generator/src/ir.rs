@@ -47,6 +47,9 @@ pub struct Accessor {
     pub parent_method: String,
     /// The JS-side name (e.g., "xAxis")
     pub js_name: String,
+    /// For indexed accessors like `worksheet_from_index(usize)`.
+    /// When set, the proxy stores a key field and passes it to the accessor.
+    pub key_type: Option<ParamType>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -210,11 +213,9 @@ impl AnalyzedStruct {
             .filter(|m| m.params.iter().all(|p| !p.ty.has_unknown()))
             .filter(move |m| {
                 if matches!(m.receiver, ReceiverKind::ConsumeSelf) {
-                    // ConsumeSelf + SelfType can be handled via mem::take (Default) or mem::replace (custom default)
-                    if matches!(m.returns, ReturnKind::SelfType) {
+                    if matches!(m.returns, ReturnKind::SelfType | ReturnKind::ResultSelf) {
                         return can_consume_self;
                     }
-                    // ConsumeSelf + other return types: no safe generation pattern exists
                     return false;
                 }
                 true
@@ -340,10 +341,12 @@ mod tests {
                     Accessor {
                         parent_method: "x_axis".into(),
                         js_name: "xAxis".into(),
+                        key_type: None,
                     },
                     Accessor {
                         parent_method: "y_axis".into(),
                         js_name: "yAxis".into(),
+                        key_type: None,
                     },
                 ],
             },

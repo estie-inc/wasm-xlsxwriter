@@ -34,12 +34,18 @@ fn build_public_module_ids(krate: &crate_inspector::Crate) -> HashSet<Id> {
 /// Information about a child type accessed from a parent.
 struct ParentInfo {
     parent_name: String,
-    /// (parent method name, child type name)
-    accessors: Vec<(String, String)>,
+    accessors: Vec<AccessorInfo>,
+}
+
+struct AccessorInfo {
+    method_name: String,
+    child_name: String,
+    /// For indexed accessors (e.g., `worksheet_from_index(usize) -> Result<&mut T>`)
+    key_type: Option<ParamType>,
 }
 
 /// Scan all structs' public methods and record those returning `&mut OtherStruct`
-/// as parent-to-child relationships.
+/// (or `Result<&mut OtherStruct, _>` with a key parameter) as parent-to-child relationships.
 fn build_parent_child_graph(
     krate: &crate_inspector::Crate,
 ) -> HashMap<String, ParentInfo> {
@@ -59,29 +65,18 @@ fn build_parent_child_graph(
                 let Some(output) = func.output() else {
                     continue;
                 };
-                // Look for methods that return `&mut OtherStruct`
-                if let rustdoc_types::Type::BorrowedRef {
-                    is_mutable: true,
-                    type_: inner,
-                    ..
-                } = output
-                {
-                    if let rustdoc_types::Type::ResolvedPath(path) = inner.as_ref() {
-                        let child_name = path_to_short_name(&path.path).to_string();
-                        if child_name == parent_name {
-                            continue;
-                        }
-                        let method_name = func.name().to_string();
-                        let entry = child_to_parent
-                            .entry(child_name.clone())
-                            .or_insert_with(|| ParentInfo {
-                                parent_name: parent_name.clone(),
-                                accessors: Vec::new(),
-                            });
-                        // Record multiple accessors that return the same child
-                        if entry.parent_name == parent_name {
-                            entry.accessors.push((method_name, child_name));
-                        }
+
+                // Try to extract the child type from the return type
+                let detected = detect_proxy_accessor(output, &func, &parent_name);
+                if let Some(info) = detected {
+                    let entry = child_to_parent
+                        .entry(info.child_name.clone())
+                        .or_insert_with(|| ParentInfo {
+                            parent_name: parent_name.clone(),
+                            accessors: Vec::new(),
+                        });
+                    if entry.parent_name == parent_name {
+                        entry.accessors.push(info);
                     }
                 }
             }
@@ -89,6 +84,88 @@ fn build_parent_child_graph(
     }
 
     child_to_parent
+}
+
+/// Detect proxy accessor patterns:
+/// 1. `fn accessor(&mut self) -> &mut ChildType` (standard proxy)
+/// 2. `fn accessor(&mut self, key: primitive) -> Result<&mut ChildType, _>` (indexed proxy)
+fn detect_proxy_accessor(
+    output: &rustdoc_types::Type,
+    func: &crate_inspector::FunctionItem<'_>,
+    parent_name: &str,
+) -> Option<AccessorInfo> {
+    // Pattern 1: direct `&mut OtherStruct`
+    if let Some(child_name) = extract_mut_ref_type(output) {
+        if child_name != parent_name {
+            return Some(AccessorInfo {
+                method_name: func.name().to_string(),
+                child_name,
+                key_type: None,
+            });
+        }
+    }
+
+    // Pattern 2: `Result<&mut OtherStruct, _>` with a key parameter
+    if let rustdoc_types::Type::ResolvedPath(path) = output {
+        if path_to_short_name(&path.path) == "Result" {
+            if let Some(args) = &path.args {
+                if let GenericArgs::AngleBracketed { args: ab_args, .. } = args.as_ref() {
+                    if let Some(GenericArg::Type(first_type)) = ab_args.first() {
+                        if let Some(child_name) = extract_mut_ref_type(first_type) {
+                            if child_name != parent_name {
+                                // Check for a single non-self primitive parameter
+                                if let Some(key_ty) = extract_single_primitive_param(func) {
+                                    return Some(AccessorInfo {
+                                        method_name: func.name().to_string(),
+                                        child_name,
+                                        key_type: Some(key_ty),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn extract_mut_ref_type(ty: &rustdoc_types::Type) -> Option<String> {
+    if let rustdoc_types::Type::BorrowedRef {
+        is_mutable: true,
+        type_: inner,
+        ..
+    } = ty
+    {
+        if let rustdoc_types::Type::ResolvedPath(path) = inner.as_ref() {
+            return Some(path_to_short_name(&path.path).to_string());
+        }
+    }
+    None
+}
+
+/// If the method has exactly one non-self parameter and it's a primitive, return its ParamType.
+fn extract_single_primitive_param(func: &crate_inspector::FunctionItem<'_>) -> Option<ParamType> {
+    let inputs: Vec<_> = func.inputs().collect();
+    let non_self: Vec<_> = inputs.iter().filter(|(name, _)| name != "self").collect();
+    if non_self.len() != 1 {
+        return None;
+    }
+    let (_, ty) = non_self[0];
+    match ty {
+        rustdoc_types::Type::Primitive(p) => match p.as_str() {
+            "usize" => Some(ParamType::Usize),
+            "u8" => Some(ParamType::U8),
+            "u16" => Some(ParamType::U16),
+            "u32" => Some(ParamType::U32),
+            "u64" => Some(ParamType::U64),
+            "i32" => Some(ParamType::I32),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 /// Return the last segment, e.g. `"rust_xlsxwriter::format::Format"` -> `"Format"`.
@@ -136,12 +213,16 @@ fn analyze_struct(
     let name = struct_item.name().to_string();
 
     let role = if let Some(info) = parent_child.get(&name) {
+        let has_indexed = info.accessors.iter().any(|a| a.key_type.is_some());
         let accessors = info
             .accessors
             .iter()
-            .map(|(method_name, _)| Accessor {
-                parent_method: method_name.clone(),
-                js_name: to_camel_case(method_name),
+            // When an indexed accessor exists, factory methods (add_xxx) are not accessors
+            .filter(|acc| !has_indexed || acc.key_type.is_some())
+            .map(|acc| Accessor {
+                parent_method: acc.method_name.clone(),
+                js_name: to_camel_case(&acc.method_name),
+                key_type: acc.key_type.clone(),
             })
             .collect();
         StructRole::Proxy {

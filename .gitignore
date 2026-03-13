@@ -7,3 +7,7 @@
 !test/expected/*.xlsx
 
 **/dist
+
+# OS / IDE
+.DS_Store
+.idea/

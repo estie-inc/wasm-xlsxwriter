@@ -9,6 +9,11 @@
 "XlsxError" = "separately defined in the WASM wrapper"
 # Custom(Formula) variant uses Arc<Mutex> struct — hand-written with Custom(String) instead
 "TableFunction" = "Custom variant uses Formula struct, hand-written with String"
+# Custom(ChartRange, ChartRange) variant needs wrapper struct refs — hand-written subset in chart_error_bars.rs
+"ChartErrorBarsType" = "Custom variant has struct refs, hand-written subset without Custom"
+# Generic enums — hand-written concrete versions in companion files
+"ConditionalFormatCellRule" = "generic enum, concrete version in conditional_format_cell.rs"
+"DataValidationRule" = "generic enum, concrete versions (Number/String) in data_validation.rs"
 
 # ========================================
 # skip: methods unnecessary or impossible in WASM
@@ -38,11 +43,6 @@
 "ChartDataLabel::set_separator" = "char type not supported in wasm_bindgen"
 # IntoCustomProperty is implemented for primitives (&str, bool, f64, i32), not CustomProperty
 "DocProperties::set_custom_property" = "IntoCustomProperty needs polymorphic JS API"
-# Vec<Color> where Color is tsify enum doesn't satisfy wasm_bindgen's ErasableGeneric trait
-"ChartSeries::set_point_colors" = "Vec<tsify enum> not supported by wasm_bindgen"
-# IntoFilterData is implemented for f64/i32/&str primitives, not FilterData — needs custom polymorphic impl
-"FilterCondition::add_list_filter" = "IntoFilterData needs polymorphic JS API"
-"FilterCondition::add_custom_filter" = "IntoFilterData needs polymorphic JS API"
 
 # ========================================
 # custom: methods using hand-written implementations instead of auto-generation
@@ -59,6 +59,11 @@
 "Workbook::add_worksheet" = "index tracking"
 "Workbook::push_worksheet" = "index tracking"
 "Workbook::save_to_buffer_sync" = "WASM-specific API"
+"Worksheet::write_rich_string" = "RichString conversion"
+"Worksheet::write_rich_string_with_format" = "RichString conversion"
+"Worksheet::write_datetime" = "accepts JS Date via JsValue polymorphism"
+"Worksheet::write_datetime_with_format" = "accepts JS Date via JsValue polymorphism"
+"Worksheet::write_url_with_options" = "Option<&Format> not supported in wasm_bindgen"
 "Worksheet::add_conditional_format" = "trait object not possible, custom implementation"
 # Chart accessor methods return proxy objects - need hand-written impl
 "Chart::title" = "returns ChartTitle proxy object"
@@ -67,6 +72,32 @@
 "Chart::y_axis" = "returns ChartAxis proxy object"
 "Chart::x2_axis" = "returns ChartAxis proxy object"
 "Chart::y2_axis" = "returns ChartAxis proxy object"
+"Chart::chart_area" = "returns ChartArea proxy object"
+"Chart::plot_area" = "returns ChartPlotArea proxy object"
+# Vec<&str> not supported by wasm_bindgen, custom impl uses Vec<String>
+"DataValidation::allow_list_strings" = "Vec<&str> not supported by wasm_bindgen"
+# ConsumeSelf + Result without Default, companion provides impl via dummy image
+"Image::set_url" = "ConsumeSelf + Result, uses dummy image for mem::replace"
+# DataValidation: DataValidationRule<T> generic enum needs concrete tsify types
+"DataValidation::allow_whole_number" = "DataValidationRule<i32> generic"
+"DataValidation::allow_whole_number_formula" = "DataValidationRule<Formula> generic"
+"DataValidation::allow_decimal_number" = "DataValidationRule<f64> generic"
+"DataValidation::allow_decimal_number_formula" = "DataValidationRule<Formula> generic"
+"DataValidation::allow_date" = "DataValidationRule<ExcelDateTime> generic"
+"DataValidation::allow_date_formula" = "DataValidationRule<Formula> generic"
+"DataValidation::allow_time" = "DataValidationRule<f64> generic"
+"DataValidation::allow_time_formula" = "DataValidationRule<Formula> generic"
+"DataValidation::allow_text_length" = "DataValidationRule<u32> generic"
+"DataValidation::allow_text_length_formula" = "DataValidationRule<Formula> generic"
+# ConditionalFormatCell: ConditionalFormatCellRule<T> generic enum
+"ConditionalFormatCell::set_rule" = "ConditionalFormatCellRule<T> generic"
+# FilterCondition: IntoFilterData trait polymorphism
+"FilterCondition::add_list_filter" = "IntoFilterData polymorphism via JsValue"
+"FilterCondition::add_custom_filter" = "IntoFilterData polymorphism via JsValue"
+# Vec<Color> tsify enum not supported by wasm_bindgen — custom impl via JsValue
+"ChartSeries::set_point_colors" = "Vec<tsify enum> via serde_wasm_bindgen"
+# ChartErrorBarsType has struct variant — hand-written subset enum
+"ChartErrorBars::set_type" = "ChartErrorBarsType Custom variant has struct refs"
 # ChartRange custom constructors (no upstream new())
 "ChartRange::set_range" = "custom constructor helper"
 
@@ -91,3 +122,12 @@
 [skip_constructors]
 # Image::new takes impl AsRef<Path> (not WASM-compatible); companion provides new(Vec<u8>) via new_from_buffer
 "Image" = "companion provides new(Vec<u8>) via xlsx::Image::new_from_buffer"
+
+# ========================================
+# consume_self_default: dummy expressions for mem::replace on types without Default
+# ========================================
+[consume_self_default]
+"Shape" = "xlsx::Shape::textbox()"
+"FilterCondition" = "xlsx::FilterCondition::new()"
+"ConditionalFormatCell" = "xlsx::ConditionalFormatCell::new()"
+"DataValidation" = "xlsx::DataValidation::new()"

@@ -168,6 +168,59 @@ impl DataValidation {
             inner: Arc::clone(&self.inner),
         }
     }
+    /// Set the title for the input message when the cell is entered.
+    ///
+    /// This option is used to set a title in bold for the input message when a
+    /// data validation cell is entered.
+    ///
+    /// The title is only visible if there is also an input message. See the
+    /// {@link DataValidation#setInputMessage} example below.
+    ///
+    /// # Parameters
+    ///
+    /// - `text`: Title string. Must be less than or equal to the Excel limit
+    ///   of 32 characters.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#DataValidationError} - The length of the title exceeds
+    ///   Excel's limit of 32 characters.
+    #[wasm_bindgen(js_name = "setInputTitle", skip_jsdoc)]
+    pub fn set_input_title(&self, text: &str) -> WasmResult<DataValidation> {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::DataValidation::new());
+        inner = inner.set_input_title(text)?;
+        *lock = inner;
+        Ok(DataValidation {
+            inner: Arc::clone(&self.inner),
+        })
+    }
+    /// Set the input message when a data validation cell is entered.
+    ///
+    /// This option is used to set an input message when a data validation cell
+    /// is entered. This can be used to explain to the user what the data
+    /// validation rules are for the cell.
+    ///
+    /// # Parameters
+    ///
+    /// - `text`: Message string. Must be less than or equal to the Excel limit
+    ///   of 255 characters. The string can contain newlines to split it over
+    ///   several lines.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#DataValidationError} - The length of the message exceeds
+    ///   Excel's limit of 255 characters.
+    #[wasm_bindgen(js_name = "setInputMessage", skip_jsdoc)]
+    pub fn set_input_message(&self, text: &str) -> WasmResult<DataValidation> {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::DataValidation::new());
+        inner = inner.set_input_message(text)?;
+        *lock = inner;
+        Ok(DataValidation {
+            inner: Arc::clone(&self.inner),
+        })
+    }
     /// Toggle option to show an error message when there is a validation error.
     ///
     /// This function is used to toggle the option that controls whether an
@@ -189,6 +242,56 @@ impl DataValidation {
         DataValidation {
             inner: Arc::clone(&self.inner),
         }
+    }
+    /// Set the title for the error message when there is a validation error.
+    ///
+    /// This option is used to set a title in bold for the error message when
+    /// there is a validation error.
+    ///
+    /// # Parameters
+    ///
+    /// - `text`: Title string. Must be less than or equal to the Excel limit
+    ///   of 32 characters.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#DataValidationError} - The length of the title exceeds
+    ///   Excel's limit of 32 characters.
+    #[wasm_bindgen(js_name = "setErrorTitle", skip_jsdoc)]
+    pub fn set_error_title(&self, text: &str) -> WasmResult<DataValidation> {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::DataValidation::new());
+        inner = inner.set_error_title(text)?;
+        *lock = inner;
+        Ok(DataValidation {
+            inner: Arc::clone(&self.inner),
+        })
+    }
+    /// Set the error message when there is a validation error.
+    ///
+    /// This option is used to set an error message when there is a validation
+    /// error. This can be used to explain to the user what the data validation
+    /// rules are for the cell.
+    ///
+    /// # Parameters
+    ///
+    /// - `text`: Message string. Must be less than or equal to the Excel limit
+    ///   of 255 characters. The string can contain newlines to split it over
+    ///   several lines.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#DataValidationError} - The length of the message exceeds
+    ///   Excel's limit of 255 characters.
+    #[wasm_bindgen(js_name = "setErrorMessage", skip_jsdoc)]
+    pub fn set_error_message(&self, text: &str) -> WasmResult<DataValidation> {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::DataValidation::new());
+        inner = inner.set_error_message(text)?;
+        *lock = inner;
+        Ok(DataValidation {
+            inner: Arc::clone(&self.inner),
+        })
     }
     /// Set the style of the error dialog type for a data validation.
     ///

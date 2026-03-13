@@ -1,9 +1,13 @@
 mod chart;
+mod conditional_format_cell;
+mod data_validation;
 mod datetime;
+mod filter_condition;
 mod excel_data;
 pub mod generated;
 mod image;
 mod rich_string;
+mod shape;
 mod utils;
 mod workbook;
 mod worksheet;
@@ -19,7 +23,6 @@ pub(crate) use generated::*;
 // Hand-written types that can't be auto-generated
 pub(crate) use datetime::ExcelDateTime;
 pub(crate) use workbook::Workbook;
-pub(crate) use worksheet::Worksheet;
 
 // This runs once when the wasm module is instantiated
 // https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-rust-exports/start.html

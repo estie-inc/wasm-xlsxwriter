@@ -1,14 +1,16 @@
 // Companion file for Chart: convenience constructors and proxy accessor methods.
 // The struct definition and auto-generated methods are in generated/chart.rs.
 
+mod chart_error_bars;
 mod chart_range;
+mod chart_series;
 
 use std::sync::{Arc, Mutex};
 
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::{Chart, ChartAxis, ChartAxisAccessor, ChartLegend, ChartTitle};
+use crate::wrapper::{Chart, ChartArea, ChartAxis, ChartAxisAccessor, ChartLegend, ChartPlotArea, ChartTitle};
 
 #[wasm_bindgen]
 impl Chart {
@@ -117,6 +119,20 @@ impl Chart {
     #[wasm_bindgen(js_name = "legend")]
     pub fn legend(&self) -> ChartLegend {
         ChartLegend {
+            parent: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "chartArea")]
+    pub fn chart_area(&self) -> ChartArea {
+        ChartArea {
+            parent: Arc::clone(&self.inner),
+        }
+    }
+
+    #[wasm_bindgen(js_name = "plotArea")]
+    pub fn plot_area(&self) -> ChartPlotArea {
+        ChartPlotArea {
             parent: Arc::clone(&self.inner),
         }
     }

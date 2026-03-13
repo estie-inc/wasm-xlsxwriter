@@ -102,6 +102,66 @@ impl ExcelDateTime {
             inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
         }
     }
+    /// Adds to a `ExcelDateTime` date instance with hours, minutes and seconds.
+    ///
+    /// Adds time to a existing `ExcelDateTime` date instance or creates a new
+    /// one if required.
+    ///
+    /// # Parameters
+    ///
+    /// - `hour`: Integer hours in the range 0-23.
+    /// - `min`: Integer minutes in the range 0-59.
+    /// - `sec`: Integer or float seconds in the range 0-59.999. Excel only
+    ///   supports millisecond precision.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#DateTimeRangeError} - One of the values used to create the
+    ///   date or time is outside Excel's allowed ranges.
+    #[wasm_bindgen(js_name = "andHms", skip_jsdoc)]
+    pub fn and_hms(&self, hour: u16, min: u8, sec: f64) -> WasmResult<ExcelDateTime> {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.and_hms(hour, min, sec)?;
+        *lock = inner;
+        Ok(ExcelDateTime {
+            inner: Arc::clone(&self.inner),
+        })
+    }
+    /// Adds to a `ExcelDateTime` date instance with hours, minutes, seconds and
+    /// milliseconds.
+    ///
+    /// Adds time to a existing `ExcelDateTime` date instance or creates a new
+    /// one if required.
+    ///
+    /// # Parameters
+    ///
+    /// - `hour`: Integer hours in the range 0-23.
+    /// - `min`: Integer minutes in the range 0-59.
+    /// - `sec`: Integer seconds in the range 0-59.
+    /// - `milli`: Integer milliseconds in the range 0-999. Excel only supports
+    ///   millisecond precision.
+    ///
+    /// # Errors
+    ///
+    /// - {@link XlsxError#DateTimeRangeError} - One of the values used to create the
+    ///   date or time is outside Excel's allowed ranges.
+    #[wasm_bindgen(js_name = "andHmsMilli", skip_jsdoc)]
+    pub fn and_hms_milli(
+        &self,
+        hour: u16,
+        min: u8,
+        sec: u8,
+        milli: u16,
+    ) -> WasmResult<ExcelDateTime> {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::take(&mut *lock);
+        inner = inner.and_hms_milli(hour, min, sec, milli)?;
+        *lock = inner;
+        Ok(ExcelDateTime {
+            inner: Arc::clone(&self.inner),
+        })
+    }
     /// Convert the `ExcelDateTime` to an Excel serial date.
     ///
     /// An Excel serial date is a f64 number that represents the time since the

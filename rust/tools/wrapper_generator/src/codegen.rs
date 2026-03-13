@@ -248,6 +248,30 @@ fn generate_method(
     };
 
     let body: TokenStream = match (&m.returns, &m.receiver) {
+        (ReturnKind::ResultSelf, ReceiverKind::ConsumeSelf) => {
+            if has_default {
+                quote! {
+                    let mut lock = self.inner.lock().unwrap();
+                    let mut inner = std::mem::take(&mut *lock);
+                    inner = inner.#method_ident(#(#params_call),*)?;
+                    *lock = inner;
+                    Ok(#struct_ident { inner: Arc::clone(&self.inner) })
+                }
+            } else if let Some(default_expr) = consume_self_default {
+                let default_tokens: TokenStream = default_expr
+                    .parse()
+                    .expect("consume_self_default expression should be valid tokens");
+                quote! {
+                    let mut lock = self.inner.lock().unwrap();
+                    let mut inner = std::mem::replace(&mut *lock, #default_tokens);
+                    inner = inner.#method_ident(#(#params_call),*)?;
+                    *lock = inner;
+                    Ok(#struct_ident { inner: Arc::clone(&self.inner) })
+                }
+            } else {
+                unreachable!("ConsumeSelf + ResultSelf without Default or consume_self_default should be filtered by generatable_methods()")
+            }
+        }
         (ReturnKind::ResultSelf, _) => {
             quote! {
                 let mut lock = self.inner.lock().unwrap();
@@ -334,6 +358,7 @@ fn generate_proxy_struct(
     let import_types = collect_import_types(s, &ctx.available_types);
 
     let multi_accessor = accessors.len() > 1;
+    let indexed = accessors.first().is_some_and(|a| a.key_type.is_some());
 
     let imports = generate_imports(name, &import_types);
 
@@ -356,7 +381,13 @@ fn generate_proxy_struct(
         );
     }
 
-    let accessor_field = if multi_accessor {
+    let extra_fields = if indexed {
+        let key_ty = accessors[0].key_type.as_ref().expect("indexed must have key_type");
+        let key_type_tokens: TokenStream = key_ty.to_rust_type_str().parse().expect("valid type");
+        quote! {
+            pub(crate) index: #key_type_tokens,
+        }
+    } else if multi_accessor {
         let accessor_enum_ident = format_ident!("{}Accessor", name);
         quote! {
             pub(crate) accessor: #accessor_enum_ident,
@@ -383,7 +414,7 @@ fn generate_proxy_struct(
         #[wasm_bindgen]
         pub struct #name_ident {
             pub(crate) parent: Arc<Mutex<xlsx::#parent_ident>>,
-            #accessor_field
+            #extra_fields
         }
     };
 
@@ -409,6 +440,7 @@ fn generate_proxy_method(
     let struct_ident = format_ident!("{}", struct_name);
     let method_ident = format_ident!("{}", m.name);
     let js_name = &m.js_name;
+    let indexed = accessors.first().is_some_and(|a| a.key_type.is_some());
 
     let params_sig: Vec<TokenStream> = m
         .params
@@ -438,7 +470,13 @@ fn generate_proxy_method(
         quote! { &self, #(#params_sig),* }
     };
 
-    let accessor_expr: TokenStream = if multi_accessor {
+    let accessor_expr: TokenStream = if indexed {
+        let acc = &accessors[0];
+        let accessor_method = format_ident!("{}", acc.parent_method);
+        quote! {
+            lock.#accessor_method(self.index).unwrap().#method_ident(#(#params_call),*)
+        }
+    } else if multi_accessor {
         let accessor_enum_ident = format_ident!("{}Accessor", struct_name);
         let arms: Vec<TokenStream> = accessors
             .iter()
@@ -463,8 +501,9 @@ fn generate_proxy_method(
         }
     };
 
-    // For multi-accessor proxies, the return struct needs the accessor field preserved
-    let return_struct: TokenStream = if multi_accessor {
+    let return_struct: TokenStream = if indexed {
+        quote! { #struct_ident { parent: Arc::clone(&self.parent), index: self.index } }
+    } else if multi_accessor {
         quote! { #struct_ident { parent: Arc::clone(&self.parent), accessor: self.accessor } }
     } else {
         quote! { #struct_ident { parent: Arc::clone(&self.parent) } }
@@ -802,6 +841,7 @@ mod tests {
                 accessors: vec![Accessor {
                     parent_method: "title".into(),
                     js_name: "title".into(),
+                    key_type: None,
                 }],
             },
             has_default: false,
@@ -841,6 +881,7 @@ mod tests {
                 accessors: vec![Accessor {
                     parent_method: "title".into(),
                     js_name: "title".into(),
+                    key_type: None,
                 }],
             },
             has_default: false,
@@ -892,6 +933,7 @@ mod tests {
                 accessors: vec![Accessor {
                     parent_method: "title".into(),
                     js_name: "title".into(),
+                    key_type: None,
                 }],
             },
             has_default: false,

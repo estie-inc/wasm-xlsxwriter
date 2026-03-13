@@ -20,19 +20,13 @@ use rust_xlsxwriter as xlsx;
 use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 
-#[derive(Clone, Copy)]
-pub enum WorksheetAccessor {
-    AddWorksheet,
-    AddChartsheet,
-}
-
 /// The `Worksheet` struct represents an Excel worksheet. It handles operations
 /// such as writing data to cells or formatting the worksheet layout.
 #[derive(Clone)]
 #[wasm_bindgen]
 pub struct Worksheet {
     pub(crate) parent: Arc<Mutex<xlsx::Workbook>>,
-    pub(crate) accessor: WorksheetAccessor,
+    pub(crate) index: usize,
 }
 
 #[wasm_bindgen]
@@ -61,13 +55,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setName", skip_jsdoc)]
     pub fn set_name(&self, name: &str) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_name(name),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_name(name),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_name(name)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Get the worksheet name.
@@ -83,10 +76,7 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "name", skip_jsdoc)]
     pub fn name(&self) -> String {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().name(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().name(),
-        }
+        lock.worksheet_from_index(self.index).unwrap().name()
     }
     /// Write an unformatted number to a cell.
     ///
@@ -127,15 +117,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "writeNumber", skip_jsdoc)]
     pub fn write_number(&self, row: u32, col: u16, number: f64) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_number(row, col, number),
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().write_number(row, col, number)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_number(row, col, number)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted number to a worksheet cell.
@@ -186,23 +173,12 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_number_with_format(
-                row,
-                col,
-                number,
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_number_with_format(
-                row,
-                col,
-                number,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_number_with_format(row, col, number, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write an unformatted string to a worksheet cell.
@@ -229,15 +205,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "writeString", skip_jsdoc)]
     pub fn write_string(&self, row: u32, col: u16, string: &str) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_string(row, col, string),
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().write_string(row, col, string)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_string(row, col, string)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted string to a worksheet cell.
@@ -272,23 +245,12 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_string_with_format(
-                row,
-                col,
-                string,
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_string_with_format(
-                row,
-                col,
-                string,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_string_with_format(row, col, string, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write an unformatted formula to a worksheet cell.
@@ -309,19 +271,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "writeFormula", skip_jsdoc)]
     pub fn write_formula(&self, row: u32, col: u16, formula: Formula) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .write_formula(row, col, formula.inner.lock().unwrap().clone())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .write_formula(row, col, formula.inner.lock().unwrap().clone())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_formula(row, col, formula.inner.lock().unwrap().clone())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted formula to a worksheet cell.
@@ -352,23 +307,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_formula_with_format(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_formula_with_format(
                 row,
                 col,
                 formula.inner.lock().unwrap().clone(),
                 &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_formula_with_format(
-                row,
-                col,
-                formula.inner.lock().unwrap().clone(),
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write an  array formula to a worksheet cell.
@@ -414,25 +363,18 @@ impl Worksheet {
         formula: Formula,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_array_formula(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_array_formula(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 formula.inner.lock().unwrap().clone(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_array_formula(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                formula.inner.lock().unwrap().clone(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted array formula to a worksheet cell.
@@ -484,31 +426,19 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().write_array_formula_with_format(
-                    first_row,
-                    first_col,
-                    last_row,
-                    last_col,
-                    formula.inner.lock().unwrap().clone(),
-                    &*format.inner.lock().unwrap(),
-                )
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().write_array_formula_with_format(
-                    first_row,
-                    first_col,
-                    last_row,
-                    last_col,
-                    formula.inner.lock().unwrap().clone(),
-                    &*format.inner.lock().unwrap(),
-                )
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_array_formula_with_format(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a dynamic array formula to a worksheet cell or range of cells.
@@ -558,25 +488,18 @@ impl Worksheet {
         formula: Formula,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_dynamic_array_formula(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_dynamic_array_formula(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 formula.inner.lock().unwrap().clone(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_dynamic_array_formula(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                formula.inner.lock().unwrap().clone(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted dynamic array formula to a worksheet cell or range of
@@ -640,31 +563,19 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .write_dynamic_array_formula_with_format(
-                    first_row,
-                    first_col,
-                    last_row,
-                    last_col,
-                    formula.inner.lock().unwrap().clone(),
-                    &*format.inner.lock().unwrap(),
-                ),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .write_dynamic_array_formula_with_format(
-                    first_row,
-                    first_col,
-                    last_row,
-                    last_col,
-                    formula.inner.lock().unwrap().clone(),
-                    &*format.inner.lock().unwrap(),
-                ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_dynamic_array_formula_with_format(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a dynamic formula to a worksheet cell.
@@ -703,21 +614,12 @@ impl Worksheet {
         formula: Formula,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_dynamic_formula(
-                row,
-                col,
-                formula.inner.lock().unwrap().clone(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_dynamic_formula(
-                row,
-                col,
-                formula.inner.lock().unwrap().clone(),
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_dynamic_formula(row, col, formula.inner.lock().unwrap().clone())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted dynamic formula to a worksheet cell.
@@ -758,27 +660,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().write_dynamic_formula_with_format(
-                    row,
-                    col,
-                    formula.inner.lock().unwrap().clone(),
-                    &*format.inner.lock().unwrap(),
-                )
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().write_dynamic_formula_with_format(
-                    row,
-                    col,
-                    formula.inner.lock().unwrap().clone(),
-                    &*format.inner.lock().unwrap(),
-                )
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_dynamic_formula_with_format(
+                row,
+                col,
+                formula.inner.lock().unwrap().clone(),
+                &*format.inner.lock().unwrap(),
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a blank formatted worksheet cell.
@@ -807,19 +699,14 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "writeBlank", skip_jsdoc)]
     pub fn write_blank(&self, row: u32, col: u16, format: &Format) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .write_blank(row, col, &*format.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .write_blank(row, col, &*format.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index).unwrap().write_blank(
+            row,
+            col,
+            &*format.inner.lock().unwrap(),
+        )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a url/hyperlink to a worksheet cell.
@@ -898,19 +785,14 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "writeUrl", skip_jsdoc)]
     pub fn write_url(&self, row: u32, col: u16, link: Url) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .write_url(row, col, link.inner.lock().unwrap().clone())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .write_url(row, col, link.inner.lock().unwrap().clone())
-            }
-        };
+        lock.worksheet_from_index(self.index).unwrap().write_url(
+            row,
+            col,
+            link.inner.lock().unwrap().clone(),
+        )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a url/hyperlink to a worksheet cell with an alternative text.
@@ -951,23 +833,12 @@ impl Worksheet {
         text: &str,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_url_with_text(
-                row,
-                col,
-                link.inner.lock().unwrap().clone(),
-                text,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_url_with_text(
-                row,
-                col,
-                link.inner.lock().unwrap().clone(),
-                text,
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_url_with_text(row, col, link.inner.lock().unwrap().clone(), text)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a url/hyperlink to a worksheet cell with a user defined format
@@ -1004,214 +875,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_url_with_format(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_url_with_format(
                 row,
                 col,
                 link.inner.lock().unwrap().clone(),
                 &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_url_with_format(
-                row,
-                col,
-                link.inner.lock().unwrap().clone(),
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
-        })
-    }
-    ///
-    /// Write a url/hyperlink to a worksheet cell with various options
-    ///
-    /// This method is similar to {@link Worksheet#writeUrl} and variant methods
-    /// except that you can also add a screen tip message, if required.
-    ///
-    /// # Parameters
-    ///
-    /// - `row`: The zero indexed row number.
-    /// - `col`: The zero indexed column number.
-    /// - `link`: The url/hyperlink to write to the cell as a string or {@link Url}.
-    /// - `text`: The alternative string to write to the cell.
-    /// - `tip`: The screen tip string to display when the user hovers over the
-    ///   url cell.
-    /// - `format`: The {@link Format} property for the cell.
-    ///
-    /// The `text` and `tip` parameters are optional and can be set as a blank
-    /// string. The `format` is an `Option<>` parameter and can be specified as
-    /// `None` if not required.
-    ///
-    /// # Errors
-    ///
-    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
-    ///   worksheet limits.
-    /// - {@link XlsxError#MaxStringLengthExceeded} - Text string exceeds Excel's
-    ///   limit of 32,767 characters.
-    /// - {@link XlsxError#MaxUrlLengthExceeded} - URL string or anchor exceeds
-    ///   Excel's limit of 2080 characters or the screen tip exceed 255
-    ///   characters.
-    /// - {@link XlsxError#UnknownUrlType} - The URL has an unknown URI type. See
-    ///   the supported types listed above.
-    /// - {@link XlsxError#ParameterError} - {@link Url} mouseover tool tip exceeds
-    ///   Excel's limit of 255 characters.
-    #[wasm_bindgen(js_name = "writeUrlWithOptions", skip_jsdoc)]
-    pub fn write_url_with_options(
-        &self,
-        row: u32,
-        col: u16,
-        link: Url,
-        text: &str,
-        tip: &str,
-        format: Option<&Format>,
-    ) -> WasmResult<Worksheet> {
-        let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_url_with_options(
-                row,
-                col,
-                link.inner.lock().unwrap().clone(),
-                text,
-                tip,
-                format,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_url_with_options(
-                row,
-                col,
-                link.inner.lock().unwrap().clone(),
-                text,
-                tip,
-                format,
-            ),
-        };
-        Ok(Worksheet {
-            parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
-        })
-    }
-    /// Write a formatted date and/or time to a worksheet cell.
-    ///
-    /// The method method writes dates/times that implements {@link IntoExcelDateTime}
-    /// to a worksheet cell.
-    ///
-    /// The date/time types supported are:
-    /// - {@link ExcelDateTime}.
-    ///
-    /// If the `chrono` feature is enabled you can use the following types:
-    ///
-    /// - {@link chrono#NaiveDateTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDateTime.html).
-    /// - {@link chrono#NaiveDate}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDate.html).
-    /// - {@link chrono#NaiveTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveTime.html).
-    ///
-    /// If the `jiff` feature is enabled you can use the following types:
-    ///
-    /// - {@link jiff#civil::CivilDateTime}(https://docs.rs/jiff/latest/jiff/civil/struct.DateTime.html).
-    /// - {@link jiff#civil::CivilDate}(https://docs.rs/jiff/latest/jiff/civil/struct.Date.html).
-    /// - {@link jiff#civil::CivilTime}(https://docs.rs/jiff/latest/jiff/civil/struct.Time.html).
-    ///
-    /// Excel stores dates and times as a floating point number with a number
-    /// format to defined how it is displayed. The number format is set via a
-    /// {@link Format} struct which can also control visual formatting such as bold
-    /// and italic text.
-    ///
-    /// # Parameters
-    ///
-    /// - `row`: The zero indexed row number.
-    /// - `col`: The zero indexed column number.
-    /// - `datetime`: A date/time instance that implements {@link IntoExcelDateTime}.
-    /// - `format`: The {@link Format} property for the cell.
-    ///
-    /// # Errors
-    ///
-    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
-    ///   worksheet limits.
-    #[wasm_bindgen(js_name = "writeDatetimeWithFormat", skip_jsdoc)]
-    pub fn write_datetime_with_format(
-        &self,
-        row: u32,
-        col: u16,
-        datetime: &ExcelDateTime,
-        format: &Format,
-    ) -> WasmResult<Worksheet> {
-        let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_datetime_with_format(
-                row,
-                col,
-                &*datetime.inner.lock().unwrap(),
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_datetime_with_format(
-                row,
-                col,
-                &*datetime.inner.lock().unwrap(),
-                &*format.inner.lock().unwrap(),
-            ),
-        };
-        Ok(Worksheet {
-            parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
-        })
-    }
-    /// Write an unformatted date and/or time to a worksheet cell.
-    ///
-    /// In general an unformatted date/time isn't very useful since a date in
-    /// Excel without a format is just a number. However, this method is
-    /// provided for cases where an implicit format is derived from the column
-    /// or row format.
-    ///
-    /// However, for most use cases you should use the
-    /// {@link write_datetime_with_format}
-    /// method with an explicit format.
-    ///
-    /// The date/time types supported are:
-    /// - {@link ExcelDateTime}.
-    ///
-    /// If the `chrono` feature is enabled you can use the following types:
-    ///
-    /// - {@link chrono#NaiveDateTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDateTime.html).
-    /// - {@link chrono#NaiveDate}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveDate.html).
-    /// - {@link chrono#NaiveTime}(https://docs.rs/chrono/latest/chrono/naive/struct.NaiveTime.html).
-    ///
-    /// If the `jiff` feature is enabled you can use the following types:
-    ///
-    /// - {@link jiff#civil::CivilDateTime}(https://docs.rs/jiff/latest/jiff/civil/struct.DateTime.html).
-    /// - {@link jiff#civil::CivilDate}(https://docs.rs/jiff/latest/jiff/civil/struct.Date.html).
-    /// - {@link jiff#civil::CivilTime}(https://docs.rs/jiff/latest/jiff/civil/struct.Time.html).
-    ///
-    /// # Parameters
-    ///
-    /// - `row`: The zero indexed row number.
-    /// - `col`: The zero indexed column number.
-    /// - `datetime`: A date/time instance that implements
-    ///   {@link IntoExcelDateTime}.
-    ///
-    /// # Errors
-    ///
-    /// - {@link XlsxError#RowColumnLimitError} - Row or column exceeds Excel's
-    ///   worksheet limits.
-    #[wasm_bindgen(js_name = "writeDatetime", skip_jsdoc)]
-    pub fn write_datetime(
-        &self,
-        row: u32,
-        col: u16,
-        datetime: &ExcelDateTime,
-    ) -> WasmResult<Worksheet> {
-        let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .write_datetime(row, col, &*datetime.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .write_datetime(row, col, &*datetime.inner.lock().unwrap())
-            }
-        };
-        Ok(Worksheet {
-            parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted date to a worksheet cell.
@@ -1259,23 +933,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_date_with_format(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_date_with_format(
                 row,
                 col,
                 &*date.inner.lock().unwrap(),
                 &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_date_with_format(
-                row,
-                col,
-                &*date.inner.lock().unwrap(),
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted time to a worksheet cell.
@@ -1323,23 +991,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_time_with_format(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_time_with_format(
                 row,
                 col,
                 &*time.inner.lock().unwrap(),
                 &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_time_with_format(
-                row,
-                col,
-                &*time.inner.lock().unwrap(),
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write an unformatted boolean value to a cell.
@@ -1359,17 +1021,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "writeBoolean", skip_jsdoc)]
     pub fn write_boolean(&self, row: u32, col: u16, boolean: bool) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().write_boolean(row, col, boolean)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().write_boolean(row, col, boolean)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_boolean(row, col, boolean)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a formatted boolean value to a worksheet cell.
@@ -1399,23 +1056,12 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().write_boolean_with_format(
-                row,
-                col,
-                boolean,
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().write_boolean_with_format(
-                row,
-                col,
-                boolean,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .write_boolean_with_format(row, col, boolean, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Merge a range of cells.
@@ -1460,27 +1106,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().merge_range(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                string,
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().merge_range(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                string,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index).unwrap().merge_range(
+            first_row,
+            first_col,
+            last_row,
+            last_col,
+            string,
+            &*format.inner.lock().unwrap(),
+        )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add an image to a worksheet.
@@ -1521,19 +1157,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertImage", skip_jsdoc)]
     pub fn insert_image(&self, row: u32, col: u16, image: &Image) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .insert_image(row, col, &*image.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .insert_image(row, col, &*image.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_image(row, col, &*image.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add an image to a worksheet at an offset.
@@ -1569,25 +1198,18 @@ impl Worksheet {
         y_offset: u32,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_image_with_offset(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_image_with_offset(
                 row,
                 col,
                 &*image.inner.lock().unwrap(),
                 x_offset,
                 y_offset,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_image_with_offset(
-                row,
-                col,
-                &*image.inner.lock().unwrap(),
-                x_offset,
-                y_offset,
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Embed an image to a worksheet and fit it to a cell.
@@ -1623,19 +1245,14 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "embedImage", skip_jsdoc)]
     pub fn embed_image(&self, row: u32, col: u16, image: &Image) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .embed_image(row, col, &*image.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .embed_image(row, col, &*image.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index).unwrap().embed_image(
+            row,
+            col,
+            &*image.inner.lock().unwrap(),
+        )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Embed an image to a worksheet and fit it to a formatted cell.
@@ -1668,23 +1285,17 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().embed_image_with_format(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .embed_image_with_format(
                 row,
                 col,
                 &*image.inner.lock().unwrap(),
                 &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().embed_image_with_format(
-                row,
-                col,
-                &*image.inner.lock().unwrap(),
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add an image to a worksheet and scale it fit in a cell.
@@ -1730,23 +1341,12 @@ impl Worksheet {
         keep_aspect_ratio: bool,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_image_fit_to_cell(
-                row,
-                col,
-                &*image.inner.lock().unwrap(),
-                keep_aspect_ratio,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_image_fit_to_cell(
-                row,
-                col,
-                &*image.inner.lock().unwrap(),
-                keep_aspect_ratio,
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_image_fit_to_cell(row, col, &*image.inner.lock().unwrap(), keep_aspect_ratio)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add an image to a worksheet and scale it to fit, centered in a cell.
@@ -1790,17 +1390,12 @@ impl Worksheet {
         image: &Image,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .insert_image_fit_to_cell_centered(row, col, &*image.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .insert_image_fit_to_cell_centered(row, col, &*image.inner.lock().unwrap()),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_image_fit_to_cell_centered(row, col, &*image.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Insert a background image into a worksheet.
@@ -1824,17 +1419,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertBackgroundImage", skip_jsdoc)]
     pub fn insert_background_image(&self, image: &Image) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .insert_background_image(&*image.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .insert_background_image(&*image.inner.lock().unwrap()),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_background_image(&*image.inner.lock().unwrap());
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Add a chart to a worksheet.
@@ -1859,19 +1449,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertChart", skip_jsdoc)]
     pub fn insert_chart(&self, row: u32, col: u16, chart: &Chart) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .insert_chart(row, col, &*chart.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .insert_chart(row, col, &*chart.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_chart(row, col, &*chart.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add a chart to a worksheet at an offset.
@@ -1903,25 +1486,18 @@ impl Worksheet {
         y_offset: u32,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_chart_with_offset(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_chart_with_offset(
                 row,
                 col,
                 &*chart.inner.lock().unwrap(),
                 x_offset,
                 y_offset,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_chart_with_offset(
-                row,
-                col,
-                &*chart.inner.lock().unwrap(),
-                x_offset,
-                y_offset,
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add a Note to a cell.
@@ -1955,19 +1531,14 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertNote", skip_jsdoc)]
     pub fn insert_note(&self, row: u32, col: u16, note: &Note) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .insert_note(row, col, &*note.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .insert_note(row, col, &*note.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index).unwrap().insert_note(
+            row,
+            col,
+            &*note.inner.lock().unwrap(),
+        )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Insert a textbox shape into a worksheet.
@@ -1996,19 +1567,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertShape", skip_jsdoc)]
     pub fn insert_shape(&self, row: u32, col: u16, shape: &Shape) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .insert_shape(row, col, &*shape.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .insert_shape(row, col, &*shape.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_shape(row, col, &*shape.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Insert a textbox shape into a worksheet cell at an offset.
@@ -2046,25 +1610,18 @@ impl Worksheet {
         y_offset: u32,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_shape_with_offset(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_shape_with_offset(
                 row,
                 col,
                 &*shape.inner.lock().unwrap(),
                 x_offset,
                 y_offset,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_shape_with_offset(
-                row,
-                col,
-                &*shape.inner.lock().unwrap(),
-                x_offset,
-                y_offset,
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Make all worksheet notes visible when the file loads.
@@ -2080,13 +1637,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "showAllNotes", skip_jsdoc)]
     pub fn show_all_notes(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().show_all_notes(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().show_all_notes(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .show_all_notes(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the default author name for all the notes in the worksheet.
@@ -2109,13 +1665,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setDefaultNoteAuthor", skip_jsdoc)]
     pub fn set_default_note_author(&self, name: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_default_note_author(name),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_default_note_author(name),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_default_note_author(name);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Add a Excel Form Control button object to a worksheet.
@@ -2141,19 +1696,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertButton", skip_jsdoc)]
     pub fn insert_button(&self, row: u32, col: u16, button: &Button) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .insert_button(row, col, &*button.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .insert_button(row, col, &*button.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_button(row, col, &*button.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add a Excel Form Control button object to a  at an offset.
@@ -2183,25 +1731,18 @@ impl Worksheet {
         y_offset: u32,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_button_with_offset(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_button_with_offset(
                 row,
                 col,
                 &*button.inner.lock().unwrap(),
                 x_offset,
                 y_offset,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_button_with_offset(
-                row,
-                col,
-                &*button.inner.lock().unwrap(),
-                x_offset,
-                y_offset,
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Insert a boolean checkbox in a worksheet cell.
@@ -2239,17 +1780,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "insertCheckbox", skip_jsdoc)]
     pub fn insert_checkbox(&self, row: u32, col: u16, boolean: bool) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().insert_checkbox(row, col, boolean)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().insert_checkbox(row, col, boolean)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_checkbox(row, col, boolean)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Insert a boolean checkbox in a worksheet cell with a cell format.
@@ -2279,23 +1815,12 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().insert_checkbox_with_format(
-                row,
-                col,
-                boolean,
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().insert_checkbox_with_format(
-                row,
-                col,
-                boolean,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .insert_checkbox_with_format(row, col, boolean, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the height for a row of cells.
@@ -2320,13 +1845,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRowHeight", skip_jsdoc)]
     pub fn set_row_height(&self, row: u32, height: f64) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_row_height(row, height),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_row_height(row, height),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_row_height(row, height)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the height for a row of cells, in pixels.
@@ -2350,17 +1874,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRowHeightPixels", skip_jsdoc)]
     pub fn set_row_height_pixels(&self, row: u32, height: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_row_height_pixels(row, height)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_row_height_pixels(row, height)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_row_height_pixels(row, height)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the format for a row of cells.
@@ -2386,17 +1905,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRowFormat", skip_jsdoc)]
     pub fn set_row_format(&self, row: u32, format: &Format) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_row_format(row, &*format.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_row_format(row, &*format.inner.lock().unwrap()),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_row_format(row, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Group a range of rows into a worksheet outline group.
@@ -2442,15 +1956,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "groupRows", skip_jsdoc)]
     pub fn group_rows(&self, first_row: u32, last_row: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().group_rows(first_row, last_row),
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().group_rows(first_row, last_row)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .group_rows(first_row, last_row)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Group a range of rows into a collapsed worksheet outline group.
@@ -2481,17 +1992,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "groupRowsCollapsed", skip_jsdoc)]
     pub fn group_rows_collapsed(&self, first_row: u32, last_row: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .group_rows_collapsed(first_row, last_row),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .group_rows_collapsed(first_row, last_row),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .group_rows_collapsed(first_row, last_row)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Group a range of columns into a worksheet outline group.
@@ -2522,17 +2028,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "groupColumns", skip_jsdoc)]
     pub fn group_columns(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().group_columns(first_col, last_col)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().group_columns(first_col, last_col)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .group_columns(first_col, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Group a range of columns into a collapsed worksheet outline group.
@@ -2563,17 +2064,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "groupColumnsCollapsed", skip_jsdoc)]
     pub fn group_columns_collapsed(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .group_columns_collapsed(first_col, last_col),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .group_columns_collapsed(first_col, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .group_columns_collapsed(first_col, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Place the row outline group expand/collapse symbols above the range.
@@ -2591,13 +2087,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "groupSymbolsAbove", skip_jsdoc)]
     pub fn group_symbols_above(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().group_symbols_above(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().group_symbols_above(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .group_symbols_above(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Place the column outline group expand/collapse symbols to the left of
@@ -2616,13 +2111,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "groupSymbolsToLeft", skip_jsdoc)]
     pub fn group_symbols_to_left(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().group_symbols_to_left(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().group_symbols_to_left(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .group_symbols_to_left(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Hide a worksheet row.
@@ -2642,13 +2136,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRowHidden", skip_jsdoc)]
     pub fn set_row_hidden(&self, row: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_row_hidden(row),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_row_hidden(row),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_row_hidden(row)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Unhide a user hidden worksheet row.
@@ -2668,13 +2161,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRowUnhidden", skip_jsdoc)]
     pub fn set_row_unhidden(&self, row: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_row_unhidden(row),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_row_unhidden(row),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_row_unhidden(row)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the default row height for all rows in a worksheet, efficiently.
@@ -2700,15 +2192,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setDefaultRowHeight", skip_jsdoc)]
     pub fn set_default_row_height(&self, height: f64) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_default_row_height(height),
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_default_row_height(height)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_default_row_height(height);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the default row height in pixels for all rows in a worksheet,
@@ -2726,17 +2215,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setDefaultRowHeightPixels", skip_jsdoc)]
     pub fn set_default_row_height_pixels(&self, height: u32) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_default_row_height_pixels(height)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_default_row_height_pixels(height)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_default_row_height_pixels(height);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Hide all unused rows in a worksheet, efficiently.
@@ -2762,13 +2246,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "hideUnusedRows", skip_jsdoc)]
     pub fn hide_unused_rows(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().hide_unused_rows(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().hide_unused_rows(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .hide_unused_rows(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the width for a worksheet column.
@@ -2802,13 +2285,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setColumnWidth", skip_jsdoc)]
     pub fn set_column_width(&self, col: u16, width: f64) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_column_width(col, width),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_column_width(col, width),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_width(col, width)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the width for a worksheet column in pixels.
@@ -2833,17 +2315,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setColumnWidthPixels", skip_jsdoc)]
     pub fn set_column_width_pixels(&self, col: u16, width: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_column_width_pixels(col, width)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_column_width_pixels(col, width)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_width_pixels(col, width)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the column pixel width in auto-fit mode.
@@ -2874,17 +2351,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setColumnAutofitWidth", skip_jsdoc)]
     pub fn set_column_autofit_width(&self, col: u16, width: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_column_autofit_width(col, width)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_column_autofit_width(col, width)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_autofit_width(col, width)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the format for a column of cells.
@@ -2910,17 +2382,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setColumnFormat", skip_jsdoc)]
     pub fn set_column_format(&self, col: u16, format: &Format) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_column_format(col, &*format.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_column_format(col, &*format.inner.lock().unwrap()),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_format(col, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Hide a worksheet column.
@@ -2940,13 +2407,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setColumnHidden", skip_jsdoc)]
     pub fn set_column_hidden(&self, col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_column_hidden(col),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_column_hidden(col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_hidden(col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the width for a range of columns.
@@ -2975,17 +2441,12 @@ impl Worksheet {
         width: f64,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_column_range_width(first_col, last_col, width),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_column_range_width(first_col, last_col, width),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_range_width(first_col, last_col, width)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the pixel width for a range of columns.
@@ -3014,17 +2475,12 @@ impl Worksheet {
         width: u32,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_column_range_width_pixels(first_col, last_col, width),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_column_range_width_pixels(first_col, last_col, width),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_range_width_pixels(first_col, last_col, width)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the format for a range of columns.
@@ -3059,21 +2515,12 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_column_range_format(
-                first_col,
-                last_col,
-                &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_column_range_format(
-                first_col,
-                last_col,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_range_format(first_col, last_col, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Hide a range of worksheet columns.
@@ -3096,17 +2543,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setColumnRangeHidden", skip_jsdoc)]
     pub fn set_column_range_hidden(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_column_range_hidden(first_col, last_col),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_column_range_hidden(first_col, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_column_range_hidden(first_col, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the default cell format for a worksheet.
@@ -3142,21 +2584,12 @@ impl Worksheet {
         col_width: u32,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_default_format(
-                &*format.inner.lock().unwrap(),
-                row_height,
-                col_width,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_default_format(
-                &*format.inner.lock().unwrap(),
-                row_height,
-                col_width,
-            ),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_default_format(&*format.inner.lock().unwrap(), row_height, col_width)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the autofilter area in the worksheet.
@@ -3197,17 +2630,12 @@ impl Worksheet {
         last_col: u16,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .autofilter(first_row, first_col, last_row, last_col),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .autofilter(first_row, first_col, last_row, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .autofilter(first_row, first_col, last_row, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the filter condition for a column in an autofilter range.
@@ -3267,17 +2695,12 @@ impl Worksheet {
         filter_condition: &FilterCondition,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .filter_column(col, &*filter_condition.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .filter_column(col, &*filter_condition.inner.lock().unwrap()),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .filter_column(col, &*filter_condition.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Turn off the option to automatically hide rows that don't match filters.
@@ -3297,13 +2720,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "filterAutomaticOff", skip_jsdoc)]
     pub fn filter_automatic_off(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().filter_automatic_off(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().filter_automatic_off(),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .filter_automatic_off();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Add a table to a worksheet.
@@ -3356,25 +2778,16 @@ impl Worksheet {
         table: &Table,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().add_table(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                &*table.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().add_table(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                &*table.inner.lock().unwrap(),
-            ),
-        };
+        lock.worksheet_from_index(self.index).unwrap().add_table(
+            first_row,
+            first_col,
+            last_row,
+            last_col,
+            &*table.inner.lock().unwrap(),
+        )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add a data validation to one or more cells to restrict user input based
@@ -3411,25 +2824,18 @@ impl Worksheet {
         data_validation: &DataValidation,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().add_data_validation(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .add_data_validation(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 &*data_validation.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().add_data_validation(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                &*data_validation.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add a sparkline to a worksheet cell.
@@ -3474,19 +2880,12 @@ impl Worksheet {
         sparkline: &Sparkline,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .add_sparkline(row, col, &*sparkline.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .add_sparkline(row, col, &*sparkline.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .add_sparkline(row, col, &*sparkline.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add a sparkline group to a worksheet range.
@@ -3544,25 +2943,18 @@ impl Worksheet {
         sparkline: &Sparkline,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().add_sparkline_group(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .add_sparkline_group(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 &*sparkline.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().add_sparkline_group(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                &*sparkline.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Protect a worksheet from modification.
@@ -3584,13 +2976,10 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "protect", skip_jsdoc)]
     pub fn protect(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().protect(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().protect(),
-        };
+        lock.worksheet_from_index(self.index).unwrap().protect();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Protect a worksheet from modification with a password.
@@ -3615,15 +3004,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "protectWithPassword", skip_jsdoc)]
     pub fn protect_with_password(&self, password: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().protect_with_password(password),
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().protect_with_password(password)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .protect_with_password(password);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Specify which worksheet elements should, or shouldn't, be protected.
@@ -3645,17 +3031,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "protectWithOptions", skip_jsdoc)]
     pub fn protect_with_options(&self, options: &ProtectionOptions) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .protect_with_options(&*options.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .protect_with_options(&*options.inner.lock().unwrap()),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .protect_with_options(&*options.inner.lock().unwrap());
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Unprotect a range of cells in a protected worksheet.
@@ -3688,17 +3069,12 @@ impl Worksheet {
         last_col: u16,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .unprotect_range(first_row, first_col, last_row, last_col),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .unprotect_range(first_row, first_col, last_row, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .unprotect_range(first_row, first_col, last_row, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Unprotect a range of cells in a protected worksheet, with options.
@@ -3738,17 +3114,14 @@ impl Worksheet {
         password: &str,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().unprotect_range_with_options(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .unprotect_range_with_options(
                 first_row, first_col, last_row, last_col, name, password,
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().unprotect_range_with_options(
-                first_row, first_col, last_row, last_col, name, password,
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the selected cell or cells in a worksheet.
@@ -3784,17 +3157,12 @@ impl Worksheet {
         last_col: u16,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_selection(first_row, first_col, last_row, last_col),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_selection(first_row, first_col, last_row, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_selection(first_row, first_col, last_row, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the first visible cell at the top left of a worksheet.
@@ -3814,13 +3182,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setTopLeftCell", skip_jsdoc)]
     pub fn set_top_left_cell(&self, row: u32, col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_top_left_cell(row, col),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_top_left_cell(row, col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_top_left_cell(row, col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Write a user defined result to a worksheet formula cell.
@@ -3852,17 +3219,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFormulaResult", skip_jsdoc)]
     pub fn set_formula_result(&self, row: u32, col: u16, result: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_formula_result(row, col, result)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_formula_result(row, col, result)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_formula_result(row, col, result);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Write the default formula result for worksheet formulas.
@@ -3884,17 +3246,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFormulaResultDefault", skip_jsdoc)]
     pub fn set_formula_result_default(&self, result: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_formula_result_default(result)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_formula_result_default(result)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_formula_result_default(result);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Add formatting to a cell without overwriting the cell data.
@@ -3929,19 +3286,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setCellFormat", skip_jsdoc)]
     pub fn set_cell_format(&self, row: u32, col: u16, format: &Format) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .set_cell_format(row, col, &*format.inner.lock().unwrap())
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .set_cell_format(row, col, &*format.inner.lock().unwrap())
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_cell_format(row, col, &*format.inner.lock().unwrap())?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add formatting to a range of cells without overwriting the cell data.
@@ -3993,25 +3343,18 @@ impl Worksheet {
         format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_range_format(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_range_format(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 &*format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_range_format(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                &*format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Add formatting to a range of cells with an external border.
@@ -4068,27 +3411,19 @@ impl Worksheet {
         border_format: &Format,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_range_format_with_border(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_range_format_with_border(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 &*cell_format.inner.lock().unwrap(),
                 &*border_format.inner.lock().unwrap(),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_range_format_with_border(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                &*cell_format.inner.lock().unwrap(),
-                &*border_format.inner.lock().unwrap(),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Clear the data and formatting from a worksheet cell.
@@ -4112,13 +3447,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "clearCell", skip_jsdoc)]
     pub fn clear_cell(&self, row: u32, col: u16) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().clear_cell(row, col),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().clear_cell(row, col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .clear_cell(row, col);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Clear the formatting from a worksheet cell.
@@ -4143,13 +3477,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "clearCellFormat", skip_jsdoc)]
     pub fn clear_cell_format(&self, row: u32, col: u16) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().clear_cell_format(row, col),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().clear_cell_format(row, col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .clear_cell_format(row, col);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Display the worksheet cells from right to left for some versions of
@@ -4172,13 +3505,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRightToLeft", skip_jsdoc)]
     pub fn set_right_to_left(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_right_to_left(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_right_to_left(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_right_to_left(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Make a worksheet the active/initially visible worksheet in a workbook.
@@ -4193,13 +3525,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setActive", skip_jsdoc)]
     pub fn set_active(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_active(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_active(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_active(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set a worksheet tab as selected.
@@ -4218,13 +3549,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setSelected", skip_jsdoc)]
     pub fn set_selected(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_selected(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_selected(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_selected(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Hide a worksheet.
@@ -4245,13 +3575,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setHidden", skip_jsdoc)]
     pub fn set_hidden(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_hidden(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_hidden(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_hidden(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Hide a worksheet. Can only be unhidden in Excel by VBA.
@@ -4268,13 +3597,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setVeryHidden", skip_jsdoc)]
     pub fn set_very_hidden(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_very_hidden(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_very_hidden(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_very_hidden(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set current worksheet as the first visible sheet tab.
@@ -4294,13 +3622,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFirstTab", skip_jsdoc)]
     pub fn set_first_tab(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_first_tab(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_first_tab(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_first_tab(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the color of the worksheet tab.
@@ -4316,17 +3643,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setTabColor", skip_jsdoc)]
     pub fn set_tab_color(&self, color: Color) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_tab_color(xlsx::Color::from(color))
-            }
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_tab_color(xlsx::Color::from(color)),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_tab_color(xlsx::Color::from(color));
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the paper type/size when printing.
@@ -4393,13 +3715,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPaperSize", skip_jsdoc)]
     pub fn set_paper_size(&self, paper_size: u8) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_paper_size(paper_size),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_paper_size(paper_size),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_paper_size(paper_size);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the order in which pages are printed.
@@ -4422,13 +3743,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPageOrder", skip_jsdoc)]
     pub fn set_page_order(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_page_order(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_page_order(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_page_order(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page orientation to landscape.
@@ -4438,13 +3758,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setLandscape", skip_jsdoc)]
     pub fn set_landscape(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_landscape(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_landscape(),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_landscape();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page orientation to portrait.
@@ -4455,13 +3774,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPortrait", skip_jsdoc)]
     pub fn set_portrait(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_portrait(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_portrait(),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_portrait();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page view mode to normal layout.
@@ -4471,13 +3789,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setViewNormal", skip_jsdoc)]
     pub fn set_view_normal(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_view_normal(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_view_normal(),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_view_normal();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page view mode to page layout.
@@ -4487,13 +3804,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setViewPageLayout", skip_jsdoc)]
     pub fn set_view_page_layout(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_view_page_layout(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_view_page_layout(),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_view_page_layout();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page view mode to page break preview.
@@ -4503,13 +3819,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setViewPageBreakPreview", skip_jsdoc)]
     pub fn set_view_page_break_preview(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_view_page_break_preview(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_view_page_break_preview(),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_view_page_break_preview();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the horizontal page breaks on a worksheet.
@@ -4535,13 +3850,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPageBreaks", skip_jsdoc)]
     pub fn set_page_breaks(&self, breaks: Vec<u32>) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_page_breaks(&breaks),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_page_breaks(&breaks),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_page_breaks(&breaks)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the vertical page breaks on a worksheet.
@@ -4564,17 +3878,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setVerticalPageBreaks", skip_jsdoc)]
     pub fn set_vertical_page_breaks(&self, breaks: Vec<u32>) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_vertical_page_breaks(&breaks)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_vertical_page_breaks(&breaks)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_vertical_page_breaks(&breaks)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the worksheet zoom factor.
@@ -4591,13 +3900,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setZoom", skip_jsdoc)]
     pub fn set_zoom(&self, zoom: u16) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_zoom(zoom),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_zoom(zoom),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_zoom(zoom);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set a chartsheet to automatically zoom to fit the screen.
@@ -4615,13 +3923,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setZoomToFit", skip_jsdoc)]
     pub fn set_zoom_to_fit(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_zoom_to_fit(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_zoom_to_fit(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_zoom_to_fit(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Freeze panes in a worksheet.
@@ -4650,13 +3957,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFreezePanes", skip_jsdoc)]
     pub fn set_freeze_panes(&self, row: u32, col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_freeze_panes(row, col),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_freeze_panes(row, col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_freeze_panes(row, col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the top most cell in the scrolling area of a freeze pane.
@@ -4679,17 +3985,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFreezePanesTopCell", skip_jsdoc)]
     pub fn set_freeze_panes_top_cell(&self, row: u32, col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_freeze_panes_top_cell(row, col)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_freeze_panes_top_cell(row, col)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_freeze_panes_top_cell(row, col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the printed page header caption.
@@ -4772,13 +4073,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setHeader", skip_jsdoc)]
     pub fn set_header(&self, header: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_header(header),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_header(header),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_header(header);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the printed page footer caption.
@@ -4794,13 +4094,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setFooter", skip_jsdoc)]
     pub fn set_footer(&self, footer: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_footer(footer),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_footer(footer),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_footer(footer);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Insert an image in a worksheet header.
@@ -4826,19 +4125,15 @@ impl Worksheet {
         position: HeaderImagePosition,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_header_image(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_header_image(
                 &*image.inner.lock().unwrap(),
                 xlsx::HeaderImagePosition::from(position),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_header_image(
-                &*image.inner.lock().unwrap(),
-                xlsx::HeaderImagePosition::from(position),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Insert an image in a worksheet footer.
@@ -4862,19 +4157,15 @@ impl Worksheet {
         position: HeaderImagePosition,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_footer_image(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_footer_image(
                 &*image.inner.lock().unwrap(),
                 xlsx::HeaderImagePosition::from(position),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_footer_image(
-                &*image.inner.lock().unwrap(),
-                xlsx::HeaderImagePosition::from(position),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the page setup option to scale the header/footer with the document.
@@ -4891,17 +4182,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setHeaderFooterScaleWithDoc", skip_jsdoc)]
     pub fn set_header_footer_scale_with_doc(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_header_footer_scale_with_doc(enable),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_header_footer_scale_with_doc(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_header_footer_scale_with_doc(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page setup option to align the header/footer with the margins.
@@ -4918,17 +4204,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setHeaderFooterAlignWithPage", skip_jsdoc)]
     pub fn set_header_footer_align_with_page(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_header_footer_align_with_page(enable),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_header_footer_align_with_page(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_header_footer_align_with_page(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page margins.
@@ -4957,17 +4238,12 @@ impl Worksheet {
         footer: f64,
     ) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_margins(left, right, top, bottom, header, footer),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_margins(left, right, top, bottom, header, footer),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_margins(left, right, top, bottom, header, footer);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the first page number when printing.
@@ -4986,17 +4262,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintFirstPageNumber", skip_jsdoc)]
     pub fn set_print_first_page_number(&self, page_number: u16) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_print_first_page_number(page_number),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_print_first_page_number(page_number),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_first_page_number(page_number);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page setup option to set the print scale.
@@ -5017,13 +4288,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintScale", skip_jsdoc)]
     pub fn set_print_scale(&self, scale: u16) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_scale(scale),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_scale(scale),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_scale(scale);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Fit the printed area to a specific number of pages both vertically and
@@ -5060,17 +4330,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintFitToPages", skip_jsdoc)]
     pub fn set_print_fit_to_pages(&self, width: u16, height: u16) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_print_fit_to_pages(width, height)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_print_fit_to_pages(width, height)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_fit_to_pages(width, height);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Center the printed page horizontally.
@@ -5087,17 +4352,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintCenterHorizontally", skip_jsdoc)]
     pub fn set_print_center_horizontally(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_print_center_horizontally(enable)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_print_center_horizontally(enable)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_center_horizontally(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Center the printed page vertically.
@@ -5114,17 +4374,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintCenterVertically", skip_jsdoc)]
     pub fn set_print_center_vertically(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_print_center_vertically(enable)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_print_center_vertically(enable)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_center_vertically(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the option to turn on/off the screen gridlines.
@@ -5141,13 +4396,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setScreenGridlines", skip_jsdoc)]
     pub fn set_screen_gridlines(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_screen_gridlines(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_screen_gridlines(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_screen_gridlines(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page setup option to turn on printed gridlines.
@@ -5167,13 +4421,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintGridlines", skip_jsdoc)]
     pub fn set_print_gridlines(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_gridlines(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_gridlines(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_gridlines(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page setup option to print in black and white.
@@ -5190,17 +4443,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintBlackAndWhite", skip_jsdoc)]
     pub fn set_print_black_and_white(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_print_black_and_white(enable)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_print_black_and_white(enable)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_black_and_white(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page setup option to print in draft quality.
@@ -5214,13 +4462,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintDraft", skip_jsdoc)]
     pub fn set_print_draft(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_draft(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_draft(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_draft(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the page setup option to print the row and column headers on the
@@ -5238,13 +4485,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setPrintHeadings", skip_jsdoc)]
     pub fn set_print_headings(&self, enable: bool) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_print_headings(enable),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_print_headings(enable),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_headings(enable);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the print area for the worksheet.
@@ -5287,17 +4533,12 @@ impl Worksheet {
         last_col: u16,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .set_print_area(first_row, first_col, last_row, last_col),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_print_area(first_row, first_col, last_row, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_print_area(first_row, first_col, last_row, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the number of rows to repeat at the top of each printed page.
@@ -5322,17 +4563,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRepeatRows", skip_jsdoc)]
     pub fn set_repeat_rows(&self, first_row: u32, last_row: u32) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_repeat_rows(first_row, last_row)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_repeat_rows(first_row, last_row)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_repeat_rows(first_row, last_row)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the columns to repeat at the left hand side of each printed page.
@@ -5358,17 +4594,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setRepeatColumns", skip_jsdoc)]
     pub fn set_repeat_columns(&self, first_col: u16, last_col: u16) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_repeat_columns(first_col, last_col)
-            }
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .set_repeat_columns(first_col, last_col),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_repeat_columns(first_col, last_col)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Autofit the worksheet column widths to the widest data in the column,
@@ -5406,13 +4637,10 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "autofit", skip_jsdoc)]
     pub fn autofit(&self) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().autofit(),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().autofit(),
-        };
+        lock.worksheet_from_index(self.index).unwrap().autofit();
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the maximum row used for autofitting worksheet columns.
@@ -5436,13 +4664,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setAutofitMaxRow", skip_jsdoc)]
     pub fn set_autofit_max_row(&self, max_row: u32) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_autofit_max_row(max_row),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_autofit_max_row(max_row),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_autofit_max_row(max_row);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the maximum autofit width for worksheet columns.
@@ -5463,17 +4690,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setAutofitMaxWidth", skip_jsdoc)]
     pub fn set_autofit_max_width(&self, max_width: u32) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet().set_autofit_max_width(max_width)
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().set_autofit_max_width(max_width)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_autofit_max_width(max_width);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Autofit the worksheet columns up to a maximum width.
@@ -5493,15 +4715,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "autofitToMaxWidth", skip_jsdoc)]
     pub fn autofit_to_max_width(&self, max_width: u32) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().autofit_to_max_width(max_width),
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet().autofit_to_max_width(max_width)
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .autofit_to_max_width(max_width);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the worksheet name used in VBA macros.
@@ -5538,13 +4757,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setVbaName", skip_jsdoc)]
     pub fn set_vba_name(&self, name: &str) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_vba_name(name),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_vba_name(name),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_vba_name(name)?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Set the default string used for NaN values.
@@ -5564,13 +4782,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setNanValue", skip_jsdoc)]
     pub fn set_nan_value(&self, value: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_nan_value(value),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_nan_value(value),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_nan_value(value);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the default string used for Infinite values.
@@ -5592,13 +4809,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setInfinityValue", skip_jsdoc)]
     pub fn set_infinity_value(&self, value: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_infinity_value(value),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_infinity_value(value),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_infinity_value(value);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Set the default string used for negative Infinite values.
@@ -5621,13 +4837,12 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "setNegInfinityValue", skip_jsdoc)]
     pub fn set_neg_infinity_value(&self, value: &str) -> Worksheet {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().set_neg_infinity_value(value),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().set_neg_infinity_value(value),
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .set_neg_infinity_value(value);
         Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         }
     }
     /// Ignore an Excel error or warning in a worksheet cell.
@@ -5684,19 +4899,12 @@ impl Worksheet {
         error_type: IgnoreError,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => {
-                lock.add_worksheet()
-                    .ignore_error(row, col, xlsx::IgnoreError::from(error_type))
-            }
-            WorksheetAccessor::AddChartsheet => {
-                lock.add_chartsheet()
-                    .ignore_error(row, col, xlsx::IgnoreError::from(error_type))
-            }
-        };
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .ignore_error(row, col, xlsx::IgnoreError::from(error_type))?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Ignore an Excel error or warning in a range of worksheet cells.
@@ -5740,25 +4948,18 @@ impl Worksheet {
         error_type: IgnoreError,
     ) -> WasmResult<Worksheet> {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock.add_worksheet().ignore_error_range(
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .ignore_error_range(
                 first_row,
                 first_col,
                 last_row,
                 last_col,
                 xlsx::IgnoreError::from(error_type),
-            ),
-            WorksheetAccessor::AddChartsheet => lock.add_chartsheet().ignore_error_range(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                xlsx::IgnoreError::from(error_type),
-            ),
-        };
+            )?;
         Ok(Worksheet {
             parent: Arc::clone(&self.parent),
-            accessor: self.accessor,
+            index: self.index,
         })
     }
     /// Get the local instance DXF id for a format.
@@ -5777,13 +4978,8 @@ impl Worksheet {
     #[wasm_bindgen(js_name = "formatDxfIndex", skip_jsdoc)]
     pub fn format_dxf_index(&self, format: &Format) -> u32 {
         let mut lock = self.parent.lock().unwrap();
-        match self.accessor {
-            WorksheetAccessor::AddWorksheet => lock
-                .add_worksheet()
-                .format_dxf_index(&*format.inner.lock().unwrap()),
-            WorksheetAccessor::AddChartsheet => lock
-                .add_chartsheet()
-                .format_dxf_index(&*format.inner.lock().unwrap()),
-        }
+        lock.worksheet_from_index(self.index)
+            .unwrap()
+            .format_dxf_index(&*format.inner.lock().unwrap())
     }
 }
