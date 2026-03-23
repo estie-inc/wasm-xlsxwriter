@@ -43,12 +43,12 @@
     },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.8",
-        "@types/node": "25.4.0",
+        "@types/node": "25.5.0",
         "@types/unzipper": "0.10.11",
-        "jsdom": "28.1.0",
-        "typescript": "5.9.3",
+        "jsdom": "29.0.1",
+        "typescript": "6.0.2",
         "unzipper": "0.12.3",
-        "vitest": "4.0.18",
+        "vitest": "4.1.1",
         "wasm-pack": "0.14.0"
     }
 }
