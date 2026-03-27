@@ -1,0 +1,93 @@
+use crate::wrapper::Color;
+use crate::wrapper::ShapePatternFillType;
+use crate::wrapper::WasmResult;
+use rust_xlsxwriter as xlsx;
+use std::sync::{Arc, Mutex};
+use wasm_bindgen::prelude::*;
+
+/// The `ShapePatternFill` struct represents a the pattern fill for a shape
+/// element.
+///
+/// The {@link ShapePatternFill} struct represents the formatting properties for the
+/// pattern fill of a Shape element. In Excel a pattern fill is comprised of a
+/// simple pixelated pattern and background and foreground colors
+///
+/// `ShapePatternFill` is a sub property of the {@link ShapeFormat} struct and is
+/// used with the {@link ShapeFormat#setPatternFill} method.
+///
+/// It is used in conjunction with the {@link Shape} struct.
+#[derive(Clone)]
+#[wasm_bindgen]
+pub struct ShapePatternFill {
+    pub(crate) inner: Arc<Mutex<xlsx::ShapePatternFill>>,
+}
+
+#[wasm_bindgen]
+impl ShapePatternFill {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> ShapePatternFill {
+        ShapePatternFill {
+            inner: Arc::new(Mutex::new(xlsx::ShapePatternFill::new())),
+        }
+    }
+    #[doc = r" Create a deep clone of this object."]
+    #[wasm_bindgen(js_name = "clone")]
+    pub fn deep_clone(&self) -> ShapePatternFill {
+        ShapePatternFill {
+            inner: Arc::new(Mutex::new(self.inner.lock().unwrap().clone())),
+        }
+    }
+    /// Set the pattern of a Shape pattern fill element.
+    ///
+    /// See the example above.
+    ///
+    /// # Parameters
+    ///
+    /// - `pattern`: The pattern property defined by a {@link ShapePatternFillType} enum value.
+    #[wasm_bindgen(js_name = "setPattern", skip_jsdoc)]
+    pub fn set_pattern(&self, pattern: ShapePatternFillType) -> ShapePatternFill {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::ShapePatternFill::new());
+        inner = inner.set_pattern(xlsx::ShapePatternFillType::from(pattern));
+        *lock = inner;
+        ShapePatternFill {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the background color of a Shape pattern fill element.
+    ///
+    /// See the example above.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The color property defined by a {@link Color} enum value or
+    ///   a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setBackgroundColor", skip_jsdoc)]
+    pub fn set_background_color(&self, color: Color) -> ShapePatternFill {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::ShapePatternFill::new());
+        inner = inner.set_background_color(xlsx::Color::from(color));
+        *lock = inner;
+        ShapePatternFill {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+    /// Set the foreground color of a Shape pattern fill element.
+    ///
+    /// See the example above.
+    ///
+    /// # Parameters
+    ///
+    /// - `color`: The color property defined by a {@link Color} enum value or
+    ///   a type that can convert `Into` a {@link Color}.
+    #[wasm_bindgen(js_name = "setForegroundColor", skip_jsdoc)]
+    pub fn set_foreground_color(&self, color: Color) -> ShapePatternFill {
+        let mut lock = self.inner.lock().unwrap();
+        let mut inner = std::mem::replace(&mut *lock, xlsx::ShapePatternFill::new());
+        inner = inner.set_foreground_color(xlsx::Color::from(color));
+        *lock = inner;
+        ShapePatternFill {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+}

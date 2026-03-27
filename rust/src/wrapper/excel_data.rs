@@ -6,7 +6,7 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::error::XlsxError;
 
-use super::{datetime::ExcelDateTime, formula::Formula, rich_string::RichString, url::Url, utils};
+use super::{datetime::ExcelDateTime, rich_string::RichString, utils, Formula, Url};
 
 // We only export the ExcelData type since ExcelDataArray and ExcelDataMatrix are used for
 #[wasm_bindgen(typescript_custom_section)]
@@ -181,8 +181,8 @@ impl xlsx::IntoExcelData for ExcelData {
                     rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
                 worksheet.write_rich_string(row, col, &rich_string)
             }
-            ExcelData::Formula(f) => worksheet.write_formula(row, col, &*f.lock()),
-            ExcelData::Url(url) => worksheet.write_url(row, col, &*url.lock()),
+            ExcelData::Formula(f) => worksheet.write_formula(row, col, &*f.inner.lock().unwrap()),
+            ExcelData::Url(url) => worksheet.write_url(row, col, &*url.inner.lock().unwrap()),
         }
     }
 
@@ -204,7 +204,7 @@ impl xlsx::IntoExcelData for ExcelData {
                 worksheet.write_datetime_with_format(row, col, dt, format)
             }
             ExcelData::Formula(f) => {
-                worksheet.write_formula_with_format(row, col, &*f.lock(), format)
+                worksheet.write_formula_with_format(row, col, &*f.inner.lock().unwrap(), format)
             }
             ExcelData::RichString(rich_string) => {
                 let rich_string = rich_string.lock();
@@ -212,7 +212,7 @@ impl xlsx::IntoExcelData for ExcelData {
                     rich_string.iter().map(|(f, s)| (f, s.as_str())).collect();
                 worksheet.write_rich_string_with_format(row, col, &rich_string, format)
             }
-            ExcelData::Url(url) => worksheet.write_url_with_format(row, col, &*url.lock(), format),
+            ExcelData::Url(url) => worksheet.write_url_with_format(row, col, &*url.inner.lock().unwrap(), format),
         }
     }
 }

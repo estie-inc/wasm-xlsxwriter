@@ -1,15 +1,16 @@
+// Companion file for Image: custom constructor and convenience helpers.
+// The struct definition and auto-generated methods are in generated/image.rs.
+
 use std::sync::{Arc, Mutex};
 
 use rust_xlsxwriter as xlsx;
 use wasm_bindgen::prelude::*;
 
-use crate::wrapper::WasmResult;
-use crate::wrapper::object_movement::ObjectMovement;
+use crate::wrapper::{Image, ObjectMovement, Url, WasmResult};
 
-/// Since the xlsx::Image does not have a default value, we use the smallest PNG image data as a dummy data.
+/// Since xlsx::Image has no default value, we use the smallest valid PNG as a placeholder.
+/// https://evanhahn.com/worlds-smallest-png/
 fn new_dummy_image() -> xlsx::Image {
-    // Smallest PNG in bytes.
-    // https://evanhahn.com/worlds-smallest-png/
     const SMALLEST_PNG_DATA: [u8; 67] = [
         0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44,
         0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x37,
@@ -20,14 +21,8 @@ fn new_dummy_image() -> xlsx::Image {
     xlsx::Image::new_from_buffer(&SMALLEST_PNG_DATA).unwrap()
 }
 
-/// The `Image` struct is used to create an object to represent an image that
-/// can be inserted into a worksheet.
-#[derive(Clone)]
-#[wasm_bindgen]
-pub struct Image {
-    pub(crate) inner: Arc<Mutex<xlsx::Image>>,
-}
-
+// xlsx::Image methods consume self and return Self, so we use mem::replace to work
+// around the Arc<Mutex<>> wrapper that prevents moving out of a shared reference.
 macro_rules! impl_method {
     ($self:ident.$method:ident($($arg:expr),*)) => {
         let mut lock = $self.inner.lock().unwrap();
@@ -188,5 +183,16 @@ impl Image {
     #[wasm_bindgen(js_name = "setScaleToSize", skip_jsdoc)]
     pub fn set_scale_to_size(&self, width: u32, height: u32, keep_aspect_ratio: bool) -> Image {
         impl_method!(self.set_scale_to_size(width, height, keep_aspect_ratio));
+    }
+
+    #[wasm_bindgen(js_name = "setUrl", skip_jsdoc)]
+    pub fn set_url(&self, url: &Url) -> WasmResult<Image> {
+        let mut lock = self.inner.lock().unwrap();
+        let inner = std::mem::replace(&mut *lock, new_dummy_image());
+        let inner = inner.set_url(url.inner.lock().unwrap().clone())?;
+        *lock = inner;
+        Ok(Image {
+            inner: Arc::clone(&self.inner),
+        })
     }
 }

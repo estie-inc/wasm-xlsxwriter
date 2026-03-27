@@ -1,17 +1,13 @@
 mod chart;
-mod color;
+mod conditional_format_cell;
+mod data_validation;
 mod datetime;
-mod doc_properties;
+mod filter_condition;
 mod excel_data;
-mod format;
-mod formula;
-mod header_image_position;
+pub mod generated;
 mod image;
-mod note;
-mod object_movement;
 mod rich_string;
-mod table;
-mod url;
+mod shape;
 mod utils;
 mod workbook;
 mod worksheet;
@@ -20,7 +16,13 @@ use crate::error::XlsxError;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 
-type WasmResult<T> = std::result::Result<T, XlsxError>;
+pub(crate) type WasmResult<T> = std::result::Result<T, XlsxError>;
+
+// Generated types are re-exported via `generated::*`
+pub(crate) use generated::*;
+// Hand-written types that can't be auto-generated
+pub(crate) use datetime::ExcelDateTime;
+pub(crate) use workbook::Workbook;
 
 // This runs once when the wasm module is instantiated
 // https://rustwasm.github.io/wasm-bindgen/reference/attributes/on-rust-exports/start.html

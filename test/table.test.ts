@@ -1,4 +1,4 @@
-import { Workbook, TableFunction, TableColumn, Formula, Table } from "../web";
+import { Workbook, TableColumn, Formula, Table } from "../web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 
@@ -28,19 +28,19 @@ describe("xlsx-wasm test", () => {
       new TableColumn().setHeader("Product").setTotalLabel("Totals"),
       new TableColumn()
         .setHeader("Quarter 1")
-        .setTotalFunction(TableFunction.sum()),
+        .setTotalFunction("Sum"),
       new TableColumn()
         .setHeader("Quarter 2")
-        .setTotalFunction(TableFunction.sum()),
+        .setTotalFunction("Sum"),
       new TableColumn()
         .setHeader("Quarter 3")
-        .setTotalFunction(TableFunction.sum()),
+        .setTotalFunction("Sum"),
       new TableColumn()
         .setHeader("Quarter 4")
-        .setTotalFunction(TableFunction.sum()),
+        .setTotalFunction("Sum"),
       new TableColumn()
         .setHeader("Year")
-        .setTotalFunction(TableFunction.sum())
+        .setTotalFunction("Sum")
         .setFormula(new Formula("SUM(Table1[@[Quarter 1]:[Quarter 4]])")),
     ];
     const table = new Table().setColumns(columns).setTotalRow(true);

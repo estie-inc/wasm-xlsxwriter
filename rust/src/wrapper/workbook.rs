@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::XlsxError,
-    wrapper::{doc_properties::DocProperties, format::Format, worksheet::Worksheet},
+    wrapper::{DocProperties, Format, Worksheet},
 };
 
 use super::WasmResult;
@@ -72,7 +72,7 @@ impl Workbook {
         let mut workbook = self.inner.lock().unwrap();
         let _ = workbook.add_worksheet();
         Worksheet {
-            workbook: Arc::clone(&self.inner),
+            parent: Arc::clone(&self.inner),
             index,
         }
     }
@@ -114,7 +114,7 @@ impl Workbook {
         let mut workbook = self.inner.lock().unwrap();
         let _ = workbook.worksheet_from_index(index)?;
         Ok(Worksheet {
-            workbook: Arc::clone(&self.inner),
+            parent: Arc::clone(&self.inner),
             index,
         })
     }
@@ -161,7 +161,7 @@ impl Workbook {
         for (index, worksheet) in workbook.worksheets().iter().enumerate() {
             if worksheet.name() == name {
                 return Ok(Worksheet {
-                    workbook: Arc::clone(&self.inner),
+                    parent: Arc::clone(&self.inner),
                     index,
                 });
             }
@@ -282,7 +282,7 @@ impl Workbook {
     #[wasm_bindgen(js_name = "setProperties", skip_jsdoc)]
     pub fn set_properties(&self, properties: &DocProperties) {
         let mut workbook = self.inner.lock().unwrap();
-        workbook.set_properties(&properties.lock());
+        workbook.set_properties(&properties.inner.lock().unwrap());
     }
 
     /// Set the default cell format for the workbook.
@@ -315,7 +315,27 @@ impl Workbook {
         col_width: u32,
     ) -> WasmResult<()> {
         let mut workbook = self.inner.lock().unwrap();
-        workbook.set_default_format(&format.lock().clone(), row_height, col_width)?;
+        workbook.set_default_format(&format.inner.lock().unwrap().clone(), row_height, col_width)?;
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = "useExcel2023Theme", skip_jsdoc)]
+    pub fn use_excel_2023_theme(&mut self) -> WasmResult<()> {
+        let mut workbook = self.inner.lock().unwrap();
+        workbook.use_excel_2023_theme()?;
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = "useZipLargeFile", skip_jsdoc)]
+    pub fn use_zip_large_file(&mut self, enable: bool) {
+        let mut workbook = self.inner.lock().unwrap();
+        workbook.use_zip_large_file(enable);
+    }
+
+    #[wasm_bindgen(js_name = "setVbaName", skip_jsdoc)]
+    pub fn set_vba_name(&mut self, name: &str) -> WasmResult<()> {
+        let mut workbook = self.inner.lock().unwrap();
+        workbook.set_vba_name(name)?;
         Ok(())
     }
 }

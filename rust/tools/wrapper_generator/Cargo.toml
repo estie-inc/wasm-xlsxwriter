@@ -1,0 +1,18 @@
+[package]
+name = "wrapper_generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+crate-inspector = "0.4.0"
+rustdoc-types = "0.55.0"
+clap = { version = "4.4", features = ["derive"] }
+toml = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+serde_json = "1.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
