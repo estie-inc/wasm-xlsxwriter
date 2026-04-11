@@ -38,16 +38,34 @@ jobs:
             fi
           done
       - run: npm test
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wasm-packages
+          path: |
+            nodejs/
+            web/
+
+  examples:
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - example: nextjs
+            build_command: "npm run build"
+          - example: nodejs
+            build_command: "npm run build && npm run start"
+          - example: vite
+            build_command: "npm run build"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "24.x"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wasm-packages
       - run: |
-          cd examples/nextjs
+          cd examples/${{ matrix.example }}
           npm ci
-          npm run build
-      - run: |
-          cd examples/nodejs
-          npm ci
-          npm run build
-          npm run start
-      - run: |
-          cd examples/vite
-          npm ci
-          npm run build
+          ${{ matrix.build_command }}
