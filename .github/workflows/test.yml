@@ -47,3 +47,7 @@ jobs:
           npm ci
           npm run build
           npm run start
+      - run: |
+          cd examples/vite
+          npm ci
+          npm run build
