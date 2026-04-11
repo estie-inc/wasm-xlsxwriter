@@ -14,7 +14,7 @@ npm install wasm-xlsxwriter
 
 ### Usage Web
 
-Here’s an example of how to use `wasm-xlsxwriter` to create an Excel file:
+Here’s an example of how to use `wasm-xlsxwriter` to create an Excel file (see [`examples/vite`](examples/vite/) and [`examples/nextjs`](examples/nextjs/) for full working examples):
 
 ```typescript
 import xlsxInit, {
@@ -84,6 +84,8 @@ const buf = workbook.saveToBufferSync();
 
 ### Usage Node.js
 
+See [`examples/nodejs`](examples/nodejs/) for a full working example.
+
 ```ts
 import {
   Color,
@@ -139,6 +141,14 @@ function writeExcel(header: string[], rows: (string | number)[][]): Buffer {
   return Buffer.from(uint8Array);
 }
 ```
+
+## Examples
+
+Working examples for different environments are available in the [`examples/`](examples/) directory:
+
+- **[Vite](examples/vite/)** — Browser usage with Vite 8 (rolldown)
+- **[Next.js](examples/nextjs/)** — Browser usage with Next.js (App Router)
+- **[Node.js](examples/nodejs/)** — Server-side usage
 
 ## Browser Support
 
