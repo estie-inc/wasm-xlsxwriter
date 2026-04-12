@@ -36,7 +36,7 @@
         "build": "npm run setup && npm run build:wasm && npm run build:web && npm run build:nodejs",
         "build:wasm": "cd rust && cargo build --lib --target wasm32-unknown-unknown --release --target-dir target",
         "build:web": "wasm-bindgen --target web --out-dir web rust/target/wasm32-unknown-unknown/release/wasm_xlsxwriter.wasm && wasm-opt -O web/wasm_xlsxwriter_bg.wasm -o web/wasm_xlsxwriter_bg.wasm",
-        "build:nodejs": "wasm-bindgen --target nodejs --out-dir nodejs rust/target/wasm32-unknown-unknown/release/wasm_xlsxwriter.wasm && wasm-opt -O nodejs/wasm_xlsxwriter_bg.wasm -o nodejs/wasm_xlsxwriter_bg.wasm",
+        "build:nodejs": "wasm-bindgen --target experimental-nodejs-module --out-dir nodejs rust/target/wasm32-unknown-unknown/release/wasm_xlsxwriter.wasm && wasm-opt -O nodejs/wasm_xlsxwriter_bg.wasm -o nodejs/wasm_xlsxwriter_bg.wasm",
         "test": "vitest"
     },
     "devDependencies": {

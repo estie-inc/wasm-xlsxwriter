@@ -1,4 +1,4 @@
-import { ExcelDateTime } from "../web";
+import { ExcelDateTime } from "wasm-xlsxwriter/web";
 import { describe, test, expect, beforeAll } from "vitest";
 import { initWasModule } from "./common.js";
 

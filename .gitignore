@@ -1,8 +1,6 @@
 **/target
 /nodejs/
-!/nodejs/package.json
 /web/
-!/web/package.json
 
 **/node_modules
 **/*.xlsx

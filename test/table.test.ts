@@ -1,4 +1,4 @@
-import { Workbook, TableFunction, TableColumn, Formula, Table } from "../web";
+import { Workbook, TableFunction, TableColumn, Formula, Table } from "wasm-xlsxwriter/web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 

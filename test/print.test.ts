@@ -1,4 +1,4 @@
-import { Color, Format, HeaderImagePosition, Image, Workbook } from "../web";
+import { Color, Format, HeaderImagePosition, Image, Workbook } from "wasm-xlsxwriter/web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
