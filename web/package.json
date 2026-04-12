@@ -1,0 +1,6 @@
+{
+    "name": "wasm-xlsxwriter-web",
+    "main": "wasm_xlsxwriter.js",
+    "types": "wasm_xlsxwriter.d.ts",
+    "type": "module"
+}

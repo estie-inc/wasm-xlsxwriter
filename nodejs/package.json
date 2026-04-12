@@ -1,0 +1,6 @@
+{
+    "name": "wasm-xlsxwriter-nodejs",
+    "main": "wasm_xlsxwriter.js",
+    "types": "wasm_xlsxwriter.d.ts",
+    "type": "commonjs"
+}

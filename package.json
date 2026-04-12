@@ -6,21 +6,21 @@
     "types": "nodejs/wasm_xlsxwriter.d.ts",
     "browser": "web/wasm_xlsxwriter.js",
     "exports": {
-      ".": {
-        "types": "./nodejs/wasm_xlsxwriter.d.ts",
-        "import": "./nodejs/wasm_xlsxwriter.js",
-        "default": "./nodejs/wasm_xlsxwriter.js"
-      },
-      "./web": {
-        "types": "./web/wasm_xlsxwriter.d.ts",
-        "import": "./web/wasm_xlsxwriter.js",
-        "default": "./web/wasm_xlsxwriter.js"
-      },
-      "./nodejs": {
-        "types": "./nodejs/wasm_xlsxwriter.d.ts",
-        "import": "./nodejs/wasm_xlsxwriter.js",
-        "default": "./nodejs/wasm_xlsxwriter.js"
-      }
+        ".": {
+            "types": "./nodejs/wasm_xlsxwriter.d.ts",
+            "import": "./nodejs/wasm_xlsxwriter.js",
+            "default": "./nodejs/wasm_xlsxwriter.js"
+        },
+        "./web": {
+            "types": "./web/wasm_xlsxwriter.d.ts",
+            "import": "./web/wasm_xlsxwriter.js",
+            "default": "./web/wasm_xlsxwriter.js"
+        },
+        "./nodejs": {
+            "types": "./nodejs/wasm_xlsxwriter.d.ts",
+            "import": "./nodejs/wasm_xlsxwriter.js",
+            "default": "./nodejs/wasm_xlsxwriter.js"
+        }
     },
     "files": [
         "web",
@@ -32,14 +32,12 @@
         "url": "https://github.com/estie-inc/wasm-xlsxwriter"
     },
     "scripts": {
-        "build": "npm run build:web && npm run build:nodejs",
-        "build:web": "wasm-pack build ./rust -t web -d ../web --release && rm ./web/.gitignore",
-        "build:nodejs": "wasm-pack build ./rust -t nodejs -d ../nodejs --release && rm ./nodejs/.gitignore",
+        "setup": "node scripts/setup.mjs",
+        "build": "npm run setup && npm run build:wasm && npm run build:web && npm run build:nodejs",
+        "build:wasm": "cd rust && cargo build --lib --target wasm32-unknown-unknown --release --target-dir target",
+        "build:web": "wasm-bindgen --target web --out-dir web rust/target/wasm32-unknown-unknown/release/wasm_xlsxwriter.wasm && wasm-opt -O web/wasm_xlsxwriter_bg.wasm -o web/wasm_xlsxwriter_bg.wasm",
+        "build:nodejs": "wasm-bindgen --target nodejs --out-dir nodejs rust/target/wasm32-unknown-unknown/release/wasm_xlsxwriter.wasm && wasm-opt -O nodejs/wasm_xlsxwriter_bg.wasm -o nodejs/wasm_xlsxwriter_bg.wasm",
         "test": "vitest"
-    },
-    "overrides": {
-        "tar": "^7.5.3",
-        "axios": "^1.7.9"
     },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.8",
@@ -48,7 +46,6 @@
         "jsdom": "29.0.1",
         "typescript": "6.0.2",
         "unzipper": "0.12.3",
-        "vitest": "4.1.2",
-        "wasm-pack": "0.14.0"
+        "vitest": "4.1.2"
     }
 }
