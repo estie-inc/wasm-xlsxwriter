@@ -21,7 +21,7 @@ import {
   ChartPatternFill,
   ChartPatternFillType,
   ChartEmptyCells,
-} from "../web/wasm_xlsxwriter";
+} from "wasm-xlsxwriter/web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 

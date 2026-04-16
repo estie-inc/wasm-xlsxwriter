@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import { Format, Image, Workbook } from "../web";
+import { Format, Image, Workbook } from "wasm-xlsxwriter/web";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
 beforeAll(async () => {

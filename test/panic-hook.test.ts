@@ -1,4 +1,4 @@
-import { Image } from "../web";
+import { Image } from "wasm-xlsxwriter/web";
 import { describe, test, beforeAll, beforeEach, afterEach, expect, vi } from "vitest";
 import { initWasModule } from "./common";
 

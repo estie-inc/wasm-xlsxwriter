@@ -9,7 +9,7 @@ import {
   FormatUnderline,
   Formula,
   Workbook,
-} from "../web";
+} from "wasm-xlsxwriter/web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, readXlsx, readXlsxFile } from "./common";
 

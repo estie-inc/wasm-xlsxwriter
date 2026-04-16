@@ -1,4 +1,4 @@
-import { Workbook, Image, ObjectMovement } from "../web";
+import { Workbook, Image, ObjectMovement } from "wasm-xlsxwriter/web";
 import { describe, test, beforeAll, expect } from "vitest";
 import { initWasModule, loadFile, readXlsx, readXlsxFile } from "./common";
 
