@@ -1,34 +1,23 @@
-"use client";
-import initModule, { Workbook } from "wasm-xlsxwriter/web";
+import Link from "next/link";
 
 export default function Page() {
   return (
-    <button
-      onClick={async () => {
-        const workbook = await generateXlsx();
-        download(workbook);
-      }}
-    >
-      Generate a xlsx file
-    </button>
+    <div>
+      <h1>wasm-xlsxwriter Next.js Integration Test</h1>
+      <ul>
+        <li>
+          <Link href="/app-client">App Router - Client Side</Link>
+        </li>
+        <li>
+          <a href="/api/generate">App Router - Route Handler (Server)</a>
+        </li>
+        <li>
+          <Link href="/pages-client">Pages Router - Client Side</Link>
+        </li>
+        <li>
+          <a href="/api/pages-generate">Pages Router - API Route (Server)</a>
+        </li>
+      </ul>
+    </div>
   );
 }
-
-const generateXlsx = async () => {
-  await initModule();
-  const workbook = new Workbook();
-  const worksheet = workbook.addWorksheet();
-  worksheet.write(0, 0, "Hello, world!");
-  return workbook;
-};
-
-const download = (workbook: Workbook) => {
-  const buffer = workbook.saveToBufferSync();
-  const blob = new Blob([buffer.slice()]);
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "generated.xlsx";
-  a.click();
-  a.remove();
-};

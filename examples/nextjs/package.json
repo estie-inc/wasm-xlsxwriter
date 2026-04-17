@@ -3,7 +3,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "test": "npx --no-install playwright test"
   },
   "dependencies": {
     "next": "^16.2.3",
@@ -12,6 +12,7 @@
     "wasm-xlsxwriter": "file:../.."
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@types/node": "25.2.2",
     "@types/react": "19.2.13",
     "typescript": "5.9.3"
