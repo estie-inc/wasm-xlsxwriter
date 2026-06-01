@@ -154,6 +154,100 @@ describe("xlsx-wasm test", () => {
     expect(actual).matchXlsx(expected);
   });
 
+  test("insert combined column-line chart", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, "Number");
+    worksheet.write(0, 1, "Score 1");
+    worksheet.write(0, 2, "Score 2");
+
+    DATA.forEach((col_data, col_num) => {
+      col_data.forEach((row_data, row_num) => {
+        worksheet.write(row_num + 1, col_num, row_data);
+      });
+    });
+
+    // Primary: column chart for "Score 1".
+    const columnChart = new Chart(ChartType.Column);
+    const columnSeries = new ChartSeries();
+    columnSeries
+      .setName("Score 1")
+      .setCategories(ChartRange.newFromRange("Sheet1", 1, 0, 6, 0))
+      .setValues(ChartRange.newFromRange("Sheet1", 1, 1, 6, 1));
+    columnChart.pushSeries(columnSeries);
+
+    // Secondary: line chart for "Score 2".
+    const lineChart = new Chart(ChartType.Line);
+    const lineSeries = new ChartSeries();
+    lineSeries
+      .setName("Score 2")
+      .setCategories(ChartRange.newFromRange("Sheet1", 1, 0, 6, 0))
+      .setValues(ChartRange.newFromRange("Sheet1", 1, 2, 6, 2));
+    lineChart.pushSeries(lineSeries);
+
+    // Combine the line chart into the column chart to get a column-line combo.
+    columnChart.combine(lineChart);
+
+    worksheet.insertChart(0, 3, columnChart);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/insert_chart_combined.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+
+  test("insert combined chart with secondary axis", async () => {
+    // Arrange
+    const workbook = new Workbook();
+
+    // Act
+    const worksheet = workbook.addWorksheet();
+    worksheet.write(0, 0, "Number");
+    worksheet.write(0, 1, "Score 1");
+    worksheet.write(0, 2, "Score 2");
+
+    DATA.forEach((col_data, col_num) => {
+      col_data.forEach((row_data, row_num) => {
+        worksheet.write(row_num + 1, col_num, row_data);
+      });
+    });
+
+    // Primary: column chart for "Score 1" on the primary axis.
+    const columnChart = new Chart(ChartType.Column);
+    const columnSeries = new ChartSeries();
+    columnSeries
+      .setName("Score 1")
+      .setCategories(ChartRange.newFromRange("Sheet1", 1, 0, 6, 0))
+      .setValues(ChartRange.newFromRange("Sheet1", 1, 1, 6, 1));
+    columnChart.pushSeries(columnSeries);
+
+    // Secondary: line chart for "Score 2" plotted on the secondary (Y2) axis.
+    const lineChart = new Chart(ChartType.Line);
+    const lineSeries = new ChartSeries();
+    lineSeries
+      .setName("Score 2")
+      .setCategories(ChartRange.newFromRange("Sheet1", 1, 0, 6, 0))
+      .setValues(ChartRange.newFromRange("Sheet1", 1, 2, 6, 2))
+      .setSecondaryAxis(true);
+    lineChart.pushSeries(lineSeries);
+
+    columnChart.combine(lineChart);
+
+    columnChart.yAxis().setName("y-axis");
+    columnChart.y2Axis().setName("y2-axis");
+    columnChart.legend().setPosition(ChartLegendPosition.Bottom);
+
+    worksheet.insertChart(0, 3, columnChart);
+
+    // Assert
+    const actual = await readXlsx(workbook.saveToBufferSync());
+    const expected = await readXlsxFile("./expected/insert_chart_combined_secondary_axis.xlsx");
+    expect(actual).matchXlsx(expected);
+  });
+
   test("insert chart with empty cells displayed as connected", async () => {
     // Arrange
     const workbook = new Workbook();

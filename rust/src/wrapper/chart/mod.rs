@@ -132,6 +132,24 @@ impl Chart {
         }
     }
 
+    /// Combine two charts into a single chart.
+    ///
+    /// Create a combined chart from two different chart types. For example a
+    /// column chart combined with a line chart. The secondary chart is passed
+    /// to the primary chart, which is the one inserted into the worksheet.
+    ///
+    /// @param {Chart} other - The secondary {@link Chart} to combine with this chart.
+    /// @returns {Chart} - The Chart object.
+    #[wasm_bindgen(js_name = "combine", skip_jsdoc)]
+    pub fn combine(&self, other: &Chart) -> Chart {
+        let mut chart = self.inner.lock().unwrap();
+        let other = other.inner.lock().unwrap();
+        chart.combine(&other);
+        Chart {
+            inner: Arc::clone(&self.inner),
+        }
+    }
+
     #[wasm_bindgen(js_name = "title")]
     pub fn title(&self) -> ChartTitle {
         ChartTitle {
