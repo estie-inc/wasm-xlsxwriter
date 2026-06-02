@@ -160,4 +160,21 @@ impl ChartSeries {
             inner: Arc::clone(&self.inner),
         }
     }
+
+    /// Plot the chart series on the secondary axis.
+    ///
+    /// In a combined chart this places the series on a secondary value (Y2)
+    /// axis, which is useful when the combined series have different scales or
+    /// units. The secondary axis can be configured via {@link Chart#y2Axis}.
+    ///
+    /// @param {boolean} enable - Turn the secondary axis on or off.
+    /// @returns {ChartSeries} - The ChartSeries object.
+    #[wasm_bindgen(js_name = "setSecondaryAxis", skip_jsdoc)]
+    pub fn set_secondary_axis(&self, enable: bool) -> ChartSeries {
+        let mut series = self.inner.lock().unwrap();
+        series.set_secondary_axis(enable);
+        ChartSeries {
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }
