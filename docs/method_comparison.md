@@ -6,8 +6,8 @@
   - ❌ Not Migrated Structs: 34
   - ✅ Migrated Enums: 21
   - ❌ Not Migrated Enums: 31
-  - ✅ Total Migrated Methods: 266
-  - ❌ Total Not Migrated Methods: 371
+  - ✅ Total Migrated Methods: 268
+  - ❌ Total Not Migrated Methods: 369
   - ✅ Total Migrated Functions: 39
   - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
@@ -31,14 +31,13 @@
   ### ✅ Url
   ### ⚠️ Chart
     Summary
-      - Migrated methods: 12
-      - Not migrated methods: 22
+      - Migrated methods: 13
+      - Not migrated methods: 21
       - Migrated functions: 10
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
       - add_series
       - chart_area
-      - combine
       - plot_area
       - set_data_table
       - set_decorative
@@ -105,8 +104,8 @@
       - set_layout
   ### ⚠️ ChartSeries
     Summary
-      - Migrated methods: 7
-      - Not migrated methods: 12
+      - Migrated methods: 8
+      - Not migrated methods: 11
       - Migrated functions: 1
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
@@ -117,7 +116,6 @@
       - set_invert_if_negative_color
       - set_overlap
       - set_point_colors
-      - set_secondary_axis
       - set_smooth
       - set_trendline
       - set_x_error_bars
