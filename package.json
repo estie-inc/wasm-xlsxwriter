@@ -40,11 +40,11 @@
     },
     "devDependencies": {
         "@tsconfig/strictest": "2.0.8",
-        "@types/node": "25.7.0",
+        "@types/node": "26.1.1",
         "@types/unzipper": "0.10.11",
         "jsdom": "29.1.1",
-        "typescript": "6.0.3",
-        "unzipper": "0.12.3",
-        "vitest": "4.1.6"
+        "typescript": "7.0.2",
+        "unzipper": "0.12.5",
+        "vitest": "4.1.10"
     }
 }
