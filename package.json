@@ -45,6 +45,6 @@
         "jsdom": "30.0.1",
         "typescript": "7.0.2",
         "unzipper": "0.12.5",
-        "vitest": "5.0.0"
+        "vitest": "5.0.1"
     }
 }
