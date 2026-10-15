@@ -9,7 +9,7 @@ on:
 jobs:
   npm-publish:
     name: Publish npm package
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     permissions:
       # see: https://docs.npmjs.com/trusted-publishers#configuring-trusted-publishing
       contents: read
