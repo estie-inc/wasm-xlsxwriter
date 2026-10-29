@@ -1727,6 +1727,68 @@ impl Worksheet {
         Ok(self.clone())
     }
 
+    /// Group a range of rows into a collapsed worksheet outline group.
+    ///
+    /// The `groupRowsCollapsed()` method works like {@link Worksheet#groupRows}
+    /// but the rows in the group are hidden and the group is displayed in the
+    /// collapsed state.
+    ///
+    /// **Note**: the collapsed state is stored on the row after the group
+    /// (`last_row + 1`). This matches Excel by default, but when
+    /// {@link Worksheet#groupSymbolsAbove} is enabled Excel stores it on the
+    /// row above the group instead. With that option the file can differ
+    /// from Excel when:
+    ///
+    /// - groups are nested: expanding the outer group can also expand the
+    ///   collapsed groups inside it.
+    /// - the row after a collapsed group is the row above another group: that
+    ///   row is marked as collapsed, which is where Excel stores the other
+    ///   group's state, even if it was added with {@link Worksheet#groupRows}.
+    ///
+    /// @param {number} first_row - The first row of the range. Zero indexed.
+    /// @param {number} last_row - The last row of the range.
+    /// @returns {Worksheet} - The worksheet object.
+    ///
+    /// # Errors
+    ///
+    /// - [`XlsxError::RowColumnLimitError`] - Row exceeds Excel's worksheet
+    ///   limits. This includes `last_row` being the last worksheet row, since
+    ///   the collapsed state is stored on the row after it.
+    /// - [`XlsxError::RowColumnOrderError`] - First row greater than the last
+    ///   row.
+    /// - [`XlsxError::MaxGroupLevelExceeded`] - Group depth level exceeds
+    ///   Excel's limit of 8 levels.
+    #[wasm_bindgen(js_name = "groupRowsCollapsed", skip_jsdoc)]
+    pub fn group_rows_collapsed(
+        &self,
+        first_row: xlsx::RowNum,
+        last_row: xlsx::RowNum,
+    ) -> WasmResult<Worksheet> {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        let _ = sheet.group_rows_collapsed(first_row, last_row)?;
+        Ok(self.clone())
+    }
+
+    /// Display the row outline group expand/collapse symbols above the range.
+    ///
+    /// The `groupSymbolsAbove()` method places the outline group
+    /// expand/collapse symbols `[+]` and `[-]` above the grouped rows instead
+    /// of below them.
+    ///
+    /// In Excel this is a worksheet wide option and will apply to all row
+    /// outlines in the worksheet.
+    ///
+    /// @param {boolean} enable - Turn the property on/off. It is off by default.
+    /// @returns {Worksheet} - The worksheet object.
+    #[wasm_bindgen(js_name = "groupSymbolsAbove", skip_jsdoc)]
+    pub fn group_symbols_above(&self, enable: bool) -> Worksheet {
+        let mut book = self.workbook.lock().unwrap();
+        let sheet = book.worksheet_from_index(self.index).unwrap();
+        sheet.group_symbols_above(enable);
+        self.clone()
+    }
+
     /// Set the worksheet margins for the printed page.
     ///
     /// The `setMargins()` method is used to set the margins of the worksheet
