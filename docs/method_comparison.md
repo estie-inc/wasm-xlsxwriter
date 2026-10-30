@@ -5,9 +5,9 @@
   - ⚠️ Partially Migrated Structs: 10
   - ❌ Not Migrated Structs: 34
   - ✅ Migrated Enums: 21
-  - ❌ Not Migrated Enums: 31
-  - ✅ Total Migrated Methods: 268
-  - ❌ Total Not Migrated Methods: 369
+  - ❌ Not Migrated Enums: 32
+  - ✅ Total Migrated Methods: 270
+  - ❌ Total Not Migrated Methods: 371
   - ✅ Total Migrated Functions: 39
   - ❌ Total Not Migrated Functions: 38
 ## Details of Structs
@@ -178,7 +178,7 @@
   ### ⚠️ Workbook
     Summary
       - Migrated methods: 7
-      - Not migrated methods: 13
+      - Not migrated methods: 16
       - Migrated functions: 1
       - Not migrated functions: 0
     ❌ Methods Not Yet Migrated
@@ -189,7 +189,10 @@
       - save
       - save_to_buffer
       - save_to_writer
+      - set_calculation_mode
+      - set_tab_ratio
       - set_vba_name
+      - set_zip_compression_level
       - use_custom_theme
       - use_excel_2023_theme
       - use_zip_large_file
@@ -197,8 +200,8 @@
       - worksheets_mut
   ### ⚠️ Worksheet
     Summary
-      - Migrated methods: 80
-      - Not migrated methods: 66
+      - Migrated methods: 82
+      - Not migrated methods: 65
       - Migrated functions: 0
       - Not migrated functions: 2
     ❌ Methods Not Yet Migrated
@@ -210,8 +213,6 @@
       - filter_column
       - group_columns
       - group_columns_collapsed
-      - group_rows_collapsed
-      - group_symbols_above
       - group_symbols_to_left
       - hide_unused_rows
       - ignore_error
@@ -243,6 +244,7 @@
       - set_formula_result_default
       - set_header_footer_align_with_page
       - set_header_footer_scale_with_doc
+      - set_hidden_zeroes
       - set_infinity_value
       - set_nan_value
       - set_neg_infinity_value
@@ -803,6 +805,7 @@
 
 ## ❌ Not Migrated Enums
   - AxisType
+  - CalculationMode
   - ChartAxisCrossing
   - ChartAxisDateUnitType
   - ChartAxisDisplayUnitType
